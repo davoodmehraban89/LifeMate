@@ -1,0 +1,27 @@
+name: Complete Final Profile Fields
+on:
+  push:
+    branches: ['final-feature-1/iran-family-school']
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: final-feature-1/iran-family-school}
+      - run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('apps/lifemate/lib/iran_hub.dart');s=p.read_text()
+          s=s.replace("int grade=7;String persona='child';", "int grade=7;String persona='child';String sex='unspecified';String birthDate='';")
+          s=s.replace("body:{'householdPersona':persona}", "body:{'householdPersona':persona,'sex':sex,'birthDate':birthDate.isEmpty?null:birthDate}")
+          s=s.replace("persona=profile['household_persona']?.toString()??persona;", "")
+          marker="if(persona=='child')DropdownButtonFormField<int>"
+          addition="DropdownButtonFormField<String>(initialValue:sex,decoration:const InputDecoration(labelText:'جنسیت'),items:const[DropdownMenuItem(value:'female',child:Text('دختر / زن')),DropdownMenuItem(value:'male',child:Text('پسر / مرد')),DropdownMenuItem(value:'unspecified',child:Text('ذکر نشود'))],onChanged:(v)=>setState(()=>sex=v??sex)),TextFormField(initialValue:birthDate,decoration:const InputDecoration(labelText:'تاریخ تولد (YYYY-MM-DD)'),onChanged:(v)=>birthDate=v),"
+          if marker not in s: raise SystemExit('profile marker not found')
+          s=s.replace(marker,addition+marker,1)
+          p.write_text(s)
+          PY
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'; git add apps/lifemate/lib/iran_hub.dart; git commit -m 'feat: complete sex and birth-date profile inputs'; git push origin HEAD:final-feature-1/iran-family-school
