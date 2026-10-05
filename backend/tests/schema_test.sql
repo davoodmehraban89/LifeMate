@@ -25,17 +25,17 @@ begin
   if is_family_admin('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002') then raise exception 'teen must not inherit admin capability'; end if;
   if not is_active_guardian('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002') then raise exception 'guardian relation missing'; end if;
   if is_active_guardian('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000002') then raise exception 'outsider must not become guardian'; end if;
-end $;
+end $$;
 
 update family_membership
 set ended_at=now()
 where family_id='10000000-0000-0000-0000-000000000001'
   and user_id='00000000-0000-0000-0000-000000000002';
 
-do $
+do $$
 begin
   if is_active_family_member('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002') then raise exception 'removed teen must not remain active member'; end if;
   if is_active_guardian('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002') then raise exception 'guardian relationship must deactivate when minor membership ends'; end if;
-end $;
+end $$;
 
 rollback;
