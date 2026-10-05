@@ -84,12 +84,13 @@ async function createSession(client, userId) {
   };
 }
 
-async function requireFamilyRole(familyId, userId, roles) {
+async function familyAccess(familyId, userId, { roles = [], admin = false } = {}) {
   const r = await pool.query(
-    'select role from family_membership where family_id=$1 and user_id=$2 and ended_at is null',
+    'select role,is_admin from family_membership where family_id=$1 and user_id=$2 and ended_at is null',
     [familyId, userId],
   );
-  return r.rowCount && roles.includes(r.rows[0].role);
+  if (!r.rowCount) return false;
+  return (admin && r.rows[0].is_admin) || roles.includes(r.rows[0].role);
 }
 
 app.get('/health', async (_req, res) => {
@@ -365,6 +366,9 @@ app.post('/v1/families', auth, async (req, res) => {
   const name = String(req.body.name ?? '').trim();
   if (!name) return res.status(400).json({ error: 'invalid_name' });
 
+  const creatorRole = ['parent_guardian', 'adult_member'].includes(req.body.role)
+    ? req.body.role
+    : 'adult_member';
   const c = await pool.connect();
   try {
     await c.query('begin');
@@ -373,8 +377,8 @@ app.post('/v1/families', auth, async (req, res) => {
       [name, req.identity.sub],
     );
     await c.query(
-      "insert into family_membership(family_id,user_id,role) values($1,$2,'owner_admin')",
-      [f.rows[0].id, req.identity.sub],
+      'insert into family_membership(family_id,user_id,role,is_admin) values($1,$2,$3,true)',
+      [f.rows[0].id, req.identity.sub, creatorRole],
     );
     await c.query(
       "insert into access_audit(actor_user_id,family_id,action,target_type,target_id) values($1,$2,'family.create','family',$2::text)",
@@ -391,15 +395,13 @@ app.post('/v1/families', auth, async (req, res) => {
 });
 
 app.get('/v1/families/:familyId/members', auth, async (req, res) => {
-  const allowed = await requireFamilyRole(
-    req.params.familyId,
-    req.identity.sub,
-    ['owner_admin', 'parent_guardian', 'teen_minor', 'adult_member'],
-  );
+  const allowed = await familyAccess(req.params.familyId, req.identity.sub, {
+    roles: ['parent_guardian', 'teen_minor', 'adult_member'],
+  });
   if (!allowed) return res.status(403).json({ error: 'forbidden' });
 
   const r = await pool.query(
-    `select m.user_id,m.role,p.display_name,p.theme_preference
+    `select m.user_id,m.role,m.is_admin,p.display_name,p.theme_preference
        from family_membership m
        join profile p on p.user_id=m.user_id
       where m.family_id=$1 and m.ended_at is null
@@ -410,11 +412,10 @@ app.get('/v1/families/:familyId/members', auth, async (req, res) => {
 });
 
 app.post('/v1/families/:familyId/invitations', auth, async (req, res) => {
-  const allowed = await requireFamilyRole(
-    req.params.familyId,
-    req.identity.sub,
-    ['owner_admin', 'parent_guardian'],
-  );
+  const allowed = await familyAccess(req.params.familyId, req.identity.sub, {
+    roles: ['parent_guardian'],
+    admin: true,
+  });
   if (!allowed) return res.status(403).json({ error: 'forbidden' });
 
   const email = normalizeEmail(req.body.email);
@@ -491,11 +492,9 @@ app.post('/v1/invitations/accept', auth, async (req, res) => {
 });
 
 app.post('/v1/families/:familyId/guardians', auth, async (req, res) => {
-  const allowed = await requireFamilyRole(
-    req.params.familyId,
-    req.identity.sub,
-    ['owner_admin'],
-  );
+  const allowed = await familyAccess(req.params.familyId, req.identity.sub, {
+    admin: true,
+  });
   if (!allowed) return res.status(403).json({ error: 'forbidden' });
 
   const guardianUserId = String(req.body.guardianUserId ?? '');
