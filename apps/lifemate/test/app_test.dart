@@ -148,10 +148,8 @@ void main() {
     expect(find.text('کارها'), findsOneWidget);
     expect(find.text('امتحان‌ها'), findsOneWidget);
   });
-}
 
-
-testWidgets('parent login opens parent-focused family shell', (tester) async {
+  testWidgets('parent login opens parent-focused family shell', (tester) async {
   await tester.pumpWidget(
     LifeMateApp(
       api: FakeApi(
@@ -178,4 +176,5 @@ testWidgets('parent login opens parent-focused family shell', (tester) async {
   expect(find.text('راهنما'), findsOneWidget);
   expect(find.text('من'), findsOneWidget);
   expect(find.text('امتحان‌ها'), findsNothing);
-});
+  });
+}
