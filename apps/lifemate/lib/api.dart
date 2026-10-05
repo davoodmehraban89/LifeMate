@@ -22,6 +22,7 @@ abstract class IdentityApi {
     String? birthDate,
     String? themePreference,
   });
+  Future<List<Map<String, dynamic>>> listFamilies();
   Future<Map<String, dynamic>> createFamily(String name, {String? role});
   Future<void> inviteMember({
     required String familyId,
@@ -180,6 +181,15 @@ class HttpIdentityApi implements IdentityApi {
         if (birthDate != null) 'birthDate': birthDate,
         if (themePreference != null) 'themePreference': themePreference,
       });
+
+  @override
+  Future<List<Map<String, dynamic>>> listFamilies() async {
+    final result = await _json('GET', '/v1/families', auth: true);
+    final families = (result['families'] as List<dynamic>? ?? const []);
+    return families
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
 
   @override
   Future<Map<String, dynamic>> createFamily(
