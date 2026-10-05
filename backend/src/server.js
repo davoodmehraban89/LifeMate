@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import pg from 'pg';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
+import { createPhase3Router } from './phase3.js';
 
 const { Pool } = pg;
 const app = express();
@@ -601,6 +602,8 @@ app.post('/v1/families/:familyId/guardians', auth, async (req, res) => {
   );
   res.status(204).end();
 });
+
+app.use('/v1', createPhase3Router({ pool, auth }));
 
 app.use((err, _req, res, _next) => {
   console.error(err);
