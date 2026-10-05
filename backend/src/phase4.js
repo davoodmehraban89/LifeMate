@@ -212,6 +212,116 @@ export function createPhase4Router({ pool, auth }) {
     });
   });
 
+  router.post('/families/:familyId/children/:minorUserId/family-guidance', async (req, res) => {
+    const allowed = await guardianRelationship(
+      pool,
+      req.params.familyId,
+      req.identity.sub,
+      req.params.minorUserId,
+    );
+    if (!allowed) return res.status(403).json({ error: 'forbidden' });
+
+    const question = clampText(req.body.question, 2000);
+    if (!question) return res.status(400).json({ error: 'invalid_input' });
+
+    const [academic, wellbeing, safety] = await Promise.all([
+      pool.query(
+        `select
+           count(*) filter (
+             where kind in ('assignment','study_session')
+               and status not in ('completed','cancelled')
+               and due_at < now()
+           )::int as overdue,
+           count(*) filter (
+             where kind in ('assignment','study_session')
+               and status='completed'
+               and completed_at >= now()-interval '7 days'
+           )::int as completed_last_7_days,
+           coalesce(sum(duration_minutes) filter (
+             where kind='study_session'
+               and status='completed'
+               and completed_at >= now()-interval '7 days'
+           ),0)::int as study_minutes_last_7_days,
+           case when sum(grade_out_of) filter (
+             where grade_points is not null and grade_out_of is not null
+           ) > 0 then
+             round(
+               sum(grade_points) filter (where grade_points is not null and grade_out_of is not null)
+               /
+               sum(grade_out_of) filter (where grade_points is not null and grade_out_of is not null)
+               * 100,
+               1
+             )
+           end as grade_percent
+         from plan_item
+        where owner_user_id=$1`,
+        [req.params.minorUserId],
+      ),
+      pool.query(
+        `select
+           count(*)::int as checkin_count,
+           round(avg(mood)::numeric,2) as mood_average,
+           round(avg(energy)::numeric,2) as energy_average,
+           round(avg(stress)::numeric,2) as stress_average
+         from wellbeing_checkin
+        where owner_user_id=$1
+          and visibility='guardian_summary'
+          and created_at >= now()-interval '14 days'`,
+        [req.params.minorUserId],
+      ),
+      pool.query(
+        `select count(*)::int as open_urgent_count
+           from wellbeing_safety_event
+          where owner_user_id=$1 and status='open'`,
+        [req.params.minorUserId],
+      ),
+    ]);
+
+    const context = {
+      academic: academic.rows[0],
+      wellbeing: wellbeing.rows[0],
+      safety: safety.rows[0],
+      privacy: {
+        rawNotesIncluded: false,
+        rawConversationIncluded: false,
+      },
+    };
+    const prompt = [
+      'You are advising a parent/guardian using only authorized aggregate data.',
+      'Do not diagnose the child and do not infer hidden mental state.',
+      'Give concrete, low-pressure family support ideas and questions the parent can ask.',
+      'If safety.open_urgent_count is above zero, prioritize immediate trusted-human support and local emergency resources.',
+      `Authorized summary: ${JSON.stringify(context)}`,
+      `Parent question: ${question}`,
+    ].join('\n');
+
+    const klass =
+      Number(context.safety.open_urgent_count ?? 0) > 0
+        ? 'urgent_review'
+        : safetyClass(question);
+    const advice = await providerGuide('wellbeing', prompt, klass);
+
+    await pool.query(
+      `insert into access_audit(actor_user_id,family_id,action,target_type,target_id,metadata)
+       values($1,$2,'parent.family_guidance.request','student',$3,$4::jsonb)`,
+      [
+        req.identity.sub,
+        req.params.familyId,
+        req.params.minorUserId,
+        JSON.stringify({ rawNotesIncluded: false, rawConversationIncluded: false }),
+      ],
+    );
+
+    res.json({
+      advice,
+      summary: context,
+      advisory: true,
+      medicalDiagnosis: false,
+      rawNotesIncluded: false,
+      rawConversationIncluded: false,
+    });
+  });
+
   router.post('/ai/sessions', async (req, res) => {
     const kind = ['study', 'planner', 'wellbeing'].includes(req.body.kind)
       ? req.body.kind
