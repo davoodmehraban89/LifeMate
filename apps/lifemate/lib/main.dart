@@ -480,6 +480,7 @@ class SimpleFormPage extends StatelessWidget {
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.api});
   final IdentityApi api;
+
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
@@ -487,35 +488,107 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int index = 0;
   String themePreference = 'adult_blue';
-  static const pages = [
+  bool adultShell = false;
+
+  static const studentPages = [
     'امروز',
     'برنامه هفتگی',
     'تقویم',
     'تکالیف و کارها',
     'امتحان‌ها و نمرات',
     'تمرکز',
-    'همراه هوشمند'
+    'همراه هوشمند',
+  ];
+
+  static const adultPages = [
+    'امروز',
+    'برنامه‌ریز',
+    'خانواده',
+    'راهنما',
+    'من',
   ];
 
   @override
   void initState() {
     super.initState();
-    loadTheme();
+    loadContext();
   }
 
-  Future<void> loadTheme() async {
+  Future<void> loadContext() async {
     try {
       final profile = await widget.api.getProfile();
+      final families = await widget.api.listFamilies();
+      final hasAdultRole = families.any(
+        (family) =>
+            family['role'] == 'parent_guardian' ||
+            family['role'] == 'adult_member',
+      );
       if (mounted) {
-        setState(() => themePreference =
-            profile['theme_preference']?.toString() ?? 'adult_blue');
+        setState(() {
+          themePreference =
+              profile['theme_preference']?.toString() ?? 'adult_blue';
+          adultShell = hasAdultRole;
+          index = 0;
+        });
       }
     } catch (_) {}
   }
 
+  List<String> get pages => adultShell ? adultPages : studentPages;
+
   Color get accent => themePreference == 'girl_pink'
       ? const Color(0xFFE58FB0)
       : const Color(0xFF4D86E8);
+
+  List<NavigationDestination> get destinations => adultShell
+      ? const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            label: 'امروز',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.event_note_outlined),
+            label: 'برنامه‌ریز',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.family_restroom_outlined),
+            label: 'خانواده',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.assistant_outlined),
+            label: 'راهنما',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            label: 'من',
+          ),
+        ]
+      : const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            label: 'امروز',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.schedule_outlined),
+            label: 'برنامه',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            label: 'تقویم',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.task_alt_outlined),
+            label: 'کارها',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.school_outlined),
+            label: 'امتحان‌ها',
+          ),
+        ];
+
+  void selectPage(int next) {
+    setState(() => index = next);
+  }
 
   @override
   Widget build(BuildContext context) => Theme(
@@ -528,51 +601,55 @@ class _HomeShellState extends State<HomeShell> {
             title: Text(pages[index]),
             actions: [
               IconButton(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ProfileFamilyPage(api: widget.api))),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ProfileFamilyPage(api: widget.api),
+                  ),
+                ),
                 icon: const Icon(Icons.person_outline),
               ),
             ],
           ),
           body: Center(
-              child: Text(pages[index],
-                  style: Theme.of(context).textTheme.headlineMedium)),
+            child: Text(
+              pages[index],
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+          ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: index > 4 ? 0 : index,
-            onDestinationSelected: (i) => setState(() => index = i),
-            destinations: const [
-              NavigationDestination(
-                  icon: Icon(Icons.home_outlined), label: 'امروز'),
-              NavigationDestination(
-                  icon: Icon(Icons.schedule_outlined), label: 'برنامه'),
-              NavigationDestination(
-                  icon: Icon(Icons.calendar_month_outlined), label: 'تقویم'),
-              NavigationDestination(
-                  icon: Icon(Icons.task_alt_outlined), label: 'کارها'),
-              NavigationDestination(
-                  icon: Icon(Icons.school_outlined), label: 'امتحان‌ها'),
-            ],
+            onDestinationSelected: selectPage,
+            destinations: destinations,
           ),
           drawer: Drawer(
             child: SafeArea(
               child: ListView(
                 children: [
                   const ListTile(
-                      title: Text('LifeMate'), subtitle: Text('منوی اصلی')),
-                  ...pages.asMap().entries.map((entry) => ListTile(
-                        title: Text(entry.value),
-                        onTap: () {
-                          setState(() => index = entry.key);
-                          Navigator.pop(context);
-                        },
-                      )),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.family_restroom),
-                    title: const Text('خانواده'),
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => ProfileFamilyPage(api: widget.api))),
+                    title: Text('LifeMate'),
+                    subtitle: Text('منوی اصلی'),
                   ),
+                  ...pages.asMap().entries.map(
+                        (entry) => ListTile(
+                          title: Text(entry.value),
+                          onTap: () {
+                            selectPage(entry.key);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                  if (!adultShell) ...[
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.family_restroom),
+                      title: const Text('خانواده'),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ProfileFamilyPage(api: widget.api),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
