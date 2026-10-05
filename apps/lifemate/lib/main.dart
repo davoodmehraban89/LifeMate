@@ -110,6 +110,80 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
+  Future<void> editProfile(Map<String, dynamic> profile) async {
+    final name = TextEditingController(
+      text: profile['display_name']?.toString() ?? '',
+    );
+    final theme = ValueNotifier<String>(
+      profile['theme_preference']?.toString() ?? 'adult_blue',
+    );
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('ویرایش پروفایل'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: name,
+              decoration: const InputDecoration(labelText: 'نام'),
+            ),
+            const SizedBox(height: 12),
+            ValueListenableBuilder<String>(
+              valueListenable: theme,
+              builder: (_, value, __) => DropdownButtonFormField<String>(
+                initialValue: value,
+                decoration: const InputDecoration(labelText: 'تم'),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'girl_pink',
+                    child: Text('سفید / صورتی'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'boy_blue',
+                    child: Text('سفید / آبی نوجوان'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'adult_blue',
+                    child: Text('سفید / آبی بزرگسال'),
+                  ),
+                ],
+                onChanged: (v) {
+                  if (v != null) {
+                    theme.value = v;
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('انصراف'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              await widget.api.updateProfile(
+                displayName: name.text.trim(),
+                themePreference: theme.value,
+              );
+              if (dialogContext.mounted) {
+                Navigator.pop(dialogContext, true);
+              }
+            },
+            child: const Text('ذخیره'),
+          ),
+        ],
+      ),
+    );
+    name.dispose();
+    theme.dispose();
+    if (saved == true && mounted) {
+      setState(() => data = load());
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
@@ -600,6 +674,10 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
                 leading: const CircleAvatar(child: Icon(Icons.person)),
                 title: Text(profile['display_name']?.toString() ?? 'پروفایل من'),
                 subtitle: Text(profile['email_normalized']?.toString() ?? ''),
+                trailing: IconButton(
+                  onPressed: () => editProfile(profile),
+                  icon: const Icon(Icons.edit_outlined),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -618,7 +696,20 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
                     leading: const Icon(Icons.family_restroom),
                     title: Text(family['name']?.toString() ?? 'خانواده'),
                     subtitle: Text((family['is_admin'] == true ? 'مدیر خانواده · ' : '') + (family['role']?.toString() ?? '')),
-                    trailing: IconButton(onPressed: () => invite(family['id'].toString()), icon: const Icon(Icons.person_add_alt)),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => FamilyMembersPage(
+                          api: widget.api,
+                          familyId: family['id'].toString(),
+                          familyName: family['name']?.toString() ?? 'خانواده',
+                          isAdmin: family['is_admin'] == true,
+                        ),
+                      ),
+                    ),
+                    trailing: IconButton(
+                      onPressed: () => invite(family['id'].toString()),
+                      icon: const Icon(Icons.person_add_alt),
+                    ),
                   ),
                 ),
               ),
@@ -638,4 +729,178 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
     ),
     floatingActionButton: FloatingActionButton.extended(onPressed: createFamily, icon: const Icon(Icons.add), label: const Text('خانواده')),
   );
+}
+
+
+class FamilyMembersPage extends StatefulWidget {
+  const FamilyMembersPage({
+    super.key,
+    required this.api,
+    required this.familyId,
+    required this.familyName,
+    required this.isAdmin,
+  });
+
+  final IdentityApi api;
+  final String familyId;
+  final String familyName;
+  final bool isAdmin;
+
+  @override
+  State<FamilyMembersPage> createState() => _FamilyMembersPageState();
+}
+
+class _FamilyMembersPageState extends State<FamilyMembersPage> {
+  late Future<List<Map<String, dynamic>>> members;
+
+  @override
+  void initState() {
+    super.initState();
+    members = widget.api.listFamilyMembers(widget.familyId);
+  }
+
+  String roleLabel(String role) => switch (role) {
+        'parent_guardian' => 'والد / سرپرست',
+        'teen_minor' => 'فرزند / نوجوان',
+        'adult_member' => 'عضو بزرگسال',
+        _ => role,
+      };
+
+  Future<void> configureGuardian(List<Map<String, dynamic>> items) async {
+    final guardians = items
+        .where((member) => member['role'] == 'parent_guardian')
+        .toList();
+    final minors = items.where((member) => member['role'] == 'teen_minor').toList();
+    if (guardians.isEmpty || minors.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('برای ثبت سرپرستی، حداقل یک والد و یک فرزند لازم است.'),
+        ),
+      );
+      return;
+    }
+
+    final guardianId = ValueNotifier<String>(guardians.first['user_id'].toString());
+    final minorId = ValueNotifier<String>(minors.first['user_id'].toString());
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('رابطه والد و فرزند'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ValueListenableBuilder<String>(
+              valueListenable: guardianId,
+              builder: (_, value, __) => DropdownButtonFormField<String>(
+                initialValue: value,
+                decoration: const InputDecoration(labelText: 'والد / سرپرست'),
+                items: guardians
+                    .map(
+                      (member) => DropdownMenuItem(
+                        value: member['user_id'].toString(),
+                        child: Text(member['display_name'].toString()),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) guardianId.value = v;
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            ValueListenableBuilder<String>(
+              valueListenable: minorId,
+              builder: (_, value, __) => DropdownButtonFormField<String>(
+                initialValue: value,
+                decoration: const InputDecoration(labelText: 'فرزند'),
+                items: minors
+                    .map(
+                      (member) => DropdownMenuItem(
+                        value: member['user_id'].toString(),
+                        child: Text(member['display_name'].toString()),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) minorId.value = v;
+                },
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('انصراف'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              await widget.api.setGuardian(
+                familyId: widget.familyId,
+                guardianUserId: guardianId.value,
+                minorUserId: minorId.value,
+              );
+              if (dialogContext.mounted) {
+                Navigator.pop(dialogContext, true);
+              }
+            },
+            child: const Text('ثبت رابطه'),
+          ),
+        ],
+      ),
+    );
+
+    guardianId.dispose();
+    minorId.dispose();
+
+    if (saved == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('رابطه سرپرستی ثبت شد.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text(widget.familyName)),
+        body: FutureBuilder<List<Map<String, dynamic>>>(
+          future: members,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(child: Text(errorText(snapshot.error!)));
+            }
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final items = snapshot.data!;
+            return ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                for (final member in items)
+                  Card(
+                    child: ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.person)),
+                      title: Text(member['display_name']?.toString() ?? 'عضو'),
+                      subtitle: Text(
+                        roleLabel(member['role']?.toString() ?? ''),
+                      ),
+                      trailing: member['is_admin'] == true
+                          ? const Chip(label: Text('مدیر'))
+                          : null,
+                    ),
+                  ),
+                if (widget.isAdmin) ...[
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () => configureGuardian(items),
+                    icon: const Icon(Icons.supervisor_account_outlined),
+                    label: const Text('تنظیم رابطه والد و فرزند'),
+                  ),
+                ],
+              ],
+            );
+          },
+        ),
+      );
 }
