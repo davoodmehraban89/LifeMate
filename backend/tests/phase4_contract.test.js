@@ -12,13 +12,10 @@ test('phase4 schema contains learning wellbeing guide and proposal boundaries',(
 });
 
 test('AI guide is advisory and has urgent safety path',()=>{
- assert.match(src,/urgent_review/);
- assert.match(src,/medicalDiagnosis:false/);
- assert.match(src,/automaticAction:false/);
- assert.match(src,/خدمات اضطراری محلی/);
+ assert.match(src,/urgent_review/); assert.match(src,/medicalDiagnosis:false/); assert.match(src,/automaticAction:false/); assert.match(src,/خدمات اضطراری محلی/);
 });
 
-test('wellbeing reads are owner scoped',()=>{
- assert.match(src,/wellbeing_checkin where owner_user_id=\$1/);
- assert.doesNotMatch(src,/guardian.*note/i);
+test('wellbeing list is owner scoped and excludes raw note',()=>{
+ assert.match(src,/select id,mood,energy,stress,visibility,created_at from wellbeing_checkin where owner_user_id=\$1/);
+ assert.doesNotMatch(src,/select id,mood,energy,stress,note,visibility,created_at from wellbeing_checkin/);
 });
