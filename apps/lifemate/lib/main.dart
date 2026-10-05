@@ -454,16 +454,58 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
 
   Future<void> invite(String familyId) async {
     final email = TextEditingController();
+    final choice = ValueNotifier<String>('daughter');
     final sent = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('دعوت فرزند / عضو'),
-        content: TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'ایمیل')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: email,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(labelText: 'ایمیل'),
+            ),
+            const SizedBox(height: 12),
+            ValueListenableBuilder<String>(
+              valueListenable: choice,
+              builder: (_, value, __) => DropdownButtonFormField<String>(
+                value: value,
+                decoration: const InputDecoration(labelText: 'نوع عضو'),
+                items: const [
+                  DropdownMenuItem(value: 'daughter', child: Text('فرزند دختر — سفید / صورتی')),
+                  DropdownMenuItem(value: 'son', child: Text('فرزند پسر — سفید / آبی')),
+                  DropdownMenuItem(value: 'parent', child: Text('والد / سرپرست — سفید / آبی')),
+                  DropdownMenuItem(value: 'adult', child: Text('عضو بزرگسال — سفید / آبی')),
+                ],
+                onChanged: (v) {
+                  if (v != null) choice.value = v;
+                },
+              ),
+            ),
+          ],
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('انصراف')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('انصراف'),
+          ),
           FilledButton(
             onPressed: () async {
-              await widget.api.inviteMember(familyId: familyId, email: email.text, role: 'teen_minor');
+              final selected = choice.value;
+              final role = switch (selected) {
+                'parent' => 'parent_guardian',
+                'adult' => 'adult_member',
+                _ => 'teen_minor',
+              };
+              final theme = selected == 'daughter' ? 'girl_pink' : selected == 'son' ? 'boy_blue' : 'adult_blue';
+              await widget.api.inviteMember(
+                familyId: familyId,
+                email: email.text,
+                role: role,
+                themePreference: theme,
+              );
               if (dialogContext.mounted) Navigator.pop(dialogContext, true);
             },
             child: const Text('ارسال دعوت'),
@@ -472,7 +514,12 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
       ),
     );
     email.dispose();
-    if (sent == true && mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('دعوت ارسال شد.')));
+    choice.dispose();
+    if (sent == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('دعوت ارسال شد.')),
+      );
+    }
   }
 
   @override
