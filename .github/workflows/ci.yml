@@ -49,9 +49,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - name: Apply migrations
+       - name: Apply migrations
         run: |
           psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0001_identity_family.sql
           psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0002_auth.sql
@@ -59,7 +57,7 @@ jobs:
         run: psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/schema_test.sql
       - name: Install backend
         working-directory: backend
-        run: npm ci
+        run: npm install
       - name: Backend tests
         working-directory: backend
         run: npm test
