@@ -1,18 +1,18 @@
 # LifeMate — Project State
 
 **Last updated:** 2026-10-05
-**Phase:** Phase 2 — Product Foundation & Identity — COMPLETE
+**Phase:** Phase 3 — Planner, School & Family Core — COMPLETE
 **Repository:** `davoodmehraban89/LifeMate`
 **Working product name:** LifeMate — approved
 
 ## Transfer checkpoint
-Phase 1 and Phase 2 are complete. The implementation branch `phase-2/product-foundation-identity` now contains the real Flutter Android/Web-PWA scaffold, provider-neutral Node API, PostgreSQL identity/family schema, auth/recovery/change-password flows, profile/family/invitation/guardian foundations, Persian RTL role-aware Teen/Parent shells, security gates and CI. Railway staging is live with PostgreSQL, API and transactional-email test infrastructure. The Phase 2 CI run for head `9c8a813d4673f9f320d804c91a347a14a51d26db` passed backend, Flutter/Web/Android and security jobs.
+Phases 1–3 are complete. Phase 3 adds the real Planner/Today core, school model and workload, family calendar/support summaries, relationship-aware sharing, reminders, offline cache/sync queue with conflict handling, Flutter RTL screens and expanded authorization/CI coverage. Railway staging has the Phase 3 API and migration active against PostgreSQL.
 
 ## Five-phase roadmap
 1. **Foundation, Product Contract & UX Direction** — COMPLETE
 2. **Product Foundation & Identity** — COMPLETE
-3. **Planner, School & Family Core** — NEXT
-4. **AI Guides, Learning & Wellbeing**
+3. **Planner, School & Family Core** — COMPLETE
+4. **AI Guides, Learning & Wellbeing** — NEXT
 5. **Hardening, Observability & Release**
 
 ## Accepted architecture baseline
@@ -20,7 +20,7 @@ Phase 1 and Phase 2 are complete. The implementation branch `phase-2/product-fou
 - iPhone/iPad initial distribution: Home Screen PWA; future packaged/native iOS path preserved.
 - Backend: provider-neutral Node API + standard PostgreSQL. Railway is the current staging host; managed database/provider can be replaced without changing domain contracts.
 - Identity: LifeMate-owned email/password/session adapter with Argon2id, verification/reset tokens, rotating refresh sessions and server-side authorization.
-- Offline: explicit custom web service-worker/cache strategy; browser storage is non-authoritative.
+- Offline: local cache plus explicit mutation queue; server remains authoritative and rejects stale/conflicting writes.
 - Authorization: relationship-aware and server-enforced; family admin is not blanket private-content access.
 
 ## Product/UX baseline
@@ -28,25 +28,22 @@ Phase 1 and Phase 2 are complete. The implementation branch `phase-2/product-fou
 - Parent/adult experiences share the platform while emphasizing Family, authorized progress/support information and guidance.
 - Parent support focuses on authorized schedule/academic/support summaries, not routine private transcript surveillance.
 - Visual language: warm, modern, calm, graphical, teen-friendly but non-childish; Persian RTL first-class. Default profile themes: daughter/teen girl = white + soft pink; son/teen boy = white + calm blue; parents/adults = white + calm blue.
-- Figma artifact exists: `LifeMate — Product UX & Brand v1` with initial editable direction frames.
-- Canva is supporting visual/illustration exploration; Figma remains UI source of truth.
-- Notion Project Hub exists as management mirror; GitHub remains technical source of truth.
+- Figma remains UI source of truth; Canva is supporting visual/illustration exploration.
+- Notion Project Hub is the management mirror; GitHub remains technical source of truth.
 
-## Phase 2 completed vertical slice
-Auth → verified email/recovery/change password → Profile → Family Workspace → invitation/membership → Guardian Relationship → server-side permission tests → Persian RTL Teen/Parent shells → CI → persistent staging infrastructure and smoke verification.
+## Phase 3 completed vertical slice
+Today/Planner → task/event/routine/goal/study-session creation and completion/rescheduling → reminder scheduling/claim/outbox → student life context → academic year/term/subject/class → assignments/exams/grades → family-visible calendar → guardian-authorized child support summary → offline cache/mutation queue → conflict/idempotency handling → CI/staging verification.
 
-### Verified Phase 2 gates
-- PostgreSQL migrations and authorization helper tests pass.
-- Backend API tests pass, including unauthenticated, teen/non-admin denial and active-member role-escalation protection.
-- Backend dependency audit reports no high-severity blocking vulnerability.
-- Secret/environment-file CI gates pass.
-- Flutter formatting, static analysis and widget tests pass.
-- Flutter Web release build passes.
-- Android debug APK build passes.
-- Railway staging PostgreSQL, API and Mailpit are online; API health and staging transactional-email probe passed.
+### Verified Phase 3 gates
+- Migration `0003_planner_school_family.sql` defines the planner, academic, reminder, sharing and sync model.
+- Database authorization matrix covers owner/private, family, guardian and removed-member denial behavior.
+- Backend integration tests cover planner CRUD, academic setup, grades, guardian summaries, offline mutation application/idempotency and reminder outbox behavior.
+- Flutter formatting, static analysis, widget tests and Web release build pass in CI; Android debug build remains part of the required CI gate.
+- Security secret/environment-file gates pass.
+- Railway staging API is online and Phase 3 database smoke verification confirms 11 required tables, 3 authorization/reminder functions and the migration ledger entry.
 
-## Phase 3 entry point
-Implement Planner, School & Family Core on top of the completed identity/family contracts. Preserve role-aware navigation, relationship-aware permissions, Persian RTL, provider-neutral backend boundaries and the existing CI/security gates.
+## Phase 4 entry point
+Build AI Guides, Learning & Wellbeing on top of the completed planner/school/family contracts. AI must remain advisory, age-appropriate, privacy-aware and relationship-aware; it must not silently broaden parent access beyond Phase 3 authorization contracts.
 
 ## Production-gate items intentionally deferred
 These do not block the engineering foundation but do block public production of wellbeing/minor-sensitive AI features: jurisdiction-specific legal/guardian consent review; safety severity taxonomy; emergency resource localization; AI provider privacy/retention review; wellbeing retention/export/deletion policy.
