@@ -14,7 +14,11 @@ class LifeMateApp extends StatelessWidget {
     const accent = Color(0xFF4D86E8);
     final uri = Uri.base;
     final token = uri.queryParameters['token'];
-    Widget entry = SignInPage(api: api);
+    Widget entry = SignInPage(
+      api: api,
+      invitationToken:
+          token != null && uri.path.contains('accept-invitation') ? token : null,
+    );
     if (token != null && uri.path.contains('verify-email')) {
       entry = VerifyEmailPage(api: api, token: token);
     } else if (token != null && uri.path.contains('reset-password')) {
@@ -64,8 +68,13 @@ String errorText(Object error) {
 }
 
 class SignInPage extends StatefulWidget {
-  const SignInPage({super.key, required this.api});
+  const SignInPage({
+    super.key,
+    required this.api,
+    this.invitationToken,
+  });
   final IdentityApi api;
+  final String? invitationToken;
   @override
   State<SignInPage> createState() => _SignInPageState();
 }
@@ -87,8 +96,13 @@ class _SignInPageState extends State<SignInPage> {
     setState(() { busy = true; error = null; });
     try {
       await widget.api.login(email.text, password.text);
+      if (widget.invitationToken != null) {
+        await widget.api.acceptInvitation(widget.invitationToken!);
+      }
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeShell(api: widget.api)));
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => HomeShell(api: widget.api)),
+      );
     } catch (e) {
       if (mounted) setState(() => error = errorText(e));
     } finally {
@@ -111,6 +125,17 @@ class _SignInPageState extends State<SignInPage> {
               const Text('LifeMate', textAlign: TextAlign.center, style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700)),
               const Text('همراه شخصی، تحصیلی و خانوادگی', textAlign: TextAlign.center),
               const SizedBox(height: 32),
+              if (widget.invitationToken != null) ...[
+                const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Text(
+                      'برای قبول دعوت خانواده، با همان ایمیلی که دعوت شده وارد شو.',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'ایمیل')),
               const SizedBox(height: 12),
               TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'رمز عبور')),
