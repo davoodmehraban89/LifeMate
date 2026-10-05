@@ -3,6 +3,7 @@ import express from 'express';
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import pg from 'pg';
+import nodemailer from 'nodemailer';
 
 const { Pool } = pg;
 const app = express();
@@ -21,20 +22,43 @@ const testMode = process.env.NODE_ENV === 'test';
 
 async function sendTransactionalEmail({ to, subject, text }) {
   if (testMode) return { delivered: false, testMode: true };
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
-  if (!apiKey || !from) return { delivered: false, reason: 'provider_not_configured' };
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from, to: [to], subject, text }),
-  });
-  if (!response.ok) throw new Error(`email_delivery_failed:${response.status}`);
-  return { delivered: true };
+  const from = process.env.EMAIL_FROM;
+  if (!from) return { delivered: false, reason: 'provider_not_configured' };
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (apiKey) {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ from, to: [to], subject, text }),
+    });
+    if (!response.ok) throw new Error(`email_delivery_failed:${response.status}`);
+    return { delivered: true, provider: 'resend' };
+  }
+
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = Number(process.env.SMTP_PORT ?? 0);
+  if (smtpHost && smtpPort > 0) {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: process.env.SMTP_USER
+        ? {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASSWORD,
+          }
+        : undefined,
+    });
+    await transporter.sendMail({ from, to, subject, text });
+    return { delivered: true, provider: 'smtp' };
+  }
+
+  return { delivered: false, reason: 'provider_not_configured' };
 }
 
 const issueAccess = (userId, sessionId) =>
