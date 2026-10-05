@@ -472,7 +472,9 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
             onPressed: () async {
               if (name.text.trim().isEmpty) return;
               await widget.api.createFamily(name.text.trim(), role: 'parent_guardian');
-              if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+              if (dialogContext.mounted) {
+                Navigator.pop(dialogContext, true);
+              }
             },
             child: const Text('ساخت'),
           ),
@@ -502,7 +504,7 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
             ValueListenableBuilder<String>(
               valueListenable: choice,
               builder: (_, value, __) => DropdownButtonFormField<String>(
-                value: value,
+                initialValue: value,
                 decoration: const InputDecoration(labelText: 'نوع عضو'),
                 items: const [
                   DropdownMenuItem(value: 'daughter', child: Text('فرزند دختر — سفید / صورتی')),
@@ -511,7 +513,9 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
                   DropdownMenuItem(value: 'adult', child: Text('عضو بزرگسال — سفید / آبی')),
                 ],
                 onChanged: (v) {
-                  if (v != null) choice.value = v;
+                  if (v != null) {
+                    choice.value = v;
+                  }
                 },
               ),
             ),
