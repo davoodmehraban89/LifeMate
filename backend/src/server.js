@@ -362,6 +362,18 @@ app.patch('/v1/profile', auth, async (req, res) => {
   res.json(r.rows[0]);
 });
 
+app.get('/v1/families', auth, async (req, res) => {
+  const r = await pool.query(
+    `select f.id,f.name,m.role,m.is_admin
+       from family_membership m
+       join family_workspace f on f.id=m.family_id
+      where m.user_id=$1 and m.ended_at is null and f.archived_at is null
+      order by f.created_at`,
+    [req.identity.sub],
+  );
+  res.json({ families: r.rows });
+});
+
 app.post('/v1/families', auth, async (req, res) => {
   const name = String(req.body.name ?? '').trim();
   if (!name) return res.status(400).json({ error: 'invalid_name' });
