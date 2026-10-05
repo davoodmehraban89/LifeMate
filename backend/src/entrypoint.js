@@ -1,9 +1,35 @@
-process.env.NODE_ENV = 'test';
+process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+import express from 'express';
+import {
+  operationalErrorHandler,
+  rateLimit,
+  requestContext,
+  requestTelemetry,
+} from './operations.js';
+
 const { app, pool } = await import('./server.js');
-const { createPhase4Router } = await import('./phase4.js');
-import jwt from 'jsonwebtoken';
-const jwtSecret=process.env.JWT_SECRET;
-async function auth(req,res,next){const raw=req.headers.authorization?.replace(/^Bearer\s+/i,'');try{const identity=jwt.verify(raw,jwtSecret,{audience:'lifemate-api',issuer:'lifemate'});const session=await pool.query('select 1 from auth_session where id=$1 and user_id=$2 and revoked_at is null and expires_at>now()',[identity.sid,identity.sub]);if(!session.rowCount)return res.status(401).json({error:'session_invalid'});req.identity=identity;next()}catch{return res.status(401).json({error:'unauthorized'})}}
-app.use('/v1',createPhase4Router({pool,auth}));
-const port=Number(process.env.PORT??8080);
-app.listen(port,()=>console.log(`LifeMate API Phase 4 listening on ${port}`));
+const outer = express();
+outer.disable('x-powered-by');
+outer.use(requestContext);
+outer.use(requestTelemetry);
+outer.use(rateLimit);
+
+outer.get('/live', (_req, res) => {
+  res.json({ status: 'ok', service: 'lifemate-api' });
+});
+
+outer.get('/ready', async (_req, res) => {
+  try {
+    const result = await pool.query('select 1 as ok');
+    if (result.rows[0]?.ok !== 1) return res.status(503).json({ status: 'degraded' });
+    res.json({ status: 'ok', database: 'ready' });
+  } catch {
+    res.status(503).json({ status: 'degraded', database: 'unavailable' });
+  }
+});
+
+outer.use(app);
+outer.use(operationalErrorHandler);
+
+const port = Number(process.env.PORT ?? 8080);
+outer.listen(port, () => console.log(JSON.stringify({ type: 'startup', service: 'lifemate-api', port })));
