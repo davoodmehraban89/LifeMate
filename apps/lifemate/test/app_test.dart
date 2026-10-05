@@ -315,6 +315,18 @@ class FakeApi implements IdentityApi {
         'rawNotesIncluded': false,
         'rawConversationIncluded': false,
       };
+
+  @override
+  Future<Map<String, dynamic>> requestFamilyGuidance(
+    String familyId,
+    String minorUserId,
+    String question,
+  ) async =>
+      {
+        'advice': 'پیشنهاد آزمایشی برای گفت‌وگوی حمایتی با فرزند',
+        'advisory': true,
+        'medicalDiagnosis': false,
+      };
 }
 
 void main() {
