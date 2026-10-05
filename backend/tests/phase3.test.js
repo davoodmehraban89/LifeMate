@@ -215,6 +215,15 @@ test('phase 3 planner school family vertical slice', async () => {
   assert.equal(sync1.status,200);
   assert.equal(sync1.body.results[0].status,'accepted');
 
+  const syncedRow = await pool.query(
+    'select due_at from plan_item where id=$1',
+    [privateTask.body.id],
+  );
+  assert.equal(
+    new Date(syncedRow.rows[0].due_at).toISOString(),
+    new Date(rescheduled).toISOString(),
+  );
+
   const sync2 = await request('/v1/sync/mutations',{
     method:'POST', token:teen.token,
     body:{mutations:[{
@@ -224,4 +233,28 @@ test('phase 3 planner school family vertical slice', async () => {
     }]},
   });
   assert.equal(sync2.body.results[0].status,'already_applied');
+
+  const reminderItem = await request('/v1/plan-items',{
+    method:'POST', token:teen.token,
+    body:{
+      kind:'task',
+      title:'یادآوری آزمایشی',
+      visibility:'private',
+      dueAt:new Date(Date.now()-60*1000).toISOString(),
+      reminderMinutesBefore:[0],
+    },
+  });
+  assert.equal(reminderItem.status,201);
+  const claimed = await request('/v1/reminders/claim-due',{
+    method:'POST', token:teen.token, body:{limit:10},
+  });
+  assert.equal(claimed.status,200);
+  assert.ok(claimed.body.claimed >= 1);
+  const notifications = await request('/v1/notification-outbox',{token:teen.token});
+  assert.equal(notifications.status,200);
+  assert.ok(
+    notifications.body.notifications.some(
+      (item)=>item.payload.planItemId===reminderItem.body.id,
+    ),
+  );
 });
