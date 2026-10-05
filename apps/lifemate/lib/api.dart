@@ -526,4 +526,89 @@ class HttpIdentityApi implements IdentityApi {
         body: {'mutations': mutations},
       );
 
+  @override
+  Future<Map<String, dynamic>> createLearningGoal({
+    required String title,
+    String? target,
+    String? subjectId,
+  }) =>
+      _json('POST', '/v1/learning/goals', auth: true, body: {
+        'title': title,
+        if (target != null) 'target': target,
+        if (subjectId != null) 'subjectId': subjectId,
+      });
+
+  @override
+  Future<List<Map<String, dynamic>>> listLearningGoals() async {
+    final result = await _json('GET', '/v1/learning/goals', auth: true);
+    return (result['items'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> createLearningCheckin({
+    String? learningGoalId,
+    required int confidence,
+    required int difficulty,
+    String? note,
+  }) =>
+      _json('POST', '/v1/learning/checkins', auth: true, body: {
+        if (learningGoalId != null) 'learningGoalId': learningGoalId,
+        'confidence': confidence,
+        'difficulty': difficulty,
+        if (note != null) 'note': note,
+      });
+
+  @override
+  Future<Map<String, dynamic>> createWellbeingCheckin({
+    required int mood,
+    required int energy,
+    required int stress,
+    String? note,
+    String visibility = 'private',
+  }) =>
+      _json('POST', '/v1/wellbeing/checkins', auth: true, body: {
+        'mood': mood,
+        'energy': energy,
+        'stress': stress,
+        if (note != null) 'note': note,
+        'visibility': visibility,
+      });
+
+  @override
+  Future<List<Map<String, dynamic>>> listWellbeingCheckins() async {
+    final result = await _json('GET', '/v1/wellbeing/checkins', auth: true);
+    return (result['items'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> createAiSession(String kind) =>
+      _json('POST', '/v1/ai/sessions', auth: true, body: {'kind': kind});
+
+  @override
+  Future<Map<String, dynamic>> sendAiMessage(
+    String sessionId,
+    String message,
+  ) =>
+      _json(
+        'POST',
+        '/v1/ai/sessions/$sessionId/messages',
+        auth: true,
+        body: {'message': message},
+      );
+
+  @override
+  Future<Map<String, dynamic>> getGuardianWellbeingSummary(
+    String familyId,
+    String minorUserId,
+  ) =>
+      _json(
+        'GET',
+        '/v1/families/$familyId/children/$minorUserId/wellbeing-summary',
+        auth: true,
+      );
+
 }
