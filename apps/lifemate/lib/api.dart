@@ -86,6 +86,41 @@ abstract class IdentityApi {
   Future<Map<String, dynamic>> submitSyncMutations(
     List<Map<String, dynamic>> mutations,
   );
+
+  Future<Map<String, dynamic>> createLearningGoal({
+    required String title,
+    String? target,
+    String? subjectId,
+  });
+  Future<List<Map<String, dynamic>>> listLearningGoals();
+  Future<Map<String, dynamic>> createLearningCheckin({
+    String? learningGoalId,
+    required int confidence,
+    required int difficulty,
+    String? note,
+  });
+  Future<Map<String, dynamic>> createWellbeingCheckin({
+    required int mood,
+    required int energy,
+    required int stress,
+    String? note,
+    String visibility,
+  });
+  Future<List<Map<String, dynamic>>> listWellbeingCheckins();
+  Future<Map<String, dynamic>> createAiSession(String kind);
+  Future<Map<String, dynamic>> sendAiMessage(
+    String sessionId,
+    String message,
+  );
+  Future<Map<String, dynamic>> getGuardianWellbeingSummary(
+    String familyId,
+    String minorUserId,
+  );
+  Future<Map<String, dynamic>> requestFamilyGuidance(
+    String familyId,
+    String minorUserId,
+    String question,
+  );
 }
 
 class ApiException implements Exception {
@@ -494,6 +529,104 @@ class HttpIdentityApi implements IdentityApi {
         '/v1/sync/mutations',
         auth: true,
         body: {'mutations': mutations},
+      );
+
+  @override
+  Future<Map<String, dynamic>> createLearningGoal({
+    required String title,
+    String? target,
+    String? subjectId,
+  }) =>
+      _json('POST', '/v1/learning/goals', auth: true, body: {
+        'title': title,
+        if (target != null) 'target': target,
+        if (subjectId != null) 'subjectId': subjectId,
+      });
+
+  @override
+  Future<List<Map<String, dynamic>>> listLearningGoals() async {
+    final result = await _json('GET', '/v1/learning/goals', auth: true);
+    return (result['items'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> createLearningCheckin({
+    String? learningGoalId,
+    required int confidence,
+    required int difficulty,
+    String? note,
+  }) =>
+      _json('POST', '/v1/learning/checkins', auth: true, body: {
+        if (learningGoalId != null) 'learningGoalId': learningGoalId,
+        'confidence': confidence,
+        'difficulty': difficulty,
+        if (note != null) 'note': note,
+      });
+
+  @override
+  Future<Map<String, dynamic>> createWellbeingCheckin({
+    required int mood,
+    required int energy,
+    required int stress,
+    String? note,
+    String visibility = 'private',
+  }) =>
+      _json('POST', '/v1/wellbeing/checkins', auth: true, body: {
+        'mood': mood,
+        'energy': energy,
+        'stress': stress,
+        if (note != null) 'note': note,
+        'visibility': visibility,
+      });
+
+  @override
+  Future<List<Map<String, dynamic>>> listWellbeingCheckins() async {
+    final result = await _json('GET', '/v1/wellbeing/checkins', auth: true);
+    return (result['items'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> createAiSession(String kind) =>
+      _json('POST', '/v1/ai/sessions', auth: true, body: {'kind': kind});
+
+  @override
+  Future<Map<String, dynamic>> sendAiMessage(
+    String sessionId,
+    String message,
+  ) =>
+      _json(
+        'POST',
+        '/v1/ai/sessions/$sessionId/messages',
+        auth: true,
+        body: {'message': message},
+      );
+
+  @override
+  Future<Map<String, dynamic>> getGuardianWellbeingSummary(
+    String familyId,
+    String minorUserId,
+  ) =>
+      _json(
+        'GET',
+        '/v1/families/$familyId/children/$minorUserId/wellbeing-summary',
+        auth: true,
+      );
+
+  @override
+  Future<Map<String, dynamic>> requestFamilyGuidance(
+    String familyId,
+    String minorUserId,
+    String question,
+  ) =>
+      _json(
+        'POST',
+        '/v1/families/$familyId/children/$minorUserId/family-guidance',
+        auth: true,
+        body: {'question': question},
       );
 
 }

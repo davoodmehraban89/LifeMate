@@ -1,4 +1,4 @@
-name: Phase 3 CI
+name: LifeMate CI
 
 on:
   push:
@@ -70,13 +70,17 @@ jobs:
           node-version: 22
       - name: Apply migrations
         run: |
-          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0001_identity_family.sql
-          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0002_auth.sql
-          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0003_planner_school_family.sql
+          for migration in backend/migrations/*.sql; do
+            echo "Applying $migration"
+            psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f "$migration"
+          done
       - name: Database authorization tests
         run: |
           psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/schema_test.sql
           psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/phase3_schema_test.sql
+          if [ -f backend/tests/phase4_schema_test.sql ]; then
+            psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/phase4_schema_test.sql
+          fi
       - name: Install backend
         working-directory: backend
         run: npm install
@@ -88,4 +92,4 @@ jobs:
         run: npm test
       - name: Verify schema objects
         run: |
-          test "$(psql -h localhost -U postgres -d lifemate_ci -Atc "select count(*) from information_schema.tables where table_schema='public' and table_name in ('app_user','profile','family_workspace','family_membership','guardian_relationship','family_invitation','access_audit','auth_credential','auth_token','auth_session','life_context','academic_year','academic_term','subject','class_session','plan_item','sharing_grant','reminder','notification_preference','notification_outbox','sync_mutation');")" = "21"
+          test "$(psql -h localhost -U postgres -d lifemate_ci -Atc "select count(*) from information_schema.tables where table_schema='public' and table_name in ('app_user','profile','family_workspace','family_membership','guardian_relationship','family_invitation','access_audit','auth_credential','auth_token','auth_session','life_context','academic_year','academic_term','subject','class_session','plan_item','sharing_grant','reminder','notification_preference','notification_outbox','sync_mutation','learning_goal','learning_checkin','wellbeing_checkin','ai_guide_session','ai_guide_message','ai_plan_proposal','wellbeing_safety_event');")" = "28"

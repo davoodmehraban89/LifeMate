@@ -237,6 +237,96 @@ class FakeApi implements IdentityApi {
             .map((m) => {'id': m['id'], 'status': 'accepted'})
             .toList(),
       };
+
+  @override
+  Future<Map<String, dynamic>> createLearningGoal({
+    required String title,
+    String? target,
+    String? subjectId,
+  }) async =>
+      {'id': 'goal-1', 'title': title, 'target': target};
+
+  @override
+  Future<List<Map<String, dynamic>>> listLearningGoals() async => [
+        {'id': 'goal-1', 'title': 'مرور ریاضی', 'target': 'فصل اول'}
+      ];
+
+  @override
+  Future<Map<String, dynamic>> createLearningCheckin({
+    String? learningGoalId,
+    required int confidence,
+    required int difficulty,
+    String? note,
+  }) async =>
+      {
+        'id': 'checkin-1',
+        'confidence': confidence,
+        'difficulty': difficulty,
+      };
+
+  @override
+  Future<Map<String, dynamic>> createWellbeingCheckin({
+    required int mood,
+    required int energy,
+    required int stress,
+    String? note,
+    String visibility = 'private',
+  }) async =>
+      {
+        'id': 'wellbeing-1',
+        'mood': mood,
+        'energy': energy,
+        'stress': stress,
+        'visibility': visibility,
+      };
+
+  @override
+  Future<List<Map<String, dynamic>>> listWellbeingCheckins() async => [];
+
+  @override
+  Future<Map<String, dynamic>> createAiSession(String kind) async =>
+      {'id': 'session-1', 'guide_kind': kind};
+
+  @override
+  Future<Map<String, dynamic>> sendAiMessage(
+    String sessionId,
+    String message,
+  ) async =>
+      {
+        'id': 'message-1',
+        'body': 'پاسخ آزمایشی همراه هوشمند',
+        'safety_class': 'ordinary',
+        'advisory': true,
+      };
+
+  @override
+  Future<Map<String, dynamic>> getGuardianWellbeingSummary(
+    String familyId,
+    String minorUserId,
+  ) async =>
+      {
+        'summary': {
+          'checkin_count': 3,
+          'mood_average': 4,
+          'energy_average': 3,
+          'stress_average': 2,
+        },
+        'safety': {'open_urgent_count': 0},
+        'rawNotesIncluded': false,
+        'rawConversationIncluded': false,
+      };
+
+  @override
+  Future<Map<String, dynamic>> requestFamilyGuidance(
+    String familyId,
+    String minorUserId,
+    String question,
+  ) async =>
+      {
+        'advice': 'پیشنهاد آزمایشی برای گفت‌وگوی حمایتی با فرزند',
+        'advisory': true,
+        'medicalDiagnosis': false,
+      };
 }
 
 void main() {
@@ -320,4 +410,36 @@ void main() {
   expect(find.text('من'), findsOneWidget);
   expect(find.text('امتحان‌ها'), findsNothing);
   });
+
+  testWidgets('phase 4 guide opens and returns advisory reply', (tester) async {
+    await tester.pumpWidget(
+      LifeMateApp(
+        api: FakeApi(role: 'parent_guardian', themePreference: 'adult_blue'),
+      ),
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'ایمیل'),
+      'parent@example.test',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'رمز عبور'),
+      'StrongPass!123',
+    );
+    await tester.tap(find.text('ورود'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('راهنما'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('راهنمای هوشمند'), findsOneWidget);
+    expect(find.text('همراه حال خوب'), findsOneWidget);
+
+    await tester.tap(find.text('راهنمای مطالعه'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'برای امتحان ریاضی چه کنم؟');
+    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('پاسخ آزمایشی همراه هوشمند'), findsOneWidget);
+  });
+
 }

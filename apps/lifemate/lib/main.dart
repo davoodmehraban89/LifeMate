@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'api.dart';
 import 'phase3_ui.dart';
+import 'phase4_ui.dart';
 
 void main() => runApp(LifeMateApp());
 
@@ -611,11 +612,13 @@ class _HomeShellState extends State<HomeShell> {
               ),
             ],
           ),
-          body: Phase3HomeContent(
-            api: widget.api,
-            page: pages[index],
-            adultShell: adultShell,
-          ),
+          body: (pages[index] == 'همراه هوشمند' || pages[index] == 'راهنما')
+              ? Phase4Hub(api: widget.api, adultShell: adultShell)
+              : Phase3HomeContent(
+                  api: widget.api,
+                  page: pages[index],
+                  adultShell: adultShell,
+                ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: index > 4 ? 0 : index,
             onDestinationSelected: selectPage,

@@ -661,14 +661,110 @@ class _FamilyDashboardCardState extends State<FamilyDashboardCard> {
     members = widget.api.listFamilyMembers(widget.family['id'].toString());
   }
 
-  Future<void> openChild(Map<String, dynamic> child) async {
-    final summary = await widget.api.getChildSupportSummary(
-      widget.family['id'].toString(),
-      child['user_id'].toString(),
+  Future<void> openFamilyGuidance(
+    String familyId,
+    String childId,
+    String childName,
+  ) async {
+    final question = TextEditingController();
+    String? advice;
+    bool busy = false;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setLocalState) => AlertDialog(
+          title: Text('مشورت درباره $childName'),
+          content: SizedBox(
+            width: 520,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'راهنما فقط از خلاصه‌های مجاز استفاده می‌کند و متن خصوصی فرزند را نمی‌بیند.',
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: question,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'سؤال شما',
+                    hintText: 'مثلاً چطور بدون فشار درباره امتحان‌ها با او صحبت کنم؟',
+                  ),
+                ),
+                if (advice != null) ...[
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      advice!,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: busy ? null : () => Navigator.pop(dialogContext),
+              child: const Text('بستن'),
+            ),
+            FilledButton(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      if (question.text.trim().isEmpty) return;
+                      setLocalState(() => busy = true);
+                      try {
+                        final result = await widget.api.requestFamilyGuidance(
+                          familyId,
+                          childId,
+                          question.text.trim(),
+                        );
+                        setLocalState(() {
+                          advice = result['advice']?.toString() ??
+                              'پیشنهادی دریافت نشد.';
+                        });
+                      } catch (_) {
+                        setLocalState(() {
+                          advice = 'دریافت راهنمایی انجام نشد. دوباره تلاش کنید.';
+                        });
+                      } finally {
+                        setLocalState(() => busy = false);
+                      }
+                    },
+              child: Text(busy ? 'در حال بررسی...' : 'دریافت راهنمایی'),
+            ),
+          ],
+        ),
+      ),
     );
+    question.dispose();
+  }
+
+  Future<void> openChild(Map<String, dynamic> child) async {
+    final familyId = widget.family['id'].toString();
+    final childId = child['user_id'].toString();
+    final summary = await widget.api.getChildSupportSummary(familyId, childId);
+    Map<String, dynamic>? wellbeing;
+    try {
+      wellbeing = await widget.api.getGuardianWellbeingSummary(familyId, childId);
+    } catch (_) {
+      wellbeing = null;
+    }
     if (!mounted) return;
     final metrics = Map<String, dynamic>.from(summary['metrics'] as Map? ?? const {});
     final upcoming = summary['upcoming'] as List<dynamic>? ?? const [];
+    final wellbeingSummary = wellbeing == null
+        ? const <String, dynamic>{}
+        : Map<String, dynamic>.from(
+            wellbeing['summary'] as Map? ?? const <String, dynamic>{},
+          );
+    final safety = wellbeing == null
+        ? const <String, dynamic>{}
+        : Map<String, dynamic>.from(
+            wellbeing['safety'] as Map? ?? const <String, dynamic>{},
+          );
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -683,6 +779,45 @@ class _FamilyDashboardCardState extends State<FamilyDashboardCard> {
                 Chip(label: Text((metrics['studyMinutesLast7Days'] ?? 0).toString() + ' دقیقه مطالعه')),
                 if (metrics['gradePercent'] != null) Chip(label: Text('میانگین ' + metrics['gradePercent'].toString() + '٪')),
               ]),
+              if (wellbeing != null) ...[
+                const SizedBox(height: 14),
+                Text('خلاصه حال خوب', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  Chip(
+                    label: Text(
+                      (wellbeingSummary['checkin_count'] ?? 0).toString() +
+                          ' ثبت مجاز',
+                    ),
+                  ),
+                  if (wellbeingSummary['mood_average'] != null)
+                    Chip(
+                      label: Text(
+                        'حال ' + wellbeingSummary['mood_average'].toString() + '/5',
+                      ),
+                    ),
+                  if (wellbeingSummary['stress_average'] != null)
+                    Chip(
+                      label: Text(
+                        'استرس ' +
+                            wellbeingSummary['stress_average'].toString() +
+                            '/5',
+                      ),
+                    ),
+                  if ((safety['open_urgent_count'] ?? 0) != 0)
+                    Chip(
+                      avatar: const Icon(Icons.warning_amber_rounded, size: 18),
+                      label: Text(
+                        safety['open_urgent_count'].toString() +
+                            ' هشدار ایمنی نیازمند توجه',
+                      ),
+                    ),
+                ]),
+                const SizedBox(height: 6),
+                const Text(
+                  'این بخش فقط خلاصه مجاز و سیگنال ایمنی را نشان می‌دهد؛ متن خصوصی گفت‌وگو یا یادداشت نمایش داده نمی‌شود.',
+                ),
+              ],
               const SizedBox(height: 10),
               const Text('موارد پیش‌رو'),
               ...upcoming.take(8).map((raw) {
@@ -697,7 +832,22 @@ class _FamilyDashboardCardState extends State<FamilyDashboardCard> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('بستن')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('بستن'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              openFamilyGuidance(
+                familyId,
+                childId,
+                child['display_name']?.toString() ?? 'فرزند',
+              );
+            },
+            icon: const Icon(Icons.psychology_alt_outlined),
+            label: const Text('مشورت با راهنمای خانواده'),
+          ),
         ],
       ),
     );
