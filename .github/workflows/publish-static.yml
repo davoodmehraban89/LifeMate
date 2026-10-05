@@ -1,0 +1,52 @@
+name: Publish static PWA and APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/lifemate
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Build PWA against staging API
+        run: >
+          flutter build web --release
+          --dart-define=LIFEMATE_API_URL=https://lifemate-api-fn-staging.up.railway.app
+
+      - name: Build Android APK against staging API
+        run: >
+          flutter build apk --release
+          --dart-define=LIFEMATE_API_URL=https://lifemate-api-fn-staging.up.railway.app
+
+      - name: Prepare static release directory
+        run: |
+          rm -rf ../../public-release
+          mkdir -p ../../public-release/downloads
+          cp -R build/web/. ../../public-release/
+          cp build/app/outputs/flutter-apk/app-release.apk ../../public-release/downloads/LifeMate.apk
+          touch ../../public-release/.nojekyll
+
+      - name: Publish immutable static branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: deployment-static
+          publish_dir: ./public-release
+          force_orphan: true
+          commit_message: "publish: LifeMate PWA and APK ${{ github.sha }}"
