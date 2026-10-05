@@ -1,0 +1,151 @@
+import express from 'express';
+
+const stages = {
+  primary_1: [1, 3, 0],
+  primary_2: [4, 6, 3],
+  secondary_1: [7, 9, 6],
+  secondary_2: [10, 12, 9],
+};
+
+function educationForGrade(grade) {
+  const n = Number(grade);
+  for (const [stage, [min, max, offset]] of Object.entries(stages)) {
+    if (Number.isInteger(n) && n >= min && n <= max) return { stage, nationalGrade: n, localYear: n - offset };
+  }
+  return null;
+}
+
+function validPersona(value) {
+  return ['mother', 'father', 'child', 'adult'].includes(value);
+}
+
+function trustedTextbookUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && ['chap.sch.ir', 'medu.gov.ir'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+export function createPhase6Router({ pool, auth }) {
+  const router = express.Router();
+
+  router.get('/me/iran-profile', auth, async (req, res) => {
+    const r = await pool.query(
+      `select p.user_id,p.display_name,p.birth_date,p.household_persona,p.sex,
+              e.stage,e.national_grade,e.local_year,e.school_name,e.school_year
+         from profile p left join education_profile e on e.user_id=p.user_id
+        where p.user_id=$1`,
+      [req.identity.sub],
+    );
+    res.json(r.rows[0] ?? {});
+  });
+
+  router.patch('/me/iran-profile', auth, async (req, res) => {
+    const persona = req.body.householdPersona;
+    const sex = req.body.sex;
+    if (persona != null && !validPersona(persona)) return res.status(400).json({ error: 'invalid_persona' });
+    if (sex != null && !['female', 'male', 'unspecified'].includes(sex)) return res.status(400).json({ error: 'invalid_sex' });
+    await pool.query(
+      `update profile set household_persona=coalesce($2,household_persona),
+        sex=coalesce($3,sex),birth_date=coalesce($4::date,birth_date),updated_at=now() where user_id=$1`,
+      [req.identity.sub, persona ?? null, sex ?? null, req.body.birthDate ?? null],
+    );
+    res.status(204).end();
+  });
+
+  router.put('/me/education', auth, async (req, res) => {
+    const mapped = educationForGrade(req.body.nationalGrade);
+    if (!mapped || (req.body.stage && req.body.stage !== mapped.stage)) {
+      return res.status(400).json({ error: 'invalid_grade_stage' });
+    }
+    const schoolYear = String(req.body.schoolYear ?? '1405-1406');
+    const r = await pool.query(
+      `insert into education_profile(user_id,stage,national_grade,local_year,school_name,school_year)
+       values($1,$2,$3,$4,$5,$6)
+       on conflict(user_id) do update set stage=excluded.stage,national_grade=excluded.national_grade,
+         local_year=excluded.local_year,school_name=excluded.school_name,school_year=excluded.school_year,updated_at=now()
+       returning *`,
+      [req.identity.sub, mapped.stage, mapped.nationalGrade, mapped.localYear, req.body.schoolName ?? null, schoolYear],
+    );
+    res.json(r.rows[0]);
+  });
+
+  router.get('/education/catalog', auth, async (req, res) => {
+    const grade = Number(req.query.grade ?? 7);
+    const schoolYear = String(req.query.schoolYear ?? '1405-1406');
+    if (!educationForGrade(grade)) return res.status(400).json({ error: 'invalid_grade' });
+    const r = await pool.query(
+      `select s.id,s.code,s.name_fa,s.national_grade,s.school_year,
+              t.title_fa,t.publisher,t.source_url,t.redistribution_status
+         from curriculum_subject s left join textbook_catalog t on t.curriculum_subject_id=s.id
+        where s.country_code='IR' and s.national_grade=$1 and s.school_year=$2 order by s.sort_order,s.name_fa`,
+      [grade, schoolYear],
+    );
+    const rows = r.rows.map((row) => ({ ...row, source_url: trustedTextbookUrl(row.source_url) ? row.source_url : null }));
+    res.json({ grade, mapping: educationForGrade(grade), subjects: rows });
+  });
+
+  router.get('/calendar/iran', auth, async (req, res) => {
+    const year = Number(req.query.year ?? 1405);
+    if (!Number.isInteger(year) || year < 1300 || year > 1600) return res.status(400).json({ error: 'invalid_jalali_year' });
+    const r = await pool.query(
+      `select jalali_year,jalali_month,jalali_day,title_fa,is_official_holiday,source_name,source_url
+         from iran_calendar_event where jalali_year=$1 order by jalali_month,jalali_day,title_fa`,
+      [year],
+    );
+    res.json({ year, weekStartsOn: 'saturday', weekendDays: ['thursday', 'friday'], statutoryWeeklyHoliday: 'friday', events: r.rows });
+  });
+
+  router.get('/me/notification-preferences', auth, async (req, res) => {
+    await pool.query('insert into notification_preference(user_id) values($1) on conflict do nothing', [req.identity.sub]);
+    const r = await pool.query('select * from notification_preference where user_id=$1', [req.identity.sub]);
+    res.json(r.rows[0]);
+  });
+
+  router.patch('/me/notification-preferences', auth, async (req, res) => {
+    await pool.query('insert into notification_preference(user_id) values($1) on conflict do nothing', [req.identity.sub]);
+    const fields = {
+      inAppBanner: 'in_app_banner', pushEnabled: 'push_enabled', plannerReminders: 'planner_reminders',
+      schoolReminders: 'school_reminders', calendarReminders: 'calendar_reminders', cycleReminders: 'cycle_reminders',
+      sensitivePreview: 'sensitive_preview',
+    };
+    for (const [input, column] of Object.entries(fields)) {
+      if (typeof req.body[input] === 'boolean') {
+        await pool.query(`update notification_preference set ${column}=$2,updated_at=now() where user_id=$1`, [req.identity.sub, req.body[input]]);
+      }
+    }
+    const r = await pool.query('select * from notification_preference where user_id=$1', [req.identity.sub]);
+    res.json(r.rows[0]);
+  });
+
+  // Deliberately owner-only. There is no family/guardian menstrual endpoint.
+  router.get('/me/menstrual-cycles', auth, async (req, res) => {
+    const r = await pool.query(
+      'select id,starts_on,ends_on,predicted_next_on,symptoms,notes,reminder_enabled,created_at,updated_at from menstrual_cycle_entry where owner_user_id=$1 order by starts_on desc limit 36',
+      [req.identity.sub],
+    );
+    res.json({ entries: r.rows });
+  });
+
+  router.post('/me/menstrual-cycles', auth, async (req, res) => {
+    if (!req.body.startsOn) return res.status(400).json({ error: 'starts_on_required' });
+    const symptoms = Array.isArray(req.body.symptoms) ? req.body.symptoms.slice(0, 20).map(String) : [];
+    const r = await pool.query(
+      `insert into menstrual_cycle_entry(owner_user_id,starts_on,ends_on,predicted_next_on,symptoms,notes,reminder_enabled)
+       values($1,$2::date,$3::date,$4::date,$5::text[],$6,$7) returning id,starts_on,ends_on,predicted_next_on,symptoms,notes,reminder_enabled`,
+      [req.identity.sub, req.body.startsOn, req.body.endsOn ?? null, req.body.predictedNextOn ?? null, symptoms, req.body.notes ?? null, req.body.reminderEnabled === true],
+    );
+    res.status(201).json(r.rows[0]);
+  });
+
+  router.delete('/me/menstrual-cycles/:id', auth, async (req, res) => {
+    await pool.query('delete from menstrual_cycle_entry where id=$1 and owner_user_id=$2', [req.params.id, req.identity.sub]);
+    res.status(204).end();
+  });
+
+  return router;
+}
+
+export { educationForGrade, trustedTextbookUrl };
