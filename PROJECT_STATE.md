@@ -1,12 +1,12 @@
 # LifeMate — Project State
 
 **Last updated:** 2026-10-05
-**Phase:** Discovery / Foundation
+**Phase:** Phase 1 — Foundation, Product Contract & UX Direction
 **Repository:** `davoodmehraban89/LifeMate`
 **Working product name:** LifeMate — approved
 
 ## Transfer checkpoint
-The repository has been created and verified as private with push/admin access. Foundation documentation is being established before locking the application stack or generating production code.
+LifeMate is now operating on a five-phase roadmap. Phase 1 has started. Repository foundation, product baseline, three foundational ADRs and an initial permission/visibility contract exist. No application stack has yet been irreversibly locked and no production code has been generated.
 
 ## Confirmed product direction
 - Personal + Family + Learning companion; not only a student planner.
@@ -21,6 +21,15 @@ The repository has been created and verified as private with push/admin access. 
 - Multi-stage reminders, banners/notifications, completion-aware cancellation and rescheduling proposals.
 - Android + iPhone/iPad PWA + responsive web using shared backend/data.
 - Strong visual identity, app icon, entry/login experience, RTL Persian quality, teen-attractive but non-childish design.
+
+## Five-phase roadmap
+1. **Foundation, Product Contract & UX Direction** — IN PROGRESS
+2. **Product Foundation & Identity**
+3. **Planner, School & Family Core**
+4. **AI Guides, Learning & Wellbeing**
+5. **Hardening, Observability & Release**
+
+See `docs/ROADMAP.md` for gates and deliverables.
 
 ## Operating structure
 Coordinator + five specialist ownership areas:
@@ -43,20 +52,27 @@ Coordinator + five specialist ownership areas:
 ## Current change ledger
 ### DONE
 - [x] Product working name approved: LifeMate.
-- [x] Private GitHub repository created.
-- [x] Repository connection and write access verified.
-- [x] Initial README created.
-- [x] `AGENTS.md` operating rules created.
+- [x] Private GitHub repository created and write access verified.
+- [x] Initial README and `AGENTS.md` created.
+- [x] Five-phase roadmap recorded.
+- [x] Product Specification v1 baseline recorded.
+- [x] Foundational ADRs: product lifecycle, family/privacy principle, distribution strategy.
+- [x] Phase 1 execution board created.
+- [x] Initial permission/visibility matrix created.
 
-### IN PROGRESS
-- [ ] Record foundational ADRs under `docs/decisions/`.
-- [ ] Convert Discovery Book v1 into repository-native product documentation.
-- [ ] Establish initial product/UX architecture and brand direction.
-- [ ] Decide cross-platform frontend implementation after prototype/technical validation.
-- [ ] Decide backend/auth stack after requirements validation.
+### IN PROGRESS — PHASE 1
+- [ ] Prioritize feature inventory into Must / Should / Later.
+- [ ] Define information architecture and primary user journeys.
+- [ ] Produce visual/brand brief and prototype-ready screen inventory.
+- [ ] Define conceptual domain model.
+- [ ] Evaluate and record frontend architecture ADR.
+- [ ] Evaluate and record backend/auth architecture ADR.
+- [ ] Define wellbeing safety boundary and risk register.
+- [ ] Validate PWA/platform constraints.
+- [ ] Define CI/staging/observability readiness rules.
 
 ### NOT STARTED
-- [ ] Application scaffold.
+- [ ] Application scaffold (Phase 2 gate).
 - [ ] Database schema/migrations.
 - [ ] CI workflows.
 - [ ] Staging environment.
@@ -66,10 +82,10 @@ Coordinator + five specialist ownership areas:
 - [ ] Voice STT/TTS provider selection.
 
 ## Immediate next sequence
-1. Create foundational ADRs for product scope, family/privacy model, and distribution strategy.
-2. Add repository-native Discovery v1 summary and requirements inventory.
-3. Produce initial UX information architecture and visual/brand brief.
-4. Validate frontend/backend candidates before generating the application scaffold.
+1. Complete Phase 1 UX information architecture + brand brief.
+2. Complete domain model and backend/frontend ADR evaluations.
+3. Complete privacy/safety and platform validation.
+4. Run Phase 1 exit review; only then generate the Phase 2 application scaffold.
 
 ## Guardrail
 Do not start implementation merely to create visible code. Foundation decisions that affect identity, permissions, privacy, teen safety, offline/sync, and cross-platform distribution must be explicit first; low-risk reversible UI prototypes may proceed in parallel.
