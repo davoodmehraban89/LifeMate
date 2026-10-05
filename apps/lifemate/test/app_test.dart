@@ -46,6 +46,7 @@ class FakeApi implements IdentityApi {
   Future<Map<String, dynamic>> getProfile() async => {
         'display_name': role == 'teen_minor' ? 'آرام' : 'والد',
         'email_normalized': 'user@example.test',
+        'user_id': role == 'teen_minor' ? 'teen-1' : 'parent-1',
         'theme_preference': themePreference,
       };
 
@@ -98,6 +99,128 @@ class FakeApi implements IdentityApi {
     required String guardianUserId,
     required String minorUserId,
   }) async {}
+
+  @override
+  Future<List<Map<String, dynamic>>> getToday({
+    required DateTime from,
+    required DateTime to,
+  }) async => [
+        {
+          'id': 'today-1',
+          'kind': 'task',
+          'title': 'مرور برنامه امروز',
+          'status': 'planned',
+          'due_at': DateTime.now().add(const Duration(hours: 1)).toUtc().toIso8601String(),
+        }
+      ];
+
+  @override
+  Future<List<Map<String, dynamic>>> listPlanItems({
+    DateTime? from,
+    DateTime? to,
+    String? kind,
+  }) async => [
+        {
+          'id': 'plan-1',
+          'kind': 'task',
+          'title': 'تکمیل تمرین',
+          'status': 'planned',
+          'due_at': DateTime.now().add(const Duration(days: 1)).toUtc().toIso8601String(),
+        }
+      ];
+
+  @override
+  Future<Map<String, dynamic>> createPlanItem(Map<String, dynamic> data) async =>
+      {'id': 'new-plan', ...data};
+
+  @override
+  Future<Map<String, dynamic>> updatePlanItem(
+    String itemId,
+    Map<String, dynamic> data,
+  ) async =>
+      {'id': itemId, ...data};
+
+  @override
+  Future<List<Map<String, dynamic>>> listLifeContexts() async => [];
+
+  @override
+  Future<Map<String, dynamic>> createLifeContext({
+    required String kind,
+    required String title,
+  }) async =>
+      {'id': 'ctx-1', 'kind': kind, 'title': title};
+
+  @override
+  Future<Map<String, dynamic>> createAcademicYear(
+    Map<String, dynamic> data,
+  ) async =>
+      {'id': 'year-1', ...data};
+
+  @override
+  Future<Map<String, dynamic>> createAcademicTerm(
+    String yearId,
+    Map<String, dynamic> data,
+  ) async =>
+      {'id': 'term-1', ...data};
+
+  @override
+  Future<Map<String, dynamic>> createSubject(
+    String termId,
+    Map<String, dynamic> data,
+  ) async =>
+      {'id': 'subject-1', ...data};
+
+  @override
+  Future<Map<String, dynamic>> createClassSession(
+    String subjectId,
+    Map<String, dynamic> data,
+  ) async =>
+      {'id': 'class-1', ...data};
+
+  @override
+  Future<Map<String, dynamic>> getSchoolOverview(String studentUserId) async => {
+        'years': [
+          {'id': 'year-1', 'title': 'سال تحصیلی'}
+        ],
+        'subjects': [
+          {'id': 'subject-1', 'name': 'ریاضی', 'term_title': 'نیمسال اول'}
+        ],
+        'workload': const [],
+        'grades': const [],
+      };
+
+  @override
+  Future<List<Map<String, dynamic>>> getTimetable(String studentUserId) async =>
+      [];
+
+  @override
+  Future<List<Map<String, dynamic>>> getFamilyCalendar(String familyId) async =>
+      [];
+
+  @override
+  Future<Map<String, dynamic>> getChildSupportSummary(
+    String familyId,
+    String studentUserId,
+  ) async =>
+      {
+        'upcoming': const [],
+        'metrics': {
+          'completedLast7Days': 3,
+          'overdue': 1,
+          'studyMinutesLast7Days': 90,
+          'gradePercent': 85,
+        }
+      };
+
+  @override
+  Future<Map<String, dynamic>> submitSyncMutations(
+    List<Map<String, dynamic>> mutations,
+  ) async =>
+      {
+        'results': mutations
+            .map((m) => {'id': m['id'], 'status': 'accepted'})
+            .toList(),
+      };
 }
 
 void main() {
