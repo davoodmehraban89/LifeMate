@@ -121,7 +121,7 @@ app.get('/health', async (_req, res) => {
   const r = await pool.query('select 1 as ok');
   res.json({
     status: r.rows[0].ok === 1 ? 'ok' : 'degraded',
-    emailProviderConfigured: Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM),
+    emailProviderConfigured: Boolean(process.env.EMAIL_FROM && (process.env.RESEND_API_KEY || (process.env.SMTP_HOST && process.env.SMTP_PORT))),
   });
 });
 
