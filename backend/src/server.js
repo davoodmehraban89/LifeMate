@@ -467,7 +467,6 @@ app.get('/v1/families/:familyId/members', auth, async (req, res) => {
 
 app.post('/v1/families/:familyId/invitations', auth, async (req, res) => {
   const allowed = await familyAccess(req.params.familyId, req.identity.sub, {
-    roles: ['parent_guardian'],
     admin: true,
   });
   if (!allowed) return res.status(403).json({ error: 'forbidden' });
@@ -484,6 +483,19 @@ app.post('/v1/families/:familyId/invitations', auth, async (req, res) => {
           : 'adult_blue';
   if (!isEmail(email) || !allowedRoles.includes(role)) {
     return res.status(400).json({ error: 'invalid_invitation' });
+  }
+
+  const activeMember = await pool.query(
+    `select 1
+       from family_membership m
+       join app_user u on u.id=m.user_id
+      where m.family_id=$1
+        and m.ended_at is null
+        and u.email_normalized=$2`,
+    [req.params.familyId, email],
+  );
+  if (activeMember.rowCount) {
+    return res.status(409).json({ error: 'member_already_active' });
   }
 
   const token = randomToken();
