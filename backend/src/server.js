@@ -4,9 +4,27 @@ import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import pg from 'pg';
 import nodemailer from 'nodemailer';
+import cors from 'cors';
 
 const { Pool } = pg;
 const app = express();
+const allowedOrigins = (process.env.CORS_ORIGINS ?? '')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || testMode || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('cors_origin_denied'));
+    },
+    methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400,
+  }),
+);
 app.use(express.json({ limit: '64kb' }));
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
