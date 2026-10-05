@@ -51,8 +51,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
       - name: Apply migrations
         run: |
           psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0001_identity_family.sql
@@ -61,7 +59,7 @@ jobs:
         run: psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/schema_test.sql
       - name: Install backend
         working-directory: backend
-        run: npm install --package-lock-only && npm ci
+        run: npm install
       - name: Load API module
         working-directory: backend
         run: node -e "import('./src/server.js').then(() => console.log('identity API loaded'))"
