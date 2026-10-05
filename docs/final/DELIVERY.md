@@ -6,16 +6,16 @@ Every green CI run retains:
 - `lifemate-web-release` — production Web/PWA bundle for controlled hosting/testing.
 
 ## iOS
-The Flutter iOS project is present in `apps/lifemate/ios`. A signed `.ipa` cannot be produced on the Linux CI runner and requires macOS/Xcode plus the owner's Apple Developer signing identity/provisioning profile. Verification command on an authorized macOS runner: `flutter build ios --release --no-codesign`; distribution then requires explicit signing/publication approval.
+The Flutter iOS project is present in `apps/lifemate/ios`. A signed `.ipa` requires macOS/Xcode plus the owner's Apple Developer signing identity/provisioning profile. Verification command on an authorized macOS runner: `flutter build ios --release --no-codesign`; distribution requires explicit signing/publication approval.
 
 ## Feature 1 test path
 1. Sign in with a test account.
-2. Open the Iranian family/learning hub when wired into the owner test shell.
+2. Open **پروفایل و خانواده → خانواده و یادگیری ایران**.
 3. Choose mother/father/child persona. For a child choose grade 1–12; grade 7 resolves to first year of lower secondary.
 4. Verify grade catalog and official textbook-source links.
 5. Verify Jalali 1405 event data, Saturday week start and Iran weekend defaults.
-6. Verify notification preferences and sensitive-preview default-off behavior.
-7. For an eligible owner test account, verify private cycle entries are visible only to that account.
+6. Verify notification preferences and sensitive-preview default-off behavior through the API-backed settings model.
+7. Verify private cycle entries are visible only to the owning account.
 
 ## External gates
 Public production release, store publication, Apple signing, production push-provider credentials, external AI/voice enablement, and textbook PDF redistribution remain explicit external gates.
