@@ -168,7 +168,7 @@ export function createPhase3Router({ pool, auth }) {
           if (!Number.isInteger(minutes) || minutes < 0 || minutes > 10080) continue;
           await client.query(
             `insert into reminder(plan_item_id,owner_user_id,minutes_before,scheduled_for)
-             values($1,$2,$3,$4 - make_interval(mins => $3))
+             values($1,$2,$3,$4::timestamptz - make_interval(mins => $3))
              on conflict(plan_item_id,owner_user_id,minutes_before)
              do update set scheduled_for=excluded.scheduled_for,status='scheduled',claimed_at=null`,
             [item.id, req.identity.sub, minutes, baseTime],
