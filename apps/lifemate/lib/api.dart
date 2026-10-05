@@ -23,6 +23,7 @@ abstract class IdentityApi {
     String? themePreference,
   });
   Future<List<Map<String, dynamic>>> listFamilies();
+  Future<List<Map<String, dynamic>>> listFamilyMembers(String familyId);
   Future<Map<String, dynamic>> createFamily(String name, {String? role});
   Future<void> inviteMember({
     required String familyId,
@@ -31,6 +32,11 @@ abstract class IdentityApi {
     String? themePreference,
   });
   Future<void> acceptInvitation(String token);
+  Future<void> setGuardian({
+    required String familyId,
+    required String guardianUserId,
+    required String minorUserId,
+  });
 }
 
 class ApiException implements Exception {
@@ -193,6 +199,19 @@ class HttpIdentityApi implements IdentityApi {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> listFamilyMembers(String familyId) async {
+    final result = await _json(
+      'GET',
+      '/v1/families/$familyId/members',
+      auth: true,
+    );
+    final members = (result['members'] as List<dynamic>? ?? const []);
+    return members
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
   Future<Map<String, dynamic>> createFamily(
     String name, {
     String? role,
@@ -228,6 +247,23 @@ class HttpIdentityApi implements IdentityApi {
       '/v1/invitations/accept',
       auth: true,
       body: {'token': token},
+    );
+  }
+
+  @override
+  Future<void> setGuardian({
+    required String familyId,
+    required String guardianUserId,
+    required String minorUserId,
+  }) async {
+    await _json(
+      'POST',
+      '/v1/families/$familyId/guardians',
+      auth: true,
+      body: {
+        'guardianUserId': guardianUserId,
+        'minorUserId': minorUserId,
+      },
     );
   }
 }
