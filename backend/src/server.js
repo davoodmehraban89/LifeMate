@@ -529,7 +529,7 @@ app.post('/v1/families/:familyId/guardians', auth, async (req, res) => {
     [req.params.familyId, guardianUserId, minorUserId],
   );
   await pool.query(
-    "insert into access_audit(actor_user_id,family_id,action,target_type,target_id,metadata) values($1,$2,'guardian.activate','guardian_relationship',$3,jsonb_build_object('minorUserId',$4))",
+    "insert into access_audit(actor_user_id,family_id,action,target_type,target_id,metadata) values($1,$2,'guardian.activate','guardian_relationship',$3,jsonb_build_object('minorUserId',$4::text))",
     [req.identity.sub, req.params.familyId, guardianUserId, minorUserId],
   );
   res.status(204).end();
