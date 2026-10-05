@@ -38,9 +38,8 @@ Today/Planner → task/event/routine/goal/study-session creation and completion/
 - Migration `0003_planner_school_family.sql` defines the planner, academic, reminder, sharing and sync model.
 - Database authorization matrix covers owner/private, family, guardian and removed-member denial behavior.
 - Backend integration tests cover planner CRUD, academic setup, grades, guardian summaries, offline mutation application/idempotency and reminder outbox behavior.
-- Flutter formatting, static analysis, widget tests and Web release build pass in CI; Android debug build remains part of the required CI gate.
-- Security secret/environment-file gates pass.
-- Railway staging API is online and Phase 3 database smoke verification confirms 11 required tables, 3 authorization/reminder functions and the migration ledger entry.
+- Phase 3 CI run 114 on implementation head `70cd274e8cb8b9fdf59bcc6bbd6889dbe4e09948` passed backend, security, Flutter formatting/static analysis/widget tests, Web release build and Android debug APK build. The following documentation-only commit does not alter executable code.
+- Railway staging API is online and Phase 3 database smoke verification confirms 11 required tables, 3 authorization/reminder functions and the `0003_planner_school_family.sql` migration ledger entry.
 
 ## Phase 4 entry point
 Build AI Guides, Learning & Wellbeing on top of the completed planner/school/family contracts. AI must remain advisory, age-appropriate, privacy-aware and relationship-aware; it must not silently broaden parent access beyond Phase 3 authorization contracts.
