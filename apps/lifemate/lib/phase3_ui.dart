@@ -661,6 +661,87 @@ class _FamilyDashboardCardState extends State<FamilyDashboardCard> {
     members = widget.api.listFamilyMembers(widget.family['id'].toString());
   }
 
+  Future<void> openFamilyGuidance(
+    String familyId,
+    String childId,
+    String childName,
+  ) async {
+    final question = TextEditingController();
+    String? advice;
+    bool busy = false;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setLocalState) => AlertDialog(
+          title: Text('مشورت درباره $childName'),
+          content: SizedBox(
+            width: 520,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'راهنما فقط از خلاصه‌های مجاز استفاده می‌کند و متن خصوصی فرزند را نمی‌بیند.',
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: question,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'سؤال شما',
+                    hintText: 'مثلاً چطور بدون فشار درباره امتحان‌ها با او صحبت کنم؟',
+                  ),
+                ),
+                if (advice != null) ...[
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      advice!,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: busy ? null : () => Navigator.pop(dialogContext),
+              child: const Text('بستن'),
+            ),
+            FilledButton(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      if (question.text.trim().isEmpty) return;
+                      setLocalState(() => busy = true);
+                      try {
+                        final result = await widget.api.requestFamilyGuidance(
+                          familyId,
+                          childId,
+                          question.text.trim(),
+                        );
+                        setLocalState(() {
+                          advice = result['advice']?.toString() ??
+                              'پیشنهادی دریافت نشد.';
+                        });
+                      } catch (_) {
+                        setLocalState(() {
+                          advice = 'دریافت راهنمایی انجام نشد. دوباره تلاش کنید.';
+                        });
+                      } finally {
+                        setLocalState(() => busy = false);
+                      }
+                    },
+              child: Text(busy ? 'در حال بررسی...' : 'دریافت راهنمایی'),
+            ),
+          ],
+        ),
+      ),
+    );
+    question.dispose();
+  }
+
   Future<void> openChild(Map<String, dynamic> child) async {
     final familyId = widget.family['id'].toString();
     final childId = child['user_id'].toString();
@@ -751,7 +832,22 @@ class _FamilyDashboardCardState extends State<FamilyDashboardCard> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('بستن')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('بستن'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              openFamilyGuidance(
+                familyId,
+                childId,
+                child['display_name']?.toString() ?? 'فرزند',
+              );
+            },
+            icon: const Icon(Icons.psychology_alt_outlined),
+            label: const Text('مشورت با راهنمای خانواده'),
+          ),
         ],
       ),
     );
