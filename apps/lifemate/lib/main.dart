@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'api.dart';
+import 'phase3_ui.dart';
 
 void main() => runApp(LifeMateApp());
 
@@ -610,11 +611,10 @@ class _HomeShellState extends State<HomeShell> {
               ),
             ],
           ),
-          body: Center(
-            child: Text(
-              pages[index],
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+          body: Phase3HomeContent(
+            api: widget.api,
+            page: pages[index],
+            adultShell: adultShell,
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: index > 4 ? 0 : index,
