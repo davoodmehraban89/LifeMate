@@ -23,14 +23,13 @@ jobs:
       - name: Generate platform scaffold
         run: flutter create --platforms=android,web --project-name=lifemate .
       - run: flutter pub get
-      - name: Format
-        run: dart format --output=none --set-exit-if-changed lib test
+      - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
       - run: flutter build web --release
       - run: flutter build apk --debug
 
-  postgres:
+  backend:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -38,21 +37,34 @@ jobs:
         env:
           POSTGRES_PASSWORD: lifemate_ci
           POSTGRES_DB: lifemate_ci
-        ports:
-          - 5432:5432
+        ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U postgres -d lifemate_ci"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+          --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       PGPASSWORD: lifemate_ci
+      DATABASE_URL: postgresql://postgres:lifemate_ci@localhost:5432/lifemate_ci
+      JWT_SECRET: ci-only-secret-ci-only-secret-ci-only-secret
+      NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
       - name: Apply migrations
-        run: psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0001_identity_family.sql
-      - name: Authorization/schema tests
+        run: |
+          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0001_identity_family.sql
+          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0002_auth.sql
+      - name: Database authorization tests
         run: psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/schema_test.sql
+      - name: Install backend
+        working-directory: backend
+        run: npm install --package-lock-only && npm ci
+      - name: Load API module
+        working-directory: backend
+        run: node -e "import('./src/server.js').then(() => console.log('identity API loaded'))"
       - name: Verify schema objects
         run: |
-          test "$(psql -h localhost -U postgres -d lifemate_ci -Atc "select count(*) from information_schema.tables where table_schema='public' and table_name in ('app_user','profile','family_workspace','family_membership','guardian_relationship','family_invitation','access_audit');")" = "7"
+          test "$(psql -h localhost -U postgres -d lifemate_ci -Atc "select count(*) from information_schema.tables where table_schema='public' and table_name in ('app_user','profile','family_workspace','family_membership','guardian_relationship','family_invitation','access_audit','auth_credential','auth_token','auth_session');")" = "10"
