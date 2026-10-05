@@ -43,6 +43,13 @@ jobs:
       - run: dart format lib test
       - run: flutter analyze
       - run: flutter test
+      - name: Verify PWA release metadata
+        run: |
+          grep -q 'manifest.json' web/index.html
+          grep -q 'theme-color' web/index.html
+          grep -q 'apple-touch-icon' web/index.html
+          grep -q 'dir="rtl"' web/index.html
+          test -f web/manifest.json
       - run: flutter build web --release
       - run: flutter build apk --debug
 
@@ -90,6 +97,17 @@ jobs:
       - name: Backend tests
         working-directory: backend
         run: npm test
+      - name: Backend syntax checks
+        working-directory: backend
+        run: npm run check
       - name: Verify schema objects
         run: |
           test "$(psql -h localhost -U postgres -d lifemate_ci -Atc "select count(*) from information_schema.tables where table_schema='public' and table_name in ('app_user','profile','family_workspace','family_membership','guardian_relationship','family_invitation','access_audit','auth_credential','auth_token','auth_session','life_context','academic_year','academic_term','subject','class_session','plan_item','sharing_grant','reminder','notification_preference','notification_outbox','sync_mutation','learning_goal','learning_checkin','wellbeing_checkin','ai_guide_session','ai_guide_message','ai_plan_proposal','wellbeing_safety_event');")" = "28"
+      - name: Backup and restore drill
+        run: |
+          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/scripts/restore-smoke.sql
+          chmod +x backend/scripts/backup.sh backend/scripts/restore.sh
+          backend/scripts/backup.sh /tmp/lifemate-ci.dump
+          createdb -h localhost -U postgres lifemate_restore
+          DATABASE_URL=postgresql://postgres:lifemate_ci@localhost:5432/lifemate_restore backend/scripts/restore.sh /tmp/lifemate-ci.dump
+          test "$(psql -h localhost -U postgres -d lifemate_restore -Atc "select count(*) from profile where display_name='Restore Smoke';")" = "1"
