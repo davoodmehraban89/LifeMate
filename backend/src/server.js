@@ -118,7 +118,7 @@ app.post('/v1/auth/register', async (req, res) => {
       [`local:${crypto.randomUUID()}`, email],
     );
     await client.query(
-      'insert into profile(user_id,display_name) values($1,$2)',
+      "insert into profile(user_id,display_name,theme_preference) values($1,$2,'adult_blue')",
       [u.rows[0].id, name],
     );
     await client.query(
@@ -432,15 +432,22 @@ app.post('/v1/families/:familyId/invitations', auth, async (req, res) => {
 
   const email = normalizeEmail(req.body.email);
   const role = String(req.body.role ?? '');
+  const themePreference = String(req.body.themePreference ?? '');
   const allowedRoles = ['parent_guardian', 'teen_minor', 'adult_member'];
+  const allowedThemes = ['girl_pink', 'boy_blue', 'adult_blue', 'custom'];
+  const resolvedTheme = allowedThemes.includes(themePreference)
+      ? themePreference
+      : role === 'teen_minor'
+          ? 'girl_pink'
+          : 'adult_blue';
   if (!isEmail(email) || !allowedRoles.includes(role)) {
     return res.status(400).json({ error: 'invalid_invitation' });
   }
 
   const token = randomToken();
   const r = await pool.query(
-    "insert into family_invitation(family_id,invited_email_normalized,intended_role,token_digest,invited_by,expires_at) values($1,$2,$3,$4,$5,now()+interval '7 days') returning id,expires_at",
-    [req.params.familyId, email, role, sha256(token), req.identity.sub],
+    "insert into family_invitation(family_id,invited_email_normalized,intended_role,intended_theme,token_digest,invited_by,expires_at) values($1,$2,$3,$4,$5,$6,now()+interval '7 days') returning id,expires_at",
+    [req.params.familyId, email, role, resolvedTheme, sha256(token), req.identity.sub],
   );
 
   const baseUrl = process.env.PUBLIC_APP_URL ?? 'https://app.lifemate.invalid';
@@ -462,7 +469,7 @@ app.post('/v1/invitations/accept', auth, async (req, res) => {
   try {
     await client.query('begin');
     const invitation = await client.query(
-      `select i.id,i.family_id,i.intended_role,i.invited_email_normalized,u.email_normalized
+      `select i.id,i.family_id,i.intended_role,i.intended_theme,i.invited_email_normalized,u.email_normalized
          from family_invitation i
          join app_user u on u.id=$2
         where i.token_digest=$1
@@ -492,6 +499,12 @@ app.post('/v1/invitations/accept', auth, async (req, res) => {
       "update family_invitation set status='accepted',accepted_by=$2,accepted_at=now() where id=$1",
       [row.id, req.identity.sub],
     );
+    if (row.intended_theme) {
+      await client.query(
+        'update profile set theme_preference=$2,updated_at=now() where user_id=$1',
+        [req.identity.sub, row.intended_theme],
+      );
+    }
     await client.query(
       "insert into access_audit(actor_user_id,family_id,action,target_type,target_id) values($1,$2,'invitation.accept','membership',$3)",
       [req.identity.sub, row.family_id, String(req.identity.sub)],
