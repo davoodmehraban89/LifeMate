@@ -370,10 +370,40 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int index = 0;
+  String themePreference = 'adult_blue';
   static const destinations = ['امروز', 'برنامه هفتگی', 'تقویم', 'تکالیف و کارها', 'امتحان‌ها و نمرات', 'تمرکز', 'همراه هوشمند'];
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  void initState() {
+    super.initState();
+    loadTheme();
+  }
+
+  Future<void> loadTheme() async {
+    try {
+      final profile = await widget.api.getProfile();
+      if (mounted) {
+        setState(() {
+          themePreference = profile['theme_preference']?.toString() ?? 'adult_blue';
+        });
+      }
+    } catch (_) {}
+  }
+
+  Color get accent => themePreference == 'girl_pink'
+      ? const Color(0xFFE58FB0)
+      : const Color(0xFF4D86E8);
+
+  @override
+  Widget build(BuildContext context) => Theme(
+    data: Theme.of(context).copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: accent,
+        surface: Colors.white,
+      ),
+      scaffoldBackgroundColor: Colors.white,
+    ),
+    child: Scaffold(
     appBar: AppBar(
       title: Text(destinations[index]),
       actions: [
@@ -411,6 +441,7 @@ class _HomeShellState extends State<HomeShell> {
         ),
       ),
     ),
+  ),
   );
 }
 
