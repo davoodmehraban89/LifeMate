@@ -56,6 +56,10 @@ class FakeApi implements IdentityApi {
   Future<List<Map<String, dynamic>>> listFamilies() async => [];
 
   @override
+  Future<List<Map<String, dynamic>>> listFamilyMembers(String familyId) async =>
+      [];
+
+  @override
   Future<Map<String, dynamic>> createFamily(
     String name, {
     String? role,
@@ -72,6 +76,13 @@ class FakeApi implements IdentityApi {
 
   @override
   Future<void> acceptInvitation(String token) async {}
+
+  @override
+  Future<void> setGuardian({
+    required String familyId,
+    required String guardianUserId,
+    required String minorUserId,
+  }) async {}
 }
 
 void main() {
