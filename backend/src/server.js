@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import pg from 'pg';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
+import { createPhase3Router } from './phase3.js';
 
 const { Pool } = pg;
 const app = express();
@@ -373,7 +374,7 @@ app.post('/v1/auth/logout', auth, async (req, res) => {
 
 app.get('/v1/profile', auth, async (req, res) => {
   const r = await pool.query(
-    'select p.display_name,p.birth_date,p.theme_preference,u.email_normalized,u.email_verified_at from profile p join app_user u on u.id=p.user_id where p.user_id=$1',
+    'select u.id as user_id,p.display_name,p.birth_date,p.theme_preference,u.email_normalized,u.email_verified_at from profile p join app_user u on u.id=p.user_id where p.user_id=$1',
     [req.identity.sub],
   );
   if (!r.rowCount) return res.status(404).json({ error: 'profile_not_found' });
@@ -601,6 +602,8 @@ app.post('/v1/families/:familyId/guardians', auth, async (req, res) => {
   );
   res.status(204).end();
 });
+
+app.use('/v1', createPhase3Router({ pool, auth }));
 
 app.use((err, _req, res, _next) => {
   console.error(err);

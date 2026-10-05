@@ -37,6 +37,55 @@ abstract class IdentityApi {
     required String guardianUserId,
     required String minorUserId,
   });
+
+  Future<List<Map<String, dynamic>>> getToday({
+    required DateTime from,
+    required DateTime to,
+  });
+  Future<List<Map<String, dynamic>>> listPlanItems({
+    DateTime? from,
+    DateTime? to,
+    String? kind,
+  });
+  Future<Map<String, dynamic>> createPlanItem(Map<String, dynamic> data);
+  Future<Map<String, dynamic>> updatePlanItem(
+    String itemId,
+    Map<String, dynamic> data,
+  );
+  Future<List<Map<String, dynamic>>> listLifeContexts();
+  Future<Map<String, dynamic>> createLifeContext({
+    required String kind,
+    required String title,
+  });
+  Future<Map<String, dynamic>> createAcademicYear(Map<String, dynamic> data);
+  Future<Map<String, dynamic>> createAcademicTerm(
+    String yearId,
+    Map<String, dynamic> data,
+  );
+  Future<Map<String, dynamic>> createSubject(
+    String termId,
+    Map<String, dynamic> data,
+  );
+  Future<Map<String, dynamic>> createClassSession(
+    String subjectId,
+    Map<String, dynamic> data,
+  );
+  Future<Map<String, dynamic>> getSchoolOverview(String studentUserId);
+  Future<List<Map<String, dynamic>>> getTimetable(String studentUserId);
+  Future<Map<String, dynamic>> setGrade(
+    String itemId, {
+    required num points,
+    required num outOf,
+  });
+  Future<List<Map<String, dynamic>>> claimDueReminders();
+  Future<List<Map<String, dynamic>>> getFamilyCalendar(String familyId);
+  Future<Map<String, dynamic>> getChildSupportSummary(
+    String familyId,
+    String studentUserId,
+  );
+  Future<Map<String, dynamic>> submitSyncMutations(
+    List<Map<String, dynamic>> mutations,
+  );
 }
 
 class ApiException implements Exception {
@@ -266,4 +315,185 @@ class HttpIdentityApi implements IdentityApi {
       },
     );
   }
+  @override
+  Future<List<Map<String, dynamic>>> getToday({
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final result = await _json(
+      'GET',
+      '/v1/today?from=${Uri.encodeQueryComponent(from.toUtc().toIso8601String())}&to=${Uri.encodeQueryComponent(to.toUtc().toIso8601String())}',
+      auth: true,
+    );
+    return (result['items'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> listPlanItems({
+    DateTime? from,
+    DateTime? to,
+    String? kind,
+  }) async {
+    final params = <String, String>{};
+    if (from != null) params['from'] = from.toUtc().toIso8601String();
+    if (to != null) params['to'] = to.toUtc().toIso8601String();
+    if (kind != null) params['kind'] = kind;
+    final suffix = params.isEmpty ? '' : '?${Uri(queryParameters: params).query}';
+    final result = await _json('GET', '/v1/plan-items$suffix', auth: true);
+    return (result['items'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> createPlanItem(Map<String, dynamic> data) =>
+      _json('POST', '/v1/plan-items', auth: true, body: data);
+
+  @override
+  Future<Map<String, dynamic>> updatePlanItem(
+    String itemId,
+    Map<String, dynamic> data,
+  ) =>
+      _json('PATCH', '/v1/plan-items/$itemId', auth: true, body: data);
+
+  @override
+  Future<List<Map<String, dynamic>>> listLifeContexts() async {
+    final result = await _json('GET', '/v1/life-contexts', auth: true);
+    return (result['contexts'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> createLifeContext({
+    required String kind,
+    required String title,
+  }) =>
+      _json(
+        'POST',
+        '/v1/life-contexts',
+        auth: true,
+        body: {'kind': kind, 'title': title},
+      );
+
+  @override
+  Future<Map<String, dynamic>> createAcademicYear(
+    Map<String, dynamic> data,
+  ) =>
+      _json('POST', '/v1/school/years', auth: true, body: data);
+
+  @override
+  Future<Map<String, dynamic>> createAcademicTerm(
+    String yearId,
+    Map<String, dynamic> data,
+  ) =>
+      _json(
+        'POST',
+        '/v1/school/years/$yearId/terms',
+        auth: true,
+        body: data,
+      );
+
+  @override
+  Future<Map<String, dynamic>> createSubject(
+    String termId,
+    Map<String, dynamic> data,
+  ) =>
+      _json(
+        'POST',
+        '/v1/school/terms/$termId/subjects',
+        auth: true,
+        body: data,
+      );
+
+  @override
+  Future<Map<String, dynamic>> createClassSession(
+    String subjectId,
+    Map<String, dynamic> data,
+  ) =>
+      _json(
+        'POST',
+        '/v1/school/subjects/$subjectId/classes',
+        auth: true,
+        body: data,
+      );
+
+  @override
+  Future<Map<String, dynamic>> getSchoolOverview(String studentUserId) =>
+      _json('GET', '/v1/school/$studentUserId/overview', auth: true);
+
+  @override
+  Future<List<Map<String, dynamic>>> getTimetable(String studentUserId) async {
+    final result = await _json(
+      'GET',
+      '/v1/school/$studentUserId/timetable',
+      auth: true,
+    );
+    return (result['classes'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> setGrade(
+    String itemId, {
+    required num points,
+    required num outOf,
+  }) =>
+      _json(
+        'PATCH',
+        '/v1/school/plan-items/$itemId/grade',
+        auth: true,
+        body: {'points': points, 'outOf': outOf},
+      );
+
+  @override
+  Future<List<Map<String, dynamic>>> claimDueReminders() async {
+    final result = await _json(
+      'POST',
+      '/v1/reminders/claim-due',
+      auth: true,
+      body: {'limit': 20},
+    );
+    return (result['reminders'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getFamilyCalendar(String familyId) async {
+    final result = await _json(
+      'GET',
+      '/v1/families/$familyId/calendar',
+      auth: true,
+    );
+    return (result['items'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> getChildSupportSummary(
+    String familyId,
+    String studentUserId,
+  ) =>
+      _json(
+        'GET',
+        '/v1/families/$familyId/children/$studentUserId/support-summary',
+        auth: true,
+      );
+
+  @override
+  Future<Map<String, dynamic>> submitSyncMutations(
+    List<Map<String, dynamic>> mutations,
+  ) =>
+      _json(
+        'POST',
+        '/v1/sync/mutations',
+        auth: true,
+        body: {'mutations': mutations},
+      );
+
 }
