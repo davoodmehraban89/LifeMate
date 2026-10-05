@@ -49,7 +49,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-       - name: Apply migrations
+      - name: Apply migrations
         run: |
           psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0001_identity_family.sql
           psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0002_auth.sql
