@@ -74,7 +74,9 @@ jobs:
           psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0002_auth.sql
           psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0003_planner_school_family.sql
       - name: Database authorization tests
-        run: psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/schema_test.sql
+        run: |
+          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/schema_test.sql
+          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/phase3_schema_test.sql
       - name: Install backend
         working-directory: backend
         run: npm install
