@@ -106,8 +106,9 @@ class _TodayPageState extends State<TodayPage> {
     final to = from.add(const Duration(days: 1));
     try {
       final items = await widget.api.getToday(from: from, to: to);
+      final reminders = await widget.api.claimDueReminders();
       await OfflineStore.instance.cacheToday(items);
-      return LoadResult(items, false);
+      return LoadResult(items, false, reminders: reminders);
     } catch (_) {
       return LoadResult(await OfflineStore.instance.readToday(), true);
     }
@@ -154,6 +155,14 @@ class _TodayPageState extends State<TodayPage> {
                   const Card(child: ListTile(
                     leading: Icon(Icons.cloud_off_outlined),
                     title: Text('نمایش نسخه آفلاین'),
+                  )),
+                if (result.reminders.isNotEmpty)
+                  ...result.reminders.map((reminder) => Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.notifications_active_outlined),
+                      title: Text('یادآوری · ' + (reminder['title']?.toString() ?? 'برنامه')),
+                      subtitle: const Text('زمان این مورد رسیده یا نزدیک است.'),
+                    ),
                   )),
                 Card(
                   child: Padding(
@@ -753,9 +762,10 @@ class EmptyCard extends StatelessWidget {
 }
 
 class LoadResult {
-  const LoadResult(this.items, this.offline);
+  const LoadResult(this.items, this.offline, {this.reminders = const []});
   final List<Map<String, dynamic>> items;
   final bool offline;
+  final List<Map<String, dynamic>> reminders;
 }
 
 class SchoolLoad {
