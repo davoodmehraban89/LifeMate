@@ -579,35 +579,149 @@ export function createPhase3Router({ pool, auth }) {
 
   router.post('/sync/mutations', auth, async (req, res) => {
     const mutations = Array.isArray(req.body.mutations) ? req.body.mutations : [];
-    if (mutations.length > 100) return res.status(400).json({ error: 'too_many_mutations' });
-    const results = [];
-    for (const m of mutations) {
-      const id = String(m.id ?? '');
-      const operation = String(m.operation ?? '');
-      if (!id || !['create','update','complete','reschedule'].includes(operation)) {
-        results.push({ id, status: 'rejected', error: 'invalid_mutation' });
-        continue;
-      }
-      const existing = await pool.query(
-        'select accepted_at from sync_mutation where id=$1 and user_id=$2',
-        [id, req.identity.sub],
-      );
-      if (existing.rowCount) {
-        results.push({ id, status: 'already_applied', acceptedAt: existing.rows[0].accepted_at });
-        continue;
-      }
-      await pool.query(
-        `insert into sync_mutation(id,user_id,entity_type,entity_id,operation,client_updated_at,payload)
-         values($1,$2,$3,$4,$5,$6,$7::jsonb)`,
-        [
-          id, req.identity.sub, String(m.entityType ?? 'plan_item'),
-          m.entityId || null, operation, m.clientUpdatedAt || new Date(),
-          JSON.stringify(m.payload ?? {}),
-        ],
-      );
-      results.push({ id, status: 'accepted' });
+    if (mutations.length > 100) {
+      return res.status(400).json({ error: 'too_many_mutations' });
     }
-    res.json({ results });
+
+    const client = await pool.connect();
+    const results = [];
+    try {
+      for (const mutation of mutations) {
+        const id = String(mutation.id ?? '');
+        const operation = String(mutation.operation ?? '');
+        const entityType = String(mutation.entityType ?? 'plan_item');
+        const entityId = mutation.entityId ? String(mutation.entityId) : null;
+        const clientUpdatedAt = asDate(mutation.clientUpdatedAt);
+        const payload = mutation.payload && typeof mutation.payload === 'object'
+          ? mutation.payload
+          : {};
+
+        if (
+          !id ||
+          entityType !== 'plan_item' ||
+          !entityId ||
+          !clientUpdatedAt ||
+          !['update', 'complete', 'reschedule'].includes(operation)
+        ) {
+          results.push({ id, status: 'rejected', error: 'invalid_mutation' });
+          continue;
+        }
+
+        await client.query('begin');
+        try {
+          const duplicate = await client.query(
+            'select accepted_at from sync_mutation where id=$1 and user_id=$2',
+            [id, req.identity.sub],
+          );
+          if (duplicate.rowCount) {
+            await client.query('rollback');
+            results.push({
+              id,
+              status: 'already_applied',
+              acceptedAt: duplicate.rows[0].accepted_at,
+            });
+            continue;
+          }
+
+          const current = await client.query(
+            'select * from plan_item where id=$1 for update',
+            [entityId],
+          );
+          if (!current.rowCount) {
+            await client.query('rollback');
+            results.push({ id, status: 'rejected', error: 'not_found' });
+            continue;
+          }
+          const item = current.rows[0];
+          if (item.owner_user_id !== req.identity.sub) {
+            await client.query('rollback');
+            results.push({ id, status: 'rejected', error: 'forbidden' });
+            continue;
+          }
+
+          const serverUpdatedAt = new Date(item.updated_at);
+          if (serverUpdatedAt.getTime() > clientUpdatedAt.getTime() + 1000) {
+            await client.query('rollback');
+            results.push({
+              id,
+              status: 'conflict',
+              serverUpdatedAt: serverUpdatedAt.toISOString(),
+            });
+            continue;
+          }
+
+          if (operation === 'complete') {
+            await client.query(
+              `update plan_item
+                  set status='completed',completed_at=now(),updated_at=now()
+                where id=$1`,
+              [entityId],
+            );
+            await client.query(
+              `update reminder set status='cancelled'
+                where plan_item_id=$1 and status in ('scheduled','claimed')`,
+              [entityId],
+            );
+          } else if (operation === 'reschedule') {
+            const dueAt = asDate(payload.dueAt);
+            const startsAt = asDate(payload.startsAt);
+            if (!dueAt && !startsAt) {
+              await client.query('rollback');
+              results.push({ id, status: 'rejected', error: 'invalid_reschedule' });
+              continue;
+            }
+            await client.query(
+              `update plan_item
+                  set due_at=coalesce($2,due_at),
+                      starts_at=coalesce($3,starts_at),
+                      updated_at=now()
+                where id=$1`,
+              [entityId, dueAt, startsAt],
+            );
+            await client.query('select recompute_reminder_schedule($1)', [entityId]);
+          } else {
+            const title = payload.title == null ? null : String(payload.title).trim();
+            const status = payload.status == null ? null : String(payload.status);
+            if (status != null && !allowedStatus.has(status)) {
+              await client.query('rollback');
+              results.push({ id, status: 'rejected', error: 'invalid_status' });
+              continue;
+            }
+            await client.query(
+              `update plan_item
+                  set title=coalesce($2,title),
+                      status=coalesce($3::plan_item_status,status),
+                      updated_at=now()
+                where id=$1`,
+              [entityId, title || null, status],
+            );
+          }
+
+          await client.query(
+            `insert into sync_mutation(
+               id,user_id,entity_type,entity_id,operation,client_updated_at,payload
+             ) values($1,$2,$3,$4,$5,$6,$7::jsonb)`,
+            [
+              id,
+              req.identity.sub,
+              entityType,
+              entityId,
+              operation,
+              clientUpdatedAt,
+              JSON.stringify(payload),
+            ],
+          );
+          await client.query('commit');
+          results.push({ id, status: 'accepted' });
+        } catch (error) {
+          await client.query('rollback').catch(() => {});
+          throw error;
+        }
+      }
+      res.json({ results });
+    } finally {
+      client.release();
+    }
   });
 
   return router;
