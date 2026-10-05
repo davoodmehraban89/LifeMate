@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifemate/api.dart';
 import 'package:lifemate/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FakeApi implements IdentityApi {
   FakeApi({
@@ -224,6 +225,10 @@ class FakeApi implements IdentityApi {
 }
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('starts in Persian RTL with identity actions', (tester) async {
     await tester.pumpWidget(LifeMateApp(api: FakeApi()));
 
