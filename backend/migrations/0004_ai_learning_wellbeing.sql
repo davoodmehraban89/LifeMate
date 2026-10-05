@@ -1,7 +1,7 @@
 create table if not exists learning_goal (
   id uuid primary key default gen_random_uuid(),
   owner_user_id uuid not null references app_user(id) on delete cascade,
-  subject_id uuid references academic_subject(id) on delete set null,
+  subject_id uuid references subject(id) on delete set null,
   title text not null,
   target text,
   status text not null default 'active' check (status in ('active','completed','archived')),
@@ -40,3 +40,14 @@ create table if not exists ai_plan_proposal (
 create index if not exists learning_goal_owner_idx on learning_goal(owner_user_id,status);
 create index if not exists wellbeing_checkin_owner_idx on wellbeing_checkin(owner_user_id,created_at desc);
 create index if not exists ai_guide_session_owner_idx on ai_guide_session(owner_user_id,created_at desc);
+
+create table if not exists wellbeing_safety_event (
+  id uuid primary key default gen_random_uuid(),
+  owner_user_id uuid not null references app_user(id) on delete cascade,
+  source_session_id uuid references ai_guide_session(id) on delete set null,
+  severity text not null check(severity in ('urgent_review')),
+  status text not null default 'open' check(status in ('open','acknowledged','closed')),
+  created_at timestamptz not null default now(),
+  acknowledged_at timestamptz
+);
+create index if not exists wellbeing_safety_event_owner_idx on wellbeing_safety_event(owner_user_id,created_at desc);
