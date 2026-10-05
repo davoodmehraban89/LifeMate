@@ -393,8 +393,8 @@ app.post('/v1/families', auth, async (req, res) => {
       [f.rows[0].id, req.identity.sub, creatorRole],
     );
     await c.query(
-      "insert into access_audit(actor_user_id,family_id,action,target_type,target_id) values($1,$2,'family.create','family',$2::text)",
-      [req.identity.sub, f.rows[0].id],
+      "insert into access_audit(actor_user_id,family_id,action,target_type,target_id) values($1,$2,'family.create','family',$3)",
+      [req.identity.sub, f.rows[0].id, String(f.rows[0].id)],
     );
     await c.query('commit');
     res.status(201).json(f.rows[0]);
@@ -493,8 +493,8 @@ app.post('/v1/invitations/accept', auth, async (req, res) => {
       [row.id, req.identity.sub],
     );
     await client.query(
-      "insert into access_audit(actor_user_id,family_id,action,target_type,target_id) values($1,$2,'invitation.accept','membership',$1::text)",
-      [req.identity.sub, row.family_id],
+      "insert into access_audit(actor_user_id,family_id,action,target_type,target_id) values($1,$2,'invitation.accept','membership',$3)",
+      [req.identity.sub, row.family_id, String(req.identity.sub)],
     );
     await client.query('commit');
     res.status(204).end();
