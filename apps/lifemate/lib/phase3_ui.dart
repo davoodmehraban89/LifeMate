@@ -662,13 +662,28 @@ class _FamilyDashboardCardState extends State<FamilyDashboardCard> {
   }
 
   Future<void> openChild(Map<String, dynamic> child) async {
-    final summary = await widget.api.getChildSupportSummary(
-      widget.family['id'].toString(),
-      child['user_id'].toString(),
-    );
+    final familyId = widget.family['id'].toString();
+    final childId = child['user_id'].toString();
+    final summary = await widget.api.getChildSupportSummary(familyId, childId);
+    Map<String, dynamic>? wellbeing;
+    try {
+      wellbeing = await widget.api.getGuardianWellbeingSummary(familyId, childId);
+    } catch (_) {
+      wellbeing = null;
+    }
     if (!mounted) return;
     final metrics = Map<String, dynamic>.from(summary['metrics'] as Map? ?? const {});
     final upcoming = summary['upcoming'] as List<dynamic>? ?? const [];
+    final wellbeingSummary = wellbeing == null
+        ? const <String, dynamic>{}
+        : Map<String, dynamic>.from(
+            wellbeing['summary'] as Map? ?? const <String, dynamic>{},
+          );
+    final safety = wellbeing == null
+        ? const <String, dynamic>{}
+        : Map<String, dynamic>.from(
+            wellbeing['safety'] as Map? ?? const <String, dynamic>{},
+          );
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -683,6 +698,45 @@ class _FamilyDashboardCardState extends State<FamilyDashboardCard> {
                 Chip(label: Text((metrics['studyMinutesLast7Days'] ?? 0).toString() + ' دقیقه مطالعه')),
                 if (metrics['gradePercent'] != null) Chip(label: Text('میانگین ' + metrics['gradePercent'].toString() + '٪')),
               ]),
+              if (wellbeing != null) ...[
+                const SizedBox(height: 14),
+                Text('خلاصه حال خوب', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  Chip(
+                    label: Text(
+                      (wellbeingSummary['checkin_count'] ?? 0).toString() +
+                          ' ثبت مجاز',
+                    ),
+                  ),
+                  if (wellbeingSummary['mood_average'] != null)
+                    Chip(
+                      label: Text(
+                        'حال ' + wellbeingSummary['mood_average'].toString() + '/5',
+                      ),
+                    ),
+                  if (wellbeingSummary['stress_average'] != null)
+                    Chip(
+                      label: Text(
+                        'استرس ' +
+                            wellbeingSummary['stress_average'].toString() +
+                            '/5',
+                      ),
+                    ),
+                  if ((safety['open_urgent_count'] ?? 0) != 0)
+                    Chip(
+                      avatar: const Icon(Icons.warning_amber_rounded, size: 18),
+                      label: Text(
+                        safety['open_urgent_count'].toString() +
+                            ' هشدار ایمنی نیازمند توجه',
+                      ),
+                    ),
+                ]),
+                const SizedBox(height: 6),
+                const Text(
+                  'این بخش فقط خلاصه مجاز و سیگنال ایمنی را نشان می‌دهد؛ متن خصوصی گفت‌وگو یا یادداشت نمایش داده نمی‌شود.',
+                ),
+              ],
               const SizedBox(height: 10),
               const Text('موارد پیش‌رو'),
               ...upcoming.take(8).map((raw) {
