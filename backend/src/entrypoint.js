@@ -1,5 +1,6 @@
-const runtimeEnv = process.env.NODE_ENV || 'production';
-process.env.NODE_ENV = 'test';
+const publicPort = Number(process.env.PORT ?? 8080);
+process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+process.env.PORT = '0';
 import express from 'express';
 import {
   operationalErrorHandler,
@@ -9,7 +10,7 @@ import {
 } from './operations.js';
 
 const { app, pool } = await import('./server.js');
-process.env.NODE_ENV = runtimeEnv;
+process.env.PORT = String(publicPort);
 
 const outer = express();
 outer.disable('x-powered-by');
@@ -33,6 +34,4 @@ outer.get('/ready', async (_req, res) => {
 
 outer.use(app);
 outer.use(operationalErrorHandler);
-
-const port = Number(process.env.PORT ?? 8080);
-outer.listen(port, () => console.log(JSON.stringify({ type: 'startup', service: 'lifemate-api', port })));
+outer.listen(publicPort, () => console.log(JSON.stringify({ type: 'startup', service: 'lifemate-api', port: publicPort })));
