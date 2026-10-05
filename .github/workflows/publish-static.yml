@@ -34,12 +34,28 @@ jobs:
           flutter build apk --release
           --dart-define=LIFEMATE_API_URL=https://lifemate-api-fn-staging.up.railway.app
 
+      - name: Publish stable APK release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=feature1-test
+          git tag -f "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG" --force
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" \
+              --title "LifeMate Feature 1 Test" \
+              --notes "Latest installable Android test build connected to the LifeMate staging API." \
+              --prerelease \
+              --target "$GITHUB_SHA"
+          gh release upload "$TAG" \
+            build/app/outputs/flutter-apk/app-release.apk#LifeMate.apk \
+            --clobber
+
       - name: Prepare static release directory
         run: |
           rm -rf ../../public-release
-          mkdir -p ../../public-release/downloads
+          mkdir -p ../../public-release
           cp -R build/web/. ../../public-release/
-          cp build/app/outputs/flutter-apk/app-release.apk ../../public-release/downloads/LifeMate.apk
           touch ../../public-release/.nojekyll
 
       - name: Publish immutable static branch
