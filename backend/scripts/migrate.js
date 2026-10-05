@@ -4,12 +4,27 @@ import pg from 'pg';
 
 const { Client } = pg;
 const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) throw new Error('DATABASE_URL is required');
-
-const client = new Client({
-  connectionString: databaseUrl,
-  ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false },
-});
+const client = new Client(
+  databaseUrl
+    ? {
+        connectionString: databaseUrl,
+        ssl:
+          process.env.PGSSLMODE === 'require'
+            ? { rejectUnauthorized: false }
+            : false,
+      }
+    : {
+        host: process.env.PGHOST,
+        port: Number(process.env.PGPORT ?? 5432),
+        database: process.env.PGDATABASE,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        ssl:
+          process.env.PGSSLMODE === 'require'
+            ? { rejectUnauthorized: false }
+            : false,
+      },
+);
 
 await client.connect();
 try {
