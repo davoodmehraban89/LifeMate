@@ -86,6 +86,36 @@ abstract class IdentityApi {
   Future<Map<String, dynamic>> submitSyncMutations(
     List<Map<String, dynamic>> mutations,
   );
+
+  Future<Map<String, dynamic>> createLearningGoal({
+    required String title,
+    String? target,
+    String? subjectId,
+  });
+  Future<List<Map<String, dynamic>>> listLearningGoals();
+  Future<Map<String, dynamic>> createLearningCheckin({
+    String? learningGoalId,
+    required int confidence,
+    required int difficulty,
+    String? note,
+  });
+  Future<Map<String, dynamic>> createWellbeingCheckin({
+    required int mood,
+    required int energy,
+    required int stress,
+    String? note,
+    String visibility,
+  });
+  Future<List<Map<String, dynamic>>> listWellbeingCheckins();
+  Future<Map<String, dynamic>> createAiSession(String kind);
+  Future<Map<String, dynamic>> sendAiMessage(
+    String sessionId,
+    String message,
+  );
+  Future<Map<String, dynamic>> getGuardianWellbeingSummary(
+    String familyId,
+    String minorUserId,
+  );
 }
 
 class ApiException implements Exception {
