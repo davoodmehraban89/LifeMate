@@ -58,6 +58,7 @@ create table family_invitation (
   family_id uuid not null references family_workspace(id) on delete cascade,
   invited_email_normalized text not null check (invited_email_normalized = lower(invited_email_normalized)),
   intended_role member_role not null,
+  intended_theme text check (intended_theme in ('girl_pink','boy_blue','adult_blue','custom')),
   token_digest text not null unique,
   status invitation_status not null default 'pending',
   invited_by uuid not null references app_user(id),
