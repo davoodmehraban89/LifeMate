@@ -1,0 +1,58 @@
+name: Phase 2 CI
+
+on:
+  push:
+    branches: [main, phase-2/product-foundation-identity]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/lifemate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate platform scaffold
+        run: flutter create --platforms=android,web --project-name=lifemate .
+      - run: flutter pub get
+      - name: Format
+        run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build web --release
+      - run: flutter build apk --debug
+
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: lifemate_ci
+          POSTGRES_DB: lifemate_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lifemate_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: lifemate_ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply migrations
+        run: psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/migrations/0001_identity_family.sql
+      - name: Authorization/schema tests
+        run: psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/schema_test.sql
+      - name: Verify schema objects
+        run: |
+          test "$(psql -h localhost -U postgres -d lifemate_ci -Atc "select count(*) from information_schema.tables where table_schema='public' and table_name in ('app_user','profile','family_workspace','family_membership','guardian_relationship','family_invitation','access_audit');")" = "7"
