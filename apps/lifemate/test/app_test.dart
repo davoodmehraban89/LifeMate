@@ -4,6 +4,14 @@ import 'package:lifemate/api.dart';
 import 'package:lifemate/main.dart';
 
 class FakeApi implements IdentityApi {
+  FakeApi({
+    this.role = 'teen_minor',
+    this.themePreference = 'girl_pink',
+  });
+
+  final String role;
+  final String themePreference;
+
   @override
   String? accessToken;
 
@@ -36,9 +44,9 @@ class FakeApi implements IdentityApi {
 
   @override
   Future<Map<String, dynamic>> getProfile() async => {
-        'display_name': 'والد',
-        'email_normalized': 'parent@example.test',
-        'theme_preference': 'adult_blue',
+        'display_name': role == 'teen_minor' ? 'آرام' : 'والد',
+        'email_normalized': 'user@example.test',
+        'theme_preference': themePreference,
       };
 
   @override
@@ -53,7 +61,14 @@ class FakeApi implements IdentityApi {
       };
 
   @override
-  Future<List<Map<String, dynamic>>> listFamilies() async => [];
+  Future<List<Map<String, dynamic>>> listFamilies() async => [
+        {
+          'id': 'family-1',
+          'name': 'خانواده',
+          'role': role,
+          'is_admin': role == 'parent_guardian',
+        }
+      ];
 
   @override
   Future<List<Map<String, dynamic>>> listFamilyMembers(String familyId) async =>
@@ -108,9 +123,13 @@ void main() {
     expect(find.text('ارسال لینک بازیابی'), findsOneWidget);
   });
 
-  testWidgets('successful login opens MyStudyLife-inspired home shell',
+  testWidgets('teen login opens MyStudyLife-inspired student shell',
       (tester) async {
-    await tester.pumpWidget(LifeMateApp(api: FakeApi()));
+    await tester.pumpWidget(
+      LifeMateApp(
+        api: FakeApi(role: 'teen_minor', themePreference: 'girl_pink'),
+      ),
+    );
 
     await tester.enterText(
       find.widgetWithText(TextField, 'ایمیل'),
@@ -130,3 +149,33 @@ void main() {
     expect(find.text('امتحان‌ها'), findsOneWidget);
   });
 }
+
+
+testWidgets('parent login opens parent-focused family shell', (tester) async {
+  await tester.pumpWidget(
+    LifeMateApp(
+      api: FakeApi(
+        role: 'parent_guardian',
+        themePreference: 'adult_blue',
+      ),
+    ),
+  );
+
+  await tester.enterText(
+    find.widgetWithText(TextField, 'ایمیل'),
+    'parent@example.test',
+  );
+  await tester.enterText(
+    find.widgetWithText(TextField, 'رمز عبور'),
+    'StrongPass!123',
+  );
+  await tester.tap(find.text('ورود'));
+  await tester.pumpAndSettle();
+
+  expect(find.text('امروز'), findsWidgets);
+  expect(find.text('برنامه‌ریز'), findsOneWidget);
+  expect(find.text('خانواده'), findsOneWidget);
+  expect(find.text('راهنما'), findsOneWidget);
+  expect(find.text('من'), findsOneWidget);
+  expect(find.text('امتحان‌ها'), findsNothing);
+});
