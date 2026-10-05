@@ -72,6 +72,12 @@ abstract class IdentityApi {
   );
   Future<Map<String, dynamic>> getSchoolOverview(String studentUserId);
   Future<List<Map<String, dynamic>>> getTimetable(String studentUserId);
+  Future<Map<String, dynamic>> setGrade(
+    String itemId, {
+    required num points,
+    required num outOf,
+  });
+  Future<List<Map<String, dynamic>>> claimDueReminders();
   Future<List<Map<String, dynamic>>> getFamilyCalendar(String familyId);
   Future<Map<String, dynamic>> getChildSupportSummary(
     String familyId,
@@ -426,6 +432,32 @@ class HttpIdentityApi implements IdentityApi {
       auth: true,
     );
     return (result['classes'] as List<dynamic>? ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> setGrade(
+    String itemId, {
+    required num points,
+    required num outOf,
+  }) =>
+      _json(
+        'PATCH',
+        '/v1/school/plan-items/$itemId/grade',
+        auth: true,
+        body: {'points': points, 'outOf': outOf},
+      );
+
+  @override
+  Future<List<Map<String, dynamic>>> claimDueReminders() async {
+    final result = await _json(
+      'POST',
+      '/v1/reminders/claim-due',
+      auth: true,
+      body: {'limit': 20},
+    );
+    return (result['reminders'] as List<dynamic>? ?? const [])
         .map((item) => Map<String, dynamic>.from(item as Map))
         .toList();
   }
