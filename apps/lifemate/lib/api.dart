@@ -28,6 +28,7 @@ abstract class IdentityApi {
     required String familyId,
     required String email,
     required String role,
+    String? themePreference,
   });
   Future<void> acceptInvitation(String token);
 }
@@ -206,12 +207,17 @@ class HttpIdentityApi implements IdentityApi {
     required String familyId,
     required String email,
     required String role,
+    String? themePreference,
   }) async {
     await _json(
       'POST',
       '/v1/families/$familyId/invitations',
       auth: true,
-      body: {'email': email, 'role': role},
+      body: {
+        'email': email,
+        'role': role,
+        if (themePreference != null) 'themePreference': themePreference,
+      },
     );
   }
 
