@@ -67,6 +67,7 @@ class FakeApi implements IdentityApi {
     required String familyId,
     required String email,
     required String role,
+    String? themePreference,
   }) async {}
 
   @override
