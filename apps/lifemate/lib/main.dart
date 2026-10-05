@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-void main() => runApp(const LifeMateApp());
+import 'api.dart';
 
-enum MemberRole { teen, parent, adult }
-enum ProfileTheme { girlPink, boyBlue, adultBlue }
+void main() => runApp(LifeMateApp());
 
 class LifeMateApp extends StatelessWidget {
-  const LifeMateApp({super.key});
+  LifeMateApp({super.key, IdentityApi? api}) : api = api ?? HttpIdentityApi();
+  final IdentityApi api;
 
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFF4D86E8);
+    final uri = Uri.base;
+    final token = uri.queryParameters['token'];
+    Widget entry = SignInPage(api: api);
+    if (token != null && uri.path.contains('verify-email')) {
+      entry = VerifyEmailPage(api: api, token: token);
+    } else if (token != null && uri.path.contains('reset-password')) {
+      entry = ResetPasswordPage(api: api, token: token);
+    }
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       locale: const Locale('fa'),
@@ -24,15 +33,39 @@ class LifeMateApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: accent, surface: Colors.white),
         scaffoldBackgroundColor: const Color(0xFFF8FAFD),
+        inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
         useMaterial3: true,
       ),
-      home: const Directionality(textDirection: TextDirection.rtl, child: SignInPage()),
+      home: Directionality(textDirection: TextDirection.rtl, child: entry),
     );
   }
 }
 
+String errorText(Object error) {
+  if (error is ApiException) {
+    switch (error.code) {
+      case 'invalid_credentials':
+        return 'ایمیل یا رمز عبور صحیح نیست.';
+      case 'email_not_verified':
+        return 'ابتدا ایمیل حساب را تأیید کن.';
+      case 'account_exists':
+        return 'برای این ایمیل قبلاً حساب ساخته شده است.';
+      case 'invalid_password':
+        return 'رمز عبور باید حداقل ۱۰ کاراکتر باشد.';
+      case 'invalid_current_password':
+        return 'رمز فعلی صحیح نیست.';
+      case 'invalid_or_expired_token':
+        return 'لینک منقضی شده یا معتبر نیست.';
+      case 'forbidden':
+        return 'برای این عملیات دسترسی نداری.';
+    }
+  }
+  return 'عملیات انجام نشد. دوباره تلاش کن.';
+}
+
 class SignInPage extends StatefulWidget {
-  const SignInPage({super.key});
+  const SignInPage({super.key, required this.api});
+  final IdentityApi api;
   @override
   State<SignInPage> createState() => _SignInPageState();
 }
@@ -40,116 +73,462 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   final email = TextEditingController();
   final password = TextEditingController();
+  bool busy = false;
+  String? error;
+
+  @override
+  void dispose() {
+    email.dispose();
+    password.dispose();
+    super.dispose();
+  }
+
+  Future<void> submit() async {
+    setState(() { busy = true; error = null; });
+    try {
+      await widget.api.login(email.text, password.text);
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeShell(api: widget.api)));
+    } catch (e) {
+      if (mounted) setState(() => error = errorText(e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: ListView(
-                padding: const EdgeInsets.all(28),
-                shrinkWrap: true,
-                children: [
-                  const Icon(Icons.route_rounded, size: 64),
-                  const SizedBox(height: 16),
-                  const Text('LifeMate', textAlign: TextAlign.center, style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700)),
-                  const Text('همراه شخصی، تحصیلی و خانوادگی', textAlign: TextAlign.center),
-                  const SizedBox(height: 32),
-                  TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'ایمیل', border: OutlineInputBorder())),
-                  const SizedBox(height: 12),
-                  TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'رمز عبور', border: OutlineInputBorder())),
-                  const SizedBox(height: 16),
-                  FilledButton(onPressed: () => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomeShell())), child: const Text('ورود')),
-                  TextButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RecoveryPage())), child: const Text('رمز عبور را فراموش کرده‌ام')),
-                  TextButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RegistrationPage())), child: const Text('ساخت حساب جدید')),
-                ],
-              ),
-            ),
+    body: SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: ListView(
+            padding: const EdgeInsets.all(28),
+            shrinkWrap: true,
+            children: [
+              const Icon(Icons.route_rounded, size: 64),
+              const SizedBox(height: 16),
+              const Text('LifeMate', textAlign: TextAlign.center, style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700)),
+              const Text('همراه شخصی، تحصیلی و خانوادگی', textAlign: TextAlign.center),
+              const SizedBox(height: 32),
+              TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'ایمیل')),
+              const SizedBox(height: 12),
+              TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'رمز عبور')),
+              if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
+              const SizedBox(height: 16),
+              FilledButton(onPressed: busy ? null : submit, child: Text(busy ? 'در حال ورود...' : 'ورود')),
+              TextButton(onPressed: busy ? null : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => RecoveryPage(api: widget.api))), child: const Text('رمز عبور را فراموش کرده‌ام')),
+              TextButton(onPressed: busy ? null : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => RegistrationPage(api: widget.api))), child: const Text('ساخت حساب جدید')),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
-class RegistrationPage extends StatelessWidget {
-  const RegistrationPage({super.key});
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key, required this.api});
+  final IdentityApi api;
   @override
-  Widget build(BuildContext context) => const _FormScaffold(title: 'ساخت حساب', fields: ['نام', 'ایمیل', 'رمز عبور', 'تکرار رمز عبور'], action: 'ثبت‌نام و ارسال ایمیل تأیید');
+  State<RegistrationPage> createState() => _RegistrationPageState();
 }
 
-class RecoveryPage extends StatelessWidget {
-  const RecoveryPage({super.key});
+class _RegistrationPageState extends State<RegistrationPage> {
+  final name = TextEditingController();
+  final email = TextEditingController();
+  final password = TextEditingController();
+  final confirm = TextEditingController();
+  bool busy = false;
+  String? error;
+
+  Future<void> submit() async {
+    if (password.text != confirm.text) {
+      setState(() => error = 'تکرار رمز عبور یکسان نیست.');
+      return;
+    }
+    setState(() { busy = true; error = null; });
+    try {
+      await widget.api.register(displayName: name.text, email: email.text, password: password.text);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('حساب ساخته شد. ایمیل تأیید را بررسی کن.')));
+      Navigator.pop(context);
+    } catch (e) {
+      if (mounted) setState(() => error = errorText(e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => const _FormScaffold(title: 'بازیابی رمز عبور', fields: ['ایمیل تأییدشده'], action: 'ارسال لینک بازیابی');
+  Widget build(BuildContext context) => SimpleFormPage(
+    title: 'ساخت حساب',
+    busy: busy,
+    error: error,
+    action: 'ثبت‌نام و ارسال ایمیل تأیید',
+    onPressed: submit,
+    fields: [
+      TextField(controller: name, decoration: const InputDecoration(labelText: 'نام')),
+      TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'ایمیل')),
+      TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'رمز عبور')),
+      TextField(controller: confirm, obscureText: true, decoration: const InputDecoration(labelText: 'تکرار رمز عبور')),
+    ],
+  );
 }
 
-class ChangePasswordPage extends StatelessWidget {
-  const ChangePasswordPage({super.key});
+class RecoveryPage extends StatefulWidget {
+  const RecoveryPage({super.key, required this.api});
+  final IdentityApi api;
   @override
-  Widget build(BuildContext context) => const _FormScaffold(title: 'تغییر رمز عبور', fields: ['رمز فعلی', 'رمز جدید', 'تکرار رمز جدید'], action: 'ذخیره رمز جدید');
+  State<RecoveryPage> createState() => _RecoveryPageState();
 }
 
-class _FormScaffold extends StatelessWidget {
-  const _FormScaffold({required this.title, required this.fields, required this.action});
+class _RecoveryPageState extends State<RecoveryPage> {
+  final email = TextEditingController();
+  bool busy = false;
+  String? error;
+  bool sent = false;
+
+  Future<void> submit() async {
+    setState(() { busy = true; error = null; });
+    try {
+      await widget.api.forgotPassword(email.text);
+      if (mounted) setState(() => sent = true);
+    } catch (e) {
+      if (mounted) setState(() => error = errorText(e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => SimpleFormPage(
+    title: 'بازیابی رمز عبور',
+    busy: busy,
+    error: error,
+    action: sent ? 'لینک ارسال شد' : 'ارسال لینک بازیابی',
+    onPressed: sent ? null : submit,
+    fields: [
+      TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'ایمیل تأییدشده')),
+      if (sent) const Text('اگر حسابی با این ایمیل وجود داشته باشد، لینک بازیابی ارسال می‌شود.'),
+    ],
+  );
+}
+
+class VerifyEmailPage extends StatefulWidget {
+  const VerifyEmailPage({super.key, required this.api, required this.token});
+  final IdentityApi api;
+  final String token;
+  @override
+  State<VerifyEmailPage> createState() => _VerifyEmailPageState();
+}
+
+class _VerifyEmailPageState extends State<VerifyEmailPage> {
+  String message = 'در حال تأیید ایمیل...';
+  @override
+  void initState() { super.initState(); verify(); }
+
+  Future<void> verify() async {
+    try {
+      await widget.api.verifyEmail(widget.token);
+      if (mounted) setState(() => message = 'ایمیل با موفقیت تأیید شد.');
+    } catch (e) {
+      if (mounted) setState(() => message = errorText(e));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(body: Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(message))));
+}
+
+class ResetPasswordPage extends StatefulWidget {
+  const ResetPasswordPage({super.key, required this.api, required this.token});
+  final IdentityApi api;
+  final String token;
+  @override
+  State<ResetPasswordPage> createState() => _ResetPasswordPageState();
+}
+
+class _ResetPasswordPageState extends State<ResetPasswordPage> {
+  final password = TextEditingController();
+  final confirm = TextEditingController();
+  bool busy = false;
+  String? error;
+  bool done = false;
+
+  Future<void> submit() async {
+    if (password.text != confirm.text) {
+      setState(() => error = 'تکرار رمز عبور یکسان نیست.');
+      return;
+    }
+    setState(() { busy = true; error = null; });
+    try {
+      await widget.api.resetPassword(widget.token, password.text);
+      if (mounted) setState(() => done = true);
+    } catch (e) {
+      if (mounted) setState(() => error = errorText(e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => SimpleFormPage(
+    title: 'ساخت رمز جدید',
+    busy: busy,
+    error: error,
+    action: done ? 'رمز تغییر کرد' : 'ذخیره رمز جدید',
+    onPressed: done ? null : submit,
+    fields: [
+      TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'رمز جدید')),
+      TextField(controller: confirm, obscureText: true, decoration: const InputDecoration(labelText: 'تکرار رمز جدید')),
+    ],
+  );
+}
+
+class ChangePasswordPage extends StatefulWidget {
+  const ChangePasswordPage({super.key, required this.api});
+  final IdentityApi api;
+  @override
+  State<ChangePasswordPage> createState() => _ChangePasswordPageState();
+}
+
+class _ChangePasswordPageState extends State<ChangePasswordPage> {
+  final current = TextEditingController();
+  final next = TextEditingController();
+  final confirm = TextEditingController();
+  bool busy = false;
+  String? error;
+
+  Future<void> submit() async {
+    if (next.text != confirm.text) {
+      setState(() => error = 'تکرار رمز عبور یکسان نیست.');
+      return;
+    }
+    setState(() { busy = true; error = null; });
+    try {
+      await widget.api.changePassword(current.text, next.text);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('رمز عبور تغییر کرد.')));
+      Navigator.pop(context);
+    } catch (e) {
+      if (mounted) setState(() => error = errorText(e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => SimpleFormPage(
+    title: 'تغییر رمز عبور',
+    busy: busy,
+    error: error,
+    action: 'ذخیره رمز جدید',
+    onPressed: submit,
+    fields: [
+      TextField(controller: current, obscureText: true, decoration: const InputDecoration(labelText: 'رمز فعلی')),
+      TextField(controller: next, obscureText: true, decoration: const InputDecoration(labelText: 'رمز جدید')),
+      TextField(controller: confirm, obscureText: true, decoration: const InputDecoration(labelText: 'تکرار رمز جدید')),
+    ],
+  );
+}
+
+class SimpleFormPage extends StatelessWidget {
+  const SimpleFormPage({super.key, required this.title, required this.fields, required this.action, required this.onPressed, this.busy = false, this.error});
   final String title;
-  final List<String> fields;
+  final List<Widget> fields;
   final String action;
+  final VoidCallback? onPressed;
+  final bool busy;
+  final String? error;
+
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(title)),
-        body: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 520), child: ListView(padding: const EdgeInsets.all(24), children: [
-          ...fields.map((f) => Padding(padding: const EdgeInsets.only(bottom: 12), child: TextField(obscureText: f.contains('رمز'), decoration: InputDecoration(labelText: f, border: const OutlineInputBorder())))),
-          FilledButton(onPressed: () {}, child: Text(action)),
-        ]))),
-      );
+    appBar: AppBar(title: Text(title)),
+    body: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            for (final field in fields) Padding(padding: const EdgeInsets.only(bottom: 12), child: field),
+            if (error != null) Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
+            FilledButton(onPressed: busy ? null : onPressed, child: Text(busy ? 'لطفاً صبر کن...' : action)),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+  const HomeShell({super.key, required this.api});
+  final IdentityApi api;
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
 
 class _HomeShellState extends State<HomeShell> {
   int index = 0;
-  static const destinations = ['امروز', 'برنامه', 'تقویم', 'کارها', 'امتحان‌ها', 'تمرکز', 'همراه هوشمند'];
+  static const destinations = ['امروز', 'برنامه هفتگی', 'تقویم', 'تکالیف و کارها', 'امتحان‌ها و نمرات', 'تمرکز', 'همراه هوشمند'];
+
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(destinations[index]), actions: [IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileFamilyPage())), icon: const Icon(Icons.person_outline))]),
-        body: Center(child: Text(destinations[index], style: Theme.of(context).textTheme.headlineMedium)),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: index > 4 ? 0 : index,
-          onDestinationSelected: (i) => setState(() => index = i),
-          destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_outlined), label: 'امروز'),
-            NavigationDestination(icon: Icon(Icons.schedule_outlined), label: 'برنامه'),
-            NavigationDestination(icon: Icon(Icons.calendar_month_outlined), label: 'تقویم'),
-            NavigationDestination(icon: Icon(Icons.task_alt_outlined), label: 'کارها'),
-            NavigationDestination(icon: Icon(Icons.school_outlined), label: 'امتحان‌ها'),
+    appBar: AppBar(
+      title: Text(destinations[index]),
+      actions: [
+        IconButton(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileFamilyPage(api: widget.api))),
+          icon: const Icon(Icons.person_outline),
+        ),
+      ],
+    ),
+    body: Center(child: Text(destinations[index], style: Theme.of(context).textTheme.headlineMedium)),
+    bottomNavigationBar: NavigationBar(
+      selectedIndex: index > 4 ? 0 : index,
+      onDestinationSelected: (i) => setState(() => index = i),
+      destinations: const [
+        NavigationDestination(icon: Icon(Icons.home_outlined), label: 'امروز'),
+        NavigationDestination(icon: Icon(Icons.schedule_outlined), label: 'برنامه'),
+        NavigationDestination(icon: Icon(Icons.calendar_month_outlined), label: 'تقویم'),
+        NavigationDestination(icon: Icon(Icons.task_alt_outlined), label: 'کارها'),
+        NavigationDestination(icon: Icon(Icons.school_outlined), label: 'امتحان‌ها'),
+      ],
+    ),
+    drawer: Drawer(
+      child: SafeArea(
+        child: ListView(
+          children: [
+            const ListTile(title: Text('LifeMate'), subtitle: Text('منوی اصلی')),
+            ...destinations.asMap().entries.map((e) => ListTile(title: Text(e.value), onTap: () { setState(() => index = e.key); Navigator.pop(context); })),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.family_restroom),
+              title: const Text('خانواده'),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileFamilyPage(api: widget.api))),
+            ),
           ],
         ),
-        drawer: Drawer(child: SafeArea(child: ListView(children: [
-          const ListTile(title: Text('LifeMate'), subtitle: Text('منو')),
-          ...destinations.asMap().entries.map((e) => ListTile(title: Text(e.value), onTap: () { setState(() => index = e.key); Navigator.pop(context); })),
-          const Divider(),
-          ListTile(leading: const Icon(Icons.family_restroom), title: const Text('خانواده'), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileFamilyPage()))),
-        ]))),
-      );
+      ),
+    ),
+  );
 }
 
-class ProfileFamilyPage extends StatelessWidget {
-  const ProfileFamilyPage({super.key});
+class ProfileFamilyPage extends StatefulWidget {
+  const ProfileFamilyPage({super.key, required this.api});
+  final IdentityApi api;
+  @override
+  State<ProfileFamilyPage> createState() => _ProfileFamilyPageState();
+}
+
+class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
+  late Future<List<dynamic>> data;
+  @override
+  void initState() { super.initState(); data = load(); }
+
+  Future<List<dynamic>> load() async => [await widget.api.getProfile(), await widget.api.listFamilies()];
+
+  Future<void> createFamily() async {
+    final name = TextEditingController();
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('ساخت فضای خانواده'),
+        content: TextField(controller: name, decoration: const InputDecoration(labelText: 'نام خانواده')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('انصراف')),
+          FilledButton(
+            onPressed: () async {
+              if (name.text.trim().isEmpty) return;
+              await widget.api.createFamily(name.text.trim(), role: 'parent_guardian');
+              if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+            },
+            child: const Text('ساخت'),
+          ),
+        ],
+      ),
+    );
+    name.dispose();
+    if (created == true && mounted) setState(() => data = load());
+  }
+
+  Future<void> invite(String familyId) async {
+    final email = TextEditingController();
+    final sent = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('دعوت فرزند / عضو'),
+        content: TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'ایمیل')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('انصراف')),
+          FilledButton(
+            onPressed: () async {
+              await widget.api.inviteMember(familyId: familyId, email: email.text, role: 'teen_minor');
+              if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+            },
+            child: const Text('ارسال دعوت'),
+          ),
+        ],
+      ),
+    );
+    email.dispose();
+    if (sent == true && mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('دعوت ارسال شد.')));
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('پروفایل و خانواده')),
-        body: ListView(padding: const EdgeInsets.all(20), children: [
-          const Card(child: ListTile(leading: CircleAvatar(child: Icon(Icons.person)), title: Text('پروفایل من'), subtitle: Text('نقش، اطلاعات شخصی و تم'))),
-          Card(child: Column(children: [
-            const ListTile(leading: Icon(Icons.family_restroom), title: Text('Family Workspace'), subtitle: Text('اعضا، نقش‌ها و دسترسی‌ها')),
-            ListTile(leading: const Icon(Icons.person_add_alt), title: const Text('دعوت عضو'), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const _FormScaffold(title: 'دعوت به خانواده', fields: ['ایمیل', 'نقش'], action: 'ارسال دعوت')))),
-          ])),
-          ListTile(leading: const Icon(Icons.password), title: const Text('تغییر رمز عبور'), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangePasswordPage()))),
-          const ListTile(leading: Icon(Icons.privacy_tip_outlined), title: Text('حریم خصوصی و دسترسی‌ها'), subtitle: Text('خصوصی، اعضای منتخب، والد/سرپرست، خانواده، ایمنی')),
-        ]),
-      );
+    appBar: AppBar(title: const Text('پروفایل و خانواده')),
+    body: FutureBuilder<List<dynamic>>(
+      future: data,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return Center(child: Text(errorText(snapshot.error!)));
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        final profile = snapshot.data![0] as Map<String, dynamic>;
+        final families = snapshot.data![1] as List<Map<String, dynamic>>;
+        return ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Card(
+              child: ListTile(
+                leading: const CircleAvatar(child: Icon(Icons.person)),
+                title: Text(profile['display_name']?.toString() ?? 'پروفایل من'),
+                subtitle: Text(profile['email_normalized']?.toString() ?? ''),
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (families.isEmpty)
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.family_restroom),
+                  title: const Text('هنوز فضای خانواده ساخته نشده'),
+                  trailing: IconButton(onPressed: createFamily, icon: const Icon(Icons.add)),
+                ),
+              )
+            else
+              ...families.map(
+                (family) => Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.family_restroom),
+                    title: Text(family['name']?.toString() ?? 'خانواده'),
+                    subtitle: Text((family['is_admin'] == true ? 'مدیر خانواده · ' : '') + (family['role']?.toString() ?? '')),
+                    trailing: IconButton(onPressed: () => invite(family['id'].toString()), icon: const Icon(Icons.person_add_alt)),
+                  ),
+                ),
+              ),
+            ListTile(
+              leading: const Icon(Icons.password),
+              title: const Text('تغییر رمز عبور'),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ChangePasswordPage(api: widget.api))),
+            ),
+            const ListTile(
+              leading: Icon(Icons.privacy_tip_outlined),
+              title: Text('حریم خصوصی و دسترسی‌ها'),
+              subtitle: Text('خصوصی، اعضای منتخب، والد/سرپرست، خانواده، ایمنی'),
+            ),
+          ],
+        );
+      },
+    ),
+    floatingActionButton: FloatingActionButton.extended(onPressed: createFamily, icon: const Icon(Icons.add), label: const Text('خانواده')),
+  );
 }
