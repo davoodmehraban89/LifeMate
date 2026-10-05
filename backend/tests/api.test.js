@@ -113,6 +113,9 @@ test('identity + family vertical slice', async () => {
   });
   assert.equal(teenLogin.status, 200);
 
+  const unauthenticatedMembers = await request(`/v1/families/${family.body.id}/members`);
+  assert.equal(unauthenticatedMembers.status, 401);
+
   const invite = await request(`/v1/families/${family.body.id}/invitations`, {
     method: 'POST',
     token: refreshed.body.accessToken,
@@ -140,6 +143,13 @@ test('identity + family vertical slice', async () => {
   assert.equal(teenMember.role, 'teen_minor');
   assert.equal(teenMember.is_admin, false);
 
+  const teenInviteAttempt = await request(`/v1/families/${family.body.id}/invitations`, {
+    method: 'POST',
+    token: teenLogin.body.accessToken,
+    body: { email: 'blocked@example.test', role: 'adult_member' },
+  });
+  assert.equal(teenInviteAttempt.status, 403);
+
   const guardian = await request(`/v1/families/${family.body.id}/guardians`, {
     method: 'POST',
     token: refreshed.body.accessToken,
@@ -149,6 +159,16 @@ test('identity + family vertical slice', async () => {
     },
   });
   assert.equal(guardian.status, 204);
+
+  const teenGuardianAttempt = await request(`/v1/families/${family.body.id}/guardians`, {
+    method: 'POST',
+    token: teenLogin.body.accessToken,
+    body: {
+      guardianUserId: parentMember.user_id,
+      minorUserId: teenMember.user_id,
+    },
+  });
+  assert.equal(teenGuardianAttempt.status, 403);
 
   const forgot = await request('/v1/auth/forgot-password', {
     method: 'POST',
