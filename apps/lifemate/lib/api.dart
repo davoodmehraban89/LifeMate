@@ -116,6 +116,11 @@ abstract class IdentityApi {
     String familyId,
     String minorUserId,
   );
+  Future<Map<String, dynamic>> requestFamilyGuidance(
+    String familyId,
+    String minorUserId,
+    String question,
+  );
 }
 
 class ApiException implements Exception {
@@ -609,6 +614,19 @@ class HttpIdentityApi implements IdentityApi {
         'GET',
         '/v1/families/$familyId/children/$minorUserId/wellbeing-summary',
         auth: true,
+      );
+
+  @override
+  Future<Map<String, dynamic>> requestFamilyGuidance(
+    String familyId,
+    String minorUserId,
+    String question,
+  ) =>
+      _json(
+        'POST',
+        '/v1/families/$familyId/children/$minorUserId/family-guidance',
+        auth: true,
+        body: {'question': question},
       );
 
 }
