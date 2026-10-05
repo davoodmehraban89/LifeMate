@@ -5,13 +5,13 @@ Once application code exists, every implementation PR must run:
 1. formatting check;
 2. Flutter/Dart static analysis;
 3. unit/widget tests relevant to changed domain/UI;
-4. authorization/database tests when schema/RLS changes;
+4. authorization/database tests when schema or access-policy changes;
 5. Android debug build smoke;
 6. Web release/debug build smoke as appropriate;
-7. secret scanning/dependency review available in the repository plan/tooling.
+7. secret scanning and backend dependency audit in CI.
 
 ## Security tests required for identity/family
-For each protected resource, test allowed and denied access for: owner profile, related guardian, unrelated family member, removed member, unauthenticated user and privileged server path where applicable. RLS tests must cover SELECT/INSERT/UPDATE/DELETE rather than only happy-path reads.
+For each protected resource, test allowed and denied access for: owner profile, related guardian, unrelated family member, removed member, unauthenticated user and privileged server path where applicable. LifeMate's primary authorization boundary is the server/API layer; database constraints and helper-policy tests provide defense in depth. If RLS is enabled for a deployment, its SELECT/INSERT/UPDATE/DELETE policies must be tested as an additional gate.
 
 ## Staging rule
 All deployable changes land in staging before production. Staging uses separate environment/secrets/data from production. No production deploy, destructive migration or sensitive access change is implied by merge alone.

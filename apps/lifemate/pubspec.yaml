@@ -1,0 +1,19 @@
+name: lifemate
+version: 0.1.0+1
+publish_to: none
+description: LifeMate personal, family and learning companion.
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  http: ^1.5.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
