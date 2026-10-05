@@ -179,6 +179,21 @@ class FakeApi implements IdentityApi {
       {'id': 'class-1', ...data};
 
   @override
+  Future<Map<String, dynamic>> setGrade(
+    String itemId, {
+    required num points,
+    required num outOf,
+  }) async =>
+      {
+        'id': itemId,
+        'grade_points': points,
+        'grade_out_of': outOf,
+      };
+
+  @override
+  Future<List<Map<String, dynamic>>> claimDueReminders() async => [];
+
+  @override
   Future<Map<String, dynamic>> getSchoolOverview(String studentUserId) async => {
         'years': [
           {'id': 'year-1', 'title': 'سال تحصیلی'}
