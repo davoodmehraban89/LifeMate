@@ -1,6 +1,6 @@
 # LifeMate — Phase 2 Implementation Blueprint
 
-## Proposed repository structure
+## Repository structure
 ```text
 apps/lifemate/                 Flutter application (Android + Web/PWA)
   lib/
@@ -8,39 +8,40 @@ apps/lifemate/                 Flutter application (Android + Web/PWA)
     features/auth/
     features/profile/
     features/family/
-    shared/                    reusable UI/domain utilities with strict scope
-  web/                         manifest, icons, bootstrap, custom SW/web integration
+    shared/
+  web/                         manifest, icons, PWA integration
   test/
-supabase/
-  migrations/                 versioned schema + grants + RLS
-  functions/                  privileged server workflows; no client secrets
-  tests/                      database/RLS allow+deny tests
+backend/
+  migrations/                 standard PostgreSQL schema + constraints/policies
+  tests/                      authorization/database tests
+  README.md                   API/identity adapter contract
 docs/                         product, UX, architecture, safety, quality, decisions
-.github/workflows/             CI after scaffold
+.github/workflows/             CI and staging verification
 ```
 
 ## Architecture style
-Feature-oriented Flutter modules with domain/service boundaries; avoid a giant shared layer. UI may validate and cache, but backend policies are authoritative for permissions. Supabase is accessed through repository/service interfaces so AI/provider logic and complex privileged workflows remain server-side.
+Feature-oriented Flutter modules behind application repositories. Flutter never receives privileged database credentials. A server/API boundary owns identity-session validation and relationship-aware authorization. PostgreSQL is the durable relational source of truth. Managed database, identity, email, storage and realtime providers are adapters rather than domain dependencies.
 
 ## Environments
-At minimum: **local**, **staging**, **production**. Staging and production use separate Supabase projects/secrets/data. Environment-specific public configuration is injected at build/deploy; secrets/service-role/provider keys exist only in server secret stores. `.env` with real credentials is never committed.
+At minimum: **local**, **staging**, **production**. Staging and production use separate database credentials/data. Environment-specific public API configuration is injected at build/deploy; privileged credentials exist only in server/CI secret stores. Real `.env` files are never committed.
 
-## Phase 2 first vertical slice
-1. App shell + localization/RTL + theme.
-2. Email/password auth + verification/recovery/change-password.
-3. Profile creation.
+## Phase 2 vertical slice
+1. App shell + Persian RTL + role/profile-aware theme.
+2. Email/password auth contract + verification/recovery/change-password UX.
+3. Profile creation/editing.
 4. Family Workspace + invitation + membership.
-5. Guardian relationship and baseline permission enforcement.
+5. Guardian relationship and baseline server authorization contract.
 6. Teen/Parent authenticated home shells.
-7. CI and staging smoke.
+7. CI and isolated PostgreSQL staging smoke.
 
-This slice deliberately proves identity and authorization before planner/school data expands the schema.
+## Student navigation baseline
+MyStudyLife is the primary information-architecture benchmark for the student surface. Direct destinations remain visible for Today, Schedule, Calendar, Tasks, Exams/Grades, Focus and AI; LifeMate Family/Wellbeing extensions are additive rather than hiding these core destinations behind a generic School layer.
 
 ## PWA integration
-Own `manifest.json`, icons/apple-touch-icon, standalone metadata, install guidance and custom service-worker strategy. Push subscription is capability-detected and implemented only after the core auth/family slice is stable.
+Own `manifest.json`, branded icons/apple-touch-icon, standalone metadata, install guidance and explicit service-worker strategy. Push is capability-detected and is not required for Phase 2 identity acceptance.
 
 ## Configuration rule
-Public client identifiers are separated from secrets. Any credential that bypasses RLS or accesses AI/email/push provider privileged APIs is server-only.
+Any credential that can read another user's private data, administer identity, send privileged email, or bypass authorization is server-only.
 
 ## Migration rule
-Schema/grant/RLS changes travel together in versioned migrations and include database tests. Destructive migrations require explicit approval and rollback/backup consideration.
+Schema, constraints and authorization-relevant database changes travel together in versioned PostgreSQL migrations and tests. Destructive migrations require explicit approval and rollback/backup consideration.
