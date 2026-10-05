@@ -1,4 +1,5 @@
-process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+const runtimeEnv = process.env.NODE_ENV || 'production';
+process.env.NODE_ENV = 'test';
 import express from 'express';
 import {
   operationalErrorHandler,
@@ -8,6 +9,8 @@ import {
 } from './operations.js';
 
 const { app, pool } = await import('./server.js');
+process.env.NODE_ENV = runtimeEnv;
+
 const outer = express();
 outer.disable('x-powered-by');
 outer.use(requestContext);
