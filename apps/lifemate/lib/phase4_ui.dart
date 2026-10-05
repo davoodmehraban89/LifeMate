@@ -67,6 +67,67 @@ class _Phase4HubState extends State<Phase4Hub> {
     }
   }
 
+  Future<void> learningCheckin(Map<String, dynamic> goal) async {
+    var confidence = 3;
+    var difficulty = 3;
+    final note = TextEditingController();
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setLocalState) => AlertDialog(
+          title: Text('ثبت پیشرفت · ${goal['title'] ?? ''}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ScaleRow(
+                label: 'اعتماد',
+                value: confidence,
+                onChanged: (v) => setLocalState(() => confidence = v),
+              ),
+              _ScaleRow(
+                label: 'سختی',
+                value: difficulty,
+                onChanged: (v) => setLocalState(() => difficulty = v),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: note,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'یادداشت کوتاه (اختیاری)',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('انصراف'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                await widget.api.createLearningCheckin(
+                  learningGoalId: goal['id']?.toString(),
+                  confidence: confidence,
+                  difficulty: difficulty,
+                  note: note.text.trim().isEmpty ? null : note.text.trim(),
+                );
+                if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+              },
+              child: const Text('ثبت'),
+            ),
+          ],
+        ),
+      ),
+    );
+    note.dispose();
+    if (saved == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('پیشرفت یادگیری ثبت شد.')),
+      );
+    }
+  }
+
   Future<void> wellbeingCheckin() async {
     var mood = 3;
     var energy = 3;
@@ -258,6 +319,8 @@ class _Phase4HubState extends State<Phase4Hub> {
                           leading: const Icon(Icons.flag_circle_outlined),
                           title: Text(goal['title']?.toString() ?? ''),
                           subtitle: Text(goal['target']?.toString() ?? ''),
+                          trailing: const Icon(Icons.add_chart_outlined),
+                          onTap: () => learningCheckin(goal),
                         ),
                       ),
                     )
