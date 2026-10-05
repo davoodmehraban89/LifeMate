@@ -176,6 +176,30 @@ test('phase 4 learning wellbeing and guardian safety boundaries', async () => {
   );
   assert.equal(outsiderSummary.status, 403);
 
+  const familyGuidance = await request(
+    `/v1/families/${family.body.id}/children/${teen.userId}/family-guidance`,
+    {
+      method: 'POST',
+      token: parent.token,
+      body: { question: 'چطور بدون فشار حمایتش کنم؟' },
+    },
+  );
+  assert.equal(familyGuidance.status, 200);
+  assert.equal(familyGuidance.body.advisory, true);
+  assert.equal(familyGuidance.body.medicalDiagnosis, false);
+  assert.equal(familyGuidance.body.rawNotesIncluded, false);
+  assert.equal(familyGuidance.body.rawConversationIncluded, false);
+
+  const outsiderGuidance = await request(
+    `/v1/families/${family.body.id}/children/${teen.userId}/family-guidance`,
+    {
+      method: 'POST',
+      token: outsider.token,
+      body: { question: 'وضعیت چیست؟' },
+    },
+  );
+  assert.equal(outsiderGuidance.status, 403);
+
   const session = await request('/v1/ai/sessions', {
     method: 'POST',
     token: teen.token,
