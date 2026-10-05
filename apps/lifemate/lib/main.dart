@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'api.dart';
+import 'iran_hub.dart';
 import 'phase3_ui.dart';
 import 'phase4_ui.dart';
 
@@ -897,6 +898,14 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
                               icon: const Icon(Icons.person_add_alt)),
                         ),
                       )),
+                ListTile(
+                  leading: const Icon(Icons.public),
+                  title: const Text('خانواده و یادگیری ایران'),
+                  subtitle: const Text('نقش‌ها، پایه تحصیلی، کتاب‌ها، تقویم و یادآوری'),
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => IranianFamilyLearningHub(identity: widget.api),
+                  )),
+                ),
                 ListTile(
                   leading: const Icon(Icons.password),
                   title: const Text('تغییر رمز عبور'),
