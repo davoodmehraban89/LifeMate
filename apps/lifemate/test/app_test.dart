@@ -315,36 +315,6 @@ class FakeApi implements IdentityApi {
         'rawNotesIncluded': false,
         'rawConversationIncluded': false,
       };
-  testWidgets('phase 4 guide opens and returns advisory reply', (tester) async {
-    await tester.pumpWidget(
-      LifeMateApp(
-        api: FakeApi(role: 'parent_guardian', themePreference: 'adult_blue'),
-      ),
-    );
-    await tester.enterText(
-      find.widgetWithText(TextField, 'ایمیل'),
-      'parent@example.test',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextField, 'رمز عبور'),
-      'StrongPass!123',
-    );
-    await tester.tap(find.text('ورود'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('راهنما'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('راهنمای هوشمند'), findsOneWidget);
-    expect(find.text('همراه حال خوب'), findsOneWidget);
-
-    await tester.tap(find.text('راهنمای مطالعه'));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).last, 'برای امتحان ریاضی چه کنم؟');
-    await tester.tap(find.byIcon(Icons.send_rounded));
-    await tester.pumpAndSettle();
-
-    expect(find.text('پاسخ آزمایشی همراه هوشمند'), findsOneWidget);
-  });
 }
 
 void main() {
@@ -428,4 +398,36 @@ void main() {
   expect(find.text('من'), findsOneWidget);
   expect(find.text('امتحان‌ها'), findsNothing);
   });
+
+  testWidgets('phase 4 guide opens and returns advisory reply', (tester) async {
+    await tester.pumpWidget(
+      LifeMateApp(
+        api: FakeApi(role: 'parent_guardian', themePreference: 'adult_blue'),
+      ),
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'ایمیل'),
+      'parent@example.test',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'رمز عبور'),
+      'StrongPass!123',
+    );
+    await tester.tap(find.text('ورود'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('راهنما'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('راهنمای هوشمند'), findsOneWidget);
+    expect(find.text('همراه حال خوب'), findsOneWidget);
+
+    await tester.tap(find.text('راهنمای مطالعه'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'برای امتحان ریاضی چه کنم؟');
+    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('پاسخ آزمایشی همراه هوشمند'), findsOneWidget);
+  });
+
 }
