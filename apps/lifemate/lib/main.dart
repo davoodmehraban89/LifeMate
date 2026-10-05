@@ -99,14 +99,20 @@ class _SignInPageState extends State<SignInPage> {
       if (widget.invitationToken != null) {
         await widget.api.acceptInvitation(widget.invitationToken!);
       }
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => HomeShell(api: widget.api)),
       );
     } catch (e) {
-      if (mounted) setState(() => error = errorText(e));
+      if (mounted) {
+        setState(() => error = errorText(e));
+      }
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+      }
     }
   }
 
@@ -249,13 +255,19 @@ class _RegistrationPageState extends State<RegistrationPage> {
     setState(() { busy = true; error = null; });
     try {
       await widget.api.register(displayName: name.text, email: email.text, password: password.text);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('حساب ساخته شد. ایمیل تأیید را بررسی کن.')));
       Navigator.pop(context);
     } catch (e) {
-      if (mounted) setState(() => error = errorText(e));
+      if (mounted) {
+        setState(() => error = errorText(e));
+      }
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+      }
     }
   }
 
@@ -292,11 +304,17 @@ class _RecoveryPageState extends State<RecoveryPage> {
     setState(() { busy = true; error = null; });
     try {
       await widget.api.forgotPassword(email.text);
-      if (mounted) setState(() => sent = true);
+      if (mounted) {
+        setState(() => sent = true);
+      }
     } catch (e) {
-      if (mounted) setState(() => error = errorText(e));
+      if (mounted) {
+        setState(() => error = errorText(e));
+      }
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+      }
     }
   }
 
@@ -330,9 +348,13 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   Future<void> verify() async {
     try {
       await widget.api.verifyEmail(widget.token);
-      if (mounted) setState(() => message = 'ایمیل با موفقیت تأیید شد.');
+      if (mounted) {
+        setState(() => message = 'ایمیل با موفقیت تأیید شد.');
+      }
     } catch (e) {
-      if (mounted) setState(() => message = errorText(e));
+      if (mounted) {
+        setState(() => message = errorText(e));
+      }
     }
   }
 
@@ -363,11 +385,17 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     setState(() { busy = true; error = null; });
     try {
       await widget.api.resetPassword(widget.token, password.text);
-      if (mounted) setState(() => done = true);
+      if (mounted) {
+        setState(() => done = true);
+      }
     } catch (e) {
-      if (mounted) setState(() => error = errorText(e));
+      if (mounted) {
+        setState(() => error = errorText(e));
+      }
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+      }
     }
   }
 
@@ -407,13 +435,19 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     setState(() { busy = true; error = null; });
     try {
       await widget.api.changePassword(current.text, next.text);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('رمز عبور تغییر کرد.')));
       Navigator.pop(context);
     } catch (e) {
-      if (mounted) setState(() => error = errorText(e));
+      if (mounted) {
+        setState(() => error = errorText(e));
+      }
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+      }
     }
   }
 
@@ -569,7 +603,9 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
           TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('انصراف')),
           FilledButton(
             onPressed: () async {
-              if (name.text.trim().isEmpty) return;
+              if (name.text.trim().isEmpty) {
+                return;
+              }
               await widget.api.createFamily(name.text.trim(), role: 'parent_guardian');
               if (dialogContext.mounted) {
                 Navigator.pop(dialogContext, true);
@@ -581,7 +617,9 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
       ),
     );
     name.dispose();
-    if (created == true && mounted) setState(() => data = load());
+    if (created == true && mounted) {
+      setState(() => data = load());
+    }
   }
 
   Future<void> invite(String familyId) async {
@@ -640,7 +678,9 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
                 role: role,
                 themePreference: theme,
               );
-              if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+              if (dialogContext.mounted) {
+                Navigator.pop(dialogContext, true);
+              }
             },
             child: const Text('ارسال دعوت'),
           ),
@@ -662,8 +702,12 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
     body: FutureBuilder<List<dynamic>>(
       future: data,
       builder: (context, snapshot) {
-        if (snapshot.hasError) return Center(child: Text(errorText(snapshot.error!)));
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (snapshot.hasError) {
+          return Center(child: Text(errorText(snapshot.error!)));
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final profile = snapshot.data![0] as Map<String, dynamic>;
         final families = snapshot.data![1] as List<Map<String, dynamic>>;
         return ListView(
@@ -804,7 +848,9 @@ class _FamilyMembersPageState extends State<FamilyMembersPage> {
                     )
                     .toList(),
                 onChanged: (v) {
-                  if (v != null) guardianId.value = v;
+                  if (v != null) {
+                    guardianId.value = v;
+                  }
                 },
               ),
             ),
@@ -823,7 +869,9 @@ class _FamilyMembersPageState extends State<FamilyMembersPage> {
                     )
                     .toList(),
                 onChanged: (v) {
-                  if (v != null) minorId.value = v;
+                  if (v != null) {
+                    minorId.value = v;
+                  }
                 },
               ),
             ),
