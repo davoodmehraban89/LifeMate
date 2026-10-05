@@ -31,6 +31,7 @@ test('identity + family vertical slice', async () => {
   const suffix = Date.now().toString(36);
   const parentEmail = `parent-${suffix}@example.test`;
   const teenEmail = `teen-${suffix}@example.test`;
+  const supporterEmail = `supporter-${suffix}@example.test`;
   const initialPassword = 'StrongPass!123';
   const changedPassword = 'StrongerPass!456';
 
@@ -149,6 +150,74 @@ test('identity + family vertical slice', async () => {
     body: { email: 'blocked@example.test', role: 'adult_member' },
   });
   assert.equal(teenInviteAttempt.status, 403);
+
+  const reinviteActiveTeen = await request(
+    `/v1/families/${family.body.id}/invitations`,
+    {
+      method: 'POST',
+      token: refreshed.body.accessToken,
+      body: {
+        email: teenEmail,
+        role: 'parent_guardian',
+        themePreference: 'adult_blue',
+      },
+    },
+  );
+  assert.equal(reinviteActiveTeen.status, 409);
+
+  const supporterRegister = await request('/v1/auth/register', {
+    method: 'POST',
+    body: {
+      displayName: 'Supporter',
+      email: supporterEmail,
+      password: initialPassword,
+    },
+  });
+  assert.equal(supporterRegister.status, 201);
+  assert.equal(
+    (
+      await request('/v1/auth/verify-email', {
+        method: 'POST',
+        body: { token: supporterRegister.body.verificationToken },
+      })
+    ).status,
+    204,
+  );
+  const supporterLogin = await request('/v1/auth/login', {
+    method: 'POST',
+    body: { email: supporterEmail, password: initialPassword },
+  });
+  assert.equal(supporterLogin.status, 200);
+
+  const supporterInvite = await request(
+    `/v1/families/${family.body.id}/invitations`,
+    {
+      method: 'POST',
+      token: refreshed.body.accessToken,
+      body: { email: supporterEmail, role: 'parent_guardian' },
+    },
+  );
+  assert.equal(supporterInvite.status, 201);
+  assert.equal(
+    (
+      await request('/v1/invitations/accept', {
+        method: 'POST',
+        token: supporterLogin.body.accessToken,
+        body: { token: supporterInvite.body.invitationToken },
+      })
+    ).status,
+    204,
+  );
+
+  const nonAdminParentInviteAttempt = await request(
+    `/v1/families/${family.body.id}/invitations`,
+    {
+      method: 'POST',
+      token: supporterLogin.body.accessToken,
+      body: { email: 'blocked-by-policy@example.test', role: 'adult_member' },
+    },
+  );
+  assert.equal(nonAdminParentInviteAttempt.status, 403);
 
   const guardian = await request(`/v1/families/${family.body.id}/guardians`, {
     method: 'POST',
