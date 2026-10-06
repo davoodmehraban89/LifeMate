@@ -1,0 +1,36 @@
+name: Build Life Guide role-entry APK
+
+on:
+  push:
+    branches: [test/role-entry-apk]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/lifemate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Test role-first entry
+        run: flutter test test/role_entry_test.dart
+      - name: Build Android APK
+        run: flutter build apk --release --target=lib/role_entry_main.dart
+      - name: Publish test APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=lifeguide-role-entry-test
+          git tag -f "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG" --force
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Life Guide Role Entry Test" --notes "Android test build with login bypassed and role-first entry for child, mother, and father." --prerelease --target "$GITHUB_SHA"
+          gh release upload "$TAG" build/app/outputs/flutter-apk/app-release.apk#LifeGuide-role-entry-test.apk --clobber
