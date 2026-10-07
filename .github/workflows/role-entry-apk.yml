@@ -25,6 +25,13 @@ jobs:
         run: flutter test test/role_entry_test.dart
       - name: Build Android APK
         run: flutter build apk --release --target=lib/role_entry_main.dart
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LifeGuide-role-entry-test-apk
+          path: apps/lifemate/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
       - name: Publish test APK
         env:
           GH_TOKEN: ${{ github.token }}
