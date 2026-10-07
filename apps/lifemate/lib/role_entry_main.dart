@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api.dart';
 import 'main.dart' show HomeShell;
@@ -25,18 +26,135 @@ class LifeGuideRoleTestApp extends StatelessWidget {
           inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
           useMaterial3: true,
         ),
-        home: const Directionality(textDirection: TextDirection.rtl, child: RoleEntryPage()),
+        home: const Directionality(textDirection: TextDirection.rtl, child: RoleEntryGate()),
       );
 }
 
-class RoleEntryPage extends StatelessWidget {
-  const RoleEntryPage({super.key});
+class LocalTestProfile {
+  const LocalTestProfile({required this.category, required this.displayName});
+  final String category;
+  final String displayName;
+}
 
-  void enter(BuildContext context, String role, String label) {
-    final api = LocalRoleTestApi(role: role, label: label);
+class LocalTestProfileStore {
+  static const _categoryKey = 'lifeguide.local_profile.category';
+  static const _displayNameKey = 'lifeguide.local_profile.display_name';
+
+  Future<LocalTestProfile?> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final category = prefs.getString(_categoryKey);
+    final displayName = prefs.getString(_displayNameKey);
+    if (category == null || displayName == null || displayName.trim().isEmpty) {
+      return null;
+    }
+    return LocalTestProfile(category: category, displayName: displayName);
+  }
+
+  Future<void> save(LocalTestProfile profile) async {
+    final name = profile.displayName.trim();
+    if (name.isEmpty) throw ArgumentError('displayName cannot be empty');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_categoryKey, profile.category);
+    await prefs.setString(_displayNameKey, name);
+  }
+}
+
+class RoleEntryGate extends StatefulWidget {
+  const RoleEntryGate({super.key});
+
+  @override
+  State<RoleEntryGate> createState() => _RoleEntryGateState();
+}
+
+class _RoleEntryGateState extends State<RoleEntryGate> {
+  final store = LocalTestProfileStore();
+  LocalTestProfile? profile;
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final saved = await store.load();
+    if (!mounted) return;
+    setState(() {
+      profile = saved;
+      loading = false;
+    });
+  }
+
+  void _openHome(LocalTestProfile value) {
+    final role = value.category == 'adult' ? 'parent_guardian' : 'teen_minor';
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => HomeShell(api: api)),
+      MaterialPageRoute(
+        builder: (_) => HomeShell(
+          api: LocalRoleTestApi(
+            role: role,
+            label: value.displayName,
+            category: value.category,
+          ),
+        ),
+      ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (profile != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _openHome(profile!);
+      });
+      return const Scaffold(body: SizedBox.shrink());
+    }
+    return RoleEntryPage(
+      onComplete: (value) async {
+        await store.save(value);
+        if (mounted) _openHome(value);
+      },
+    );
+  }
+}
+
+class RoleEntryPage extends StatelessWidget {
+  const RoleEntryPage({super.key, required this.onComplete});
+  final Future<void> Function(LocalTestProfile profile) onComplete;
+
+  Future<void> _choose(BuildContext context, String category, String fallbackName) async {
+    final controller = TextEditingController(text: fallbackName);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('اسم این پروفایل چیست؟'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(labelText: 'نام نمایشی'),
+          onSubmitted: (value) {
+            if (value.trim().isNotEmpty) Navigator.pop(dialogContext, value.trim());
+          },
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('انصراف')),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              if (value.isNotEmpty) Navigator.pop(dialogContext, value);
+            },
+            child: const Text('ادامه'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.trim().isEmpty) return;
+    await onComplete(LocalTestProfile(category: category, displayName: name.trim()));
   }
 
   @override
@@ -54,12 +172,14 @@ class RoleEntryPage extends StatelessWidget {
                   const Text('Life Guide', textAlign: TextAlign.center, style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
                   const Text('چه کسی وارد می‌شود؟', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  const Text('یک‌بار پروفایل را انتخاب و نام‌گذاری کن؛ دفعه‌های بعد مستقیم وارد فضای شخصی خودت می‌شوی.', textAlign: TextAlign.center),
                   const SizedBox(height: 28),
-                  _RoleButton(icon: Icons.school_rounded, title: 'فرزند / دانش‌آموز', subtitle: 'ورود به فضای شخصی و تحصیلی', onTap: () => enter(context, 'teen_minor', 'فرزند')),
+                  _RoleButton(icon: Icons.girl_rounded, title: 'فرزند دختر', subtitle: 'فضای شخصی و تحصیلی با تم دخترانه', onTap: () => _choose(context, 'girl_minor', 'آرام')),
                   const SizedBox(height: 12),
-                  _RoleButton(icon: Icons.woman_rounded, title: 'مادر', subtitle: 'ورود به فضای والد و خانواده', onTap: () => enter(context, 'parent_guardian', 'مادر')),
+                  _RoleButton(icon: Icons.boy_rounded, title: 'فرزند پسر', subtitle: 'فضای شخصی و تحصیلی با تم پسرانه', onTap: () => _choose(context, 'boy_minor', 'فرزند')),
                   const SizedBox(height: 12),
-                  _RoleButton(icon: Icons.man_rounded, title: 'پدر', subtitle: 'ورود به فضای والد و خانواده', onTap: () => enter(context, 'parent_guardian', 'پدر')),
+                  _RoleButton(icon: Icons.person_rounded, title: 'بزرگسال', subtitle: 'فضای شخصی، خانواده و مدیریت', onTap: () => _choose(context, 'adult', 'بزرگسال')),
                   const SizedBox(height: 20),
                   const Text('نسخه آزمایشی: ورود ایمیل/رمز موقتاً غیرفعال است.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
                 ],
@@ -90,9 +210,10 @@ class _RoleButton extends StatelessWidget {
 }
 
 class LocalRoleTestApi implements IdentityApi {
-  LocalRoleTestApi({required this.role, required this.label});
+  LocalRoleTestApi({required this.role, required this.label, this.category});
   final String role;
   final String label;
+  final String? category;
   bool familyCreated = false;
   String familyName = 'خانواده من';
   @override String? accessToken = 'local-role-test';
@@ -102,7 +223,7 @@ class LocalRoleTestApi implements IdentityApi {
   @override Future<void> forgotPassword(String email) async {}
   @override Future<void> resetPassword(String token, String newPassword) async {}
   @override Future<void> changePassword(String currentPassword, String newPassword) async {}
-  @override Future<Map<String,dynamic>> getProfile() async => {'display_name': label, 'email_normalized':'test@lifeguide.local', 'user_id': role == 'teen_minor' ? 'student-test' : 'parent-test', 'theme_preference': role == 'teen_minor' ? 'girl_pink' : 'adult_blue'};
+  @override Future<Map<String,dynamic>> getProfile() async => {'display_name': label, 'email_normalized':'test@lifeguide.local', 'user_id': role == 'teen_minor' ? 'student-test' : 'parent-test', 'theme_preference': category == 'girl_minor' ? 'girl_pink' : category == 'boy_minor' ? 'boy_blue' : 'adult_blue'};
   @override Future<Map<String,dynamic>> updateProfile({String? displayName,String? birthDate,String? themePreference}) async => {'display_name':displayName ?? label,'theme_preference':themePreference ?? 'adult_blue'};
   @override Future<List<Map<String,dynamic>>> listFamilies() async => familyCreated ? [{'id':'family-test','name':familyName,'role':role,'is_admin':role == 'parent_guardian'}] : [];
   @override Future<List<Map<String,dynamic>>> listFamilyMembers(String familyId) async => [];
