@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 import express from 'express';
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
@@ -7,6 +8,9 @@ import nodemailer from 'nodemailer';
 import cors from 'cors';
 import { createPhase3Router } from './phase3.js';
 import { createPhase4Router } from './phase4.js';
+import { createPhase6Router } from './phase6.js';
+import { operationalErrorHandler } from './operations.js';
+import { createSessionAuth } from './session_auth.js';
 
 const { Pool } = pg;
 const app = express();
@@ -20,9 +24,11 @@ app.use(
       if (!origin || testMode || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(new Error('cors_origin_denied'));
+      const error = new Error('cors_origin_denied');
+      error.code = 'CORS_ORIGIN_DENIED';
+      return callback(error);
     },
-    methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     maxAge: 86400,
   }),
@@ -88,24 +94,7 @@ const issueAccess = (userId, sessionId) =>
     { expiresIn: '15m', issuer: 'lifemate' },
   );
 
-async function auth(req, res, next) {
-  const raw = req.headers.authorization?.replace(/^Bearer\s+/i, '');
-  try {
-    const identity = jwt.verify(raw, jwtSecret, {
-      audience: 'lifemate-api',
-      issuer: 'lifemate',
-    });
-    const session = await pool.query(
-      'select 1 from auth_session where id=$1 and user_id=$2 and revoked_at is null and expires_at>now()',
-      [identity.sid, identity.sub],
-    );
-    if (!session.rowCount) return res.status(401).json({ error: 'session_invalid' });
-    req.identity = identity;
-    next();
-  } catch {
-    res.status(401).json({ error: 'unauthorized' });
-  }
-}
+const auth = createSessionAuth({ pool, jwtSecret });
 
 async function createOneTimeToken(client, userId, kind, minutes) {
   const raw = randomToken();
@@ -252,7 +241,9 @@ app.post('/v1/auth/refresh', async (req, res) => {
   try {
     await client.query('begin');
     const r = await client.query(
-      'select id,user_id from auth_session where refresh_digest=$1 and revoked_at is null and expires_at>now() for update',
+      `select s.id,s.user_id from auth_session s join app_user u on u.id=s.user_id
+       where s.refresh_digest=$1 and s.revoked_at is null and s.expires_at>now()
+         and u.disabled_at is null for update of s,u`,
       [digest],
     );
     if (!r.rowCount) {
@@ -606,14 +597,13 @@ app.post('/v1/families/:familyId/guardians', auth, async (req, res) => {
 
 app.use('/v1', createPhase3Router({ pool, auth }));
 app.use('/v1', createPhase4Router({ pool, auth }));
+app.use('/v1', createPhase6Router({ pool, auth }));
 
-app.use((err, _req, res, _next) => {
-  console.error(err);
-  res.status(500).json({ error: 'internal_error' });
-});
+app.use(operationalErrorHandler);
 
 const port = Number(process.env.PORT ?? 8080);
-if (!testMode) {
+const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (!testMode && invokedDirectly) {
   app.listen(port, () => console.log(`LifeMate API listening on ${port}`));
 }
 

@@ -43,8 +43,12 @@ jobs:
           grep -q 'apple-touch-icon' web/index.html
           grep -q 'dir="rtl"' web/index.html
           test -f web/manifest.json
-      - run: flutter build web --release
-      - run: flutter build apk --release
+      - run: >
+          flutter build web --release
+          --dart-define=LIFEMATE_API_URL=https://lifemate-api-fn-staging.up.railway.app
+      - run: >
+          flutter build apk --release
+          --dart-define=LIFEMATE_API_URL=https://lifemate-api-fn-staging.up.railway.app
       - name: Upload Web release
         uses: actions/upload-artifact@v4
         with:
