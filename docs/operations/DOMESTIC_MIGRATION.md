@@ -12,7 +12,7 @@ bash scripts/restore-drill.sh --synthetic-only
 
 script از Docker محلی استفاده می‌کند، دو نام DB تازه با prefix `lifeguide_drill_` می‌سازد، migrations موجود را اجرا، fixture موجود `backend/scripts/restore-smoke.sql` و fixture خانواده ساختگی `deployment/restore-fixture.sql` را درج و scripts موجود `backup.sh`/`restore.sh` را اجرا می‌کند. در مقصد، حساب/profile، شمار کامل migrationها، دسترسی guardian مجاز، عدم دسترسی او به تکلیف خصوصی، عدم دسترسی والد نامرتبط و مجموع ۶۰۰ ثانیه interval مطالعه با وقفه را بررسی و فقط همین دو DB تازه را پاک می‌کند. دیتابیس برنامه و volume آن دست‌نخورده‌اند. خروجی `PASS ... preserved` شاهد drill است؛ موفقیت syntax/build به‌تنهایی شاهد restore نیست.
 
-اجرای محلی Linux/Docker مورخ ۲۰۲۶-۱۰-۰۸، ۱۵:۲۳ UTC با PostgreSQL16، **PASS** بود: `identity, family permissions, private task, paused study intervals and 10 migrations preserved`. این شاهد، انتقال واقعی، DNS و سرور داخلی مالک را تأیید نمی‌کند.
+آخرین اجرای محلی Linux/Docker مورخ ۲۰۲۶-۱۰-۰۸، ۱۶:۴۶ UTC با PostgreSQL16 و image نهایی API، **PASS** بود: `identity, family permissions, private task, paused study intervals and 12 migrations preserved`. query مستقل بعد از cleanup، تعداد DBهای drill باقی‌مانده را صفر نشان داد. این شاهد، انتقال واقعی، DNS و سرور داخلی مالک را تأیید نمی‌کند.
 
 ## مراحل دستی انتقال واقعی، فقط پس از مجوز
 

@@ -9,6 +9,8 @@
 - Harden active memberships, guardian privacy, invitation reuse and disabled external AI/voice/sensitive data gates.
 - Add real study sessions with pause/resume, versioned/idempotent events, overlap protection and authorized reports; recorded time is not evidence of study.
 - Add runtime endpoint configuration, scoped session/cache/queue, server acknowledgements, optimistic versions and visible conflicts.
+- Preserve discarded conflict payloads in an explicit recovery journal; test reminder replay, private school/class/check-in CRUD/archive and complete Tehran-day report windows.
+- Add disabled-by-default HTTPS SMS webhook adapter and isolate live delivery/AI environment variables from all test processes.
 - Set Android ID ir.lifeguide.app; require real owner release signing; remove automatic public publishing and unused fix workflow.
 - Real-device/Safari, reachability from Iran, live provider delivery and official signed release remain UNVERIFIED. See PROJECT_STATE.md for actual execution evidence.
 
