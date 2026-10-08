@@ -184,3 +184,57 @@ test('grade updates require the latest owner version and support time counts onl
   assert.equal(report.body.metrics.studyMinutesLast7Days, 5);
   assert.equal(report.body.metrics.recordedTimeIsProofOfStudy, false);
 });
+
+test('sync create/update/retry preserve real reminder schedules without duplicates; reschedule, complete and archive retain cancellation semantics', async () => {
+  const f = await fixture();
+  const dueAt = new Date(Date.now() + 3600000).toISOString();
+  const mutation = create(f, { dueAt, reminderMinutesBefore: [30, 10, 10] });
+  const reminderRows = async (planId = mutation.entityId) => (await pool.query(
+    'select id,minutes_before,status,scheduled_for from reminder where plan_item_id=$1 order by minutes_before', [planId],
+  )).rows;
+  const assertSchedule = (rows, base, leads) => {
+    assert.deepEqual(rows.map((row) => row.minutes_before), leads);
+    for (const row of rows) {
+      assert.equal(row.status, 'scheduled');
+      assert.equal(row.scheduled_for.toISOString(), new Date(Date.parse(base) - row.minutes_before * 60000).toISOString());
+    }
+  };
+  const created = await sync(f.child, [mutation]);
+  assert.equal(created.body.results[0].status, 'accepted');
+  const original = await reminderRows();
+  assertSchedule(original, dueAt, [10, 30]);
+  assert.equal((await sync(f.child, [mutation])).body.results[0].status, 'already_applied');
+  assert.deepEqual(await reminderRows(), original);
+
+  const updatedDueAt = new Date(Date.now() + 7200000).toISOString();
+  const update = { id: uuid(), entityType: 'plan_item', entityId: mutation.entityId, operation: 'update', expectedVersion: 1,
+    payload: { dueAt: updatedDueAt, reminderMinutesBefore: [15, 0, 15] } };
+  const updated = await sync(f.child, [update]);
+  assert.equal(updated.body.results[0].status, 'accepted');
+  const replacement = await reminderRows();
+  assertSchedule(replacement, updatedDueAt, [0, 15]);
+  assert.equal((await pool.query('select count(*)::int n from reminder where id=any($1::uuid[])', [original.map((row) => row.id)])).rows[0].n, 0);
+  const retry = await sync(f.child, [update]);
+  assert.equal(retry.body.results[0].status, 'already_applied');
+  assert.deepEqual(retry.body.results[0].item, updated.body.results[0].item);
+  assert.deepEqual(await reminderRows(), replacement);
+
+  const movedDueAt = new Date(Date.now() + 10800000).toISOString();
+  const reschedule = { id: uuid(), entityType: 'plan_item', entityId: mutation.entityId, operation: 'reschedule', expectedVersion: 2, payload: { dueAt: movedDueAt } };
+  assert.equal((await sync(f.child, [reschedule])).body.results[0].status, 'accepted');
+  const moved = await reminderRows();
+  assertSchedule(moved, movedDueAt, [0, 15]);
+  assert.deepEqual(moved.map((row) => row.id), replacement.map((row) => row.id));
+  assert.equal((await sync(f.child, [reschedule])).body.results[0].status, 'already_applied');
+  assert.deepEqual(await reminderRows(), moved);
+  const complete = { id: uuid(), entityType: 'plan_item', entityId: mutation.entityId, operation: 'complete', expectedVersion: 3, payload: {} };
+  assert.equal((await sync(f.child, [complete])).body.results[0].status, 'accepted');
+  assert.ok((await reminderRows()).every((row) => row.status === 'cancelled'));
+
+  const archiveItem = create(f, { dueAt, reminderMinutesBefore: [5] });
+  assert.equal((await sync(f.child, [archiveItem])).body.results[0].status, 'accepted');
+  assertSchedule(await reminderRows(archiveItem.entityId), dueAt, [5]);
+  const archive = { id: uuid(), entityType: 'plan_item', entityId: archiveItem.entityId, operation: 'archive', expectedVersion: 1, payload: {} };
+  assert.equal((await sync(f.child, [archive])).body.results[0].status, 'accepted');
+  assert.equal((await reminderRows(archiveItem.entityId))[0].status, 'cancelled');
+});
