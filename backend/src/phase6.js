@@ -1,23 +1,13 @@
 import express from 'express';
-import jwt from 'jsonwebtoken';
+import { createSessionAuth } from './session_auth.js';
 
 const stages = { primary_1:[1,3,0], primary_2:[4,6,3], secondary_1:[7,9,6], secondary_2:[10,12,9] };
 function educationForGrade(grade){ const n=Number(grade); for(const [stage,[min,max,offset]] of Object.entries(stages)){ if(Number.isInteger(n)&&n>=min&&n<=max)return{stage,nationalGrade:n,localYear:n-offset}; } return null; }
 function validPersona(value){ return ['mother','father','child','adult'].includes(value); }
 function trustedTextbookUrl(value){ try{ const url=new URL(value); return url.protocol==='https:'&&['chap.sch.ir','medu.gov.ir'].includes(url.hostname); }catch{return false;} }
 
-function localAuth(pool){
-  return async (req,res,next)=>{ try{
-    const raw=req.headers.authorization?.replace(/^Bearer\s+/i,'');
-    const identity=jwt.verify(raw,process.env.JWT_SECRET,{audience:'lifemate-api',issuer:'lifemate'});
-    const session=await pool.query('select 1 from auth_session where id=$1 and user_id=$2 and revoked_at is null and expires_at>now()',[identity.sid,identity.sub]);
-    if(!session.rowCount)return res.status(401).json({error:'session_invalid'});
-    req.identity=identity; next();
-  }catch{return res.status(401).json({error:'unauthorized'});} };
-}
-
 export function createPhase6Router({pool,auth}){
-  const router=express.Router(); const requireAuth=auth??localAuth(pool);
+  const router=express.Router(); const requireAuth=auth??createSessionAuth({pool,jwtSecret:process.env.JWT_SECRET});
   router.get('/me/iran-profile',requireAuth,async(req,res)=>{ const r=await pool.query(`select p.user_id,p.display_name,p.birth_date,p.household_persona,p.sex,e.stage,e.national_grade,e.local_year,e.school_name,e.school_year from profile p left join education_profile e on e.user_id=p.user_id where p.user_id=$1`,[req.identity.sub]); res.json(r.rows[0]??{}); });
   router.patch('/me/iran-profile',requireAuth,async(req,res)=>{ const persona=req.body.householdPersona,sex=req.body.sex; if(persona!=null&&!validPersona(persona))return res.status(400).json({error:'invalid_persona'}); if(sex!=null&&!['female','male','unspecified'].includes(sex))return res.status(400).json({error:'invalid_sex'}); await pool.query(`update profile set household_persona=coalesce($2,household_persona),sex=coalesce($3,sex),birth_date=coalesce($4::date,birth_date),updated_at=now() where user_id=$1`,[req.identity.sub,persona??null,sex??null,req.body.birthDate??null]); res.status(204).end(); });
   router.put('/me/education',requireAuth,async(req,res)=>{ const mapped=educationForGrade(req.body.nationalGrade); if(!mapped||(req.body.stage&&req.body.stage!==mapped.stage))return res.status(400).json({error:'invalid_grade_stage'}); const schoolYear=String(req.body.schoolYear??'1405-1406'); const r=await pool.query(`insert into education_profile(user_id,stage,national_grade,local_year,school_name,school_year) values($1,$2,$3,$4,$5,$6) on conflict(user_id) do update set stage=excluded.stage,national_grade=excluded.national_grade,local_year=excluded.local_year,school_name=excluded.school_name,school_year=excluded.school_year,updated_at=now() returning *`,[req.identity.sub,mapped.stage,mapped.nationalGrade,mapped.localYear,req.body.schoolName??null,schoolYear]); res.json(r.rows[0]); });
