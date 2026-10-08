@@ -1,7 +1,7 @@
 name: LifeGuide CI
 on:
   push:
-    branches: [main, 'feat/online-family-stage0']
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -51,11 +51,14 @@ jobs:
       - run: npm test && npm run check && npm audit --audit-level=high
         working-directory: backend
       - name: Backup and restore synthetic database
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
         run: |
-          backend/scripts/backup.sh /tmp/lifeguide-ci.dump
-          createdb -h localhost -U postgres lifeguide_restore
-          DATABASE_URL=postgresql://postgres:synthetic_ci_only@localhost:5432/lifeguide_restore backend/scripts/restore.sh /tmp/lifeguide-ci.dump
-          test "$(psql -h localhost -U postgres -d lifeguide_restore -Atc 'select count(*) from schema_migration')" = "$(psql "$DATABASE_URL" -Atc 'select count(*) from schema_migration')"
+          docker exec "$PG_CONTAINER" pg_dump --version
+          docker exec -i -e DATABASE_URL=postgresql://postgres:synthetic_ci_only@127.0.0.1:5432/lifemate_ci "$PG_CONTAINER" bash -s -- /tmp/lifeguide-ci.dump < backend/scripts/backup.sh
+          docker exec "$PG_CONTAINER" createdb -U postgres lifeguide_restore
+          docker exec -i -e DATABASE_URL=postgresql://postgres:synthetic_ci_only@127.0.0.1:5432/lifeguide_restore "$PG_CONTAINER" bash -s -- /tmp/lifeguide-ci.dump < backend/scripts/restore.sh
+          test "$(docker exec "$PG_CONTAINER" psql -U postgres -d lifeguide_restore -Atc 'select count(*) from schema_migration')" = "$(docker exec "$PG_CONTAINER" psql -U postgres -d lifemate_ci -Atc 'select count(*) from schema_migration')"
   flutter:
     runs-on: ubuntu-latest
     defaults:
