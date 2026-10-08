@@ -35,9 +35,10 @@ jobs:
         run: |
           dart format --output=none --set-exit-if-changed \
             lib/main.dart lib/phase3_ui.dart lib/role_entry_main.dart \
-            lib/local_data_store.dart lib/local_only_api.dart \
+            lib/local_data_store.dart lib/local_only_api.dart lib/local_write_guard.dart \
             test/app_test.dart test/local_persistence_test.dart \
-            test/local_persistence_ui_test.dart integration_test
+            test/local_persistence_ui_test.dart test/local_test_preferences.dart \
+            integration_test test_driver
       - run: flutter analyze --no-pub
       - run: flutter test --no-pub --reporter expanded
 
@@ -76,7 +77,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Verify real Android storage across four app processes
+      - name: Verify Android storage and guard lifetime
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -90,19 +91,23 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           working-directory: apps/lifemate
           # Each command runs in its own shell. Keep pipefail with each test.
-          # --no-uninstall retains SharedPreferences during Flutter test teardown.
-          # Direct VM service avoids the observed DDS startup failure between phases.
+          # The official integration driver avoids Flutter 3.47.6 test's custom
+          # golden VM stream, which requires DDS. --no-dds avoids the observed
+          # DDS startup failure. Drive normally uninstalls at teardown, so retain
+          # the app with --keep-app-running and stop each process explicitly.
           script: |
-            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --no-dds --dart-define=PERSISTENCE_PHASE=create --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-create.log"'
+            bash -eo pipefail -c 'flutter drive --driver=test_driver/integration_test.dart --target=integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --keep-app-running --no-dds --dart-define=INTEGRATION_TEST_SHOULD_REPORT_RESULTS_TO_NATIVE=false --dart-define=PERSISTENCE_PHASE=create 2>&1 | tee "$RUNNER_TEMP/local-persistence-create.log"'
             adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
-            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --no-dds --dart-define=PERSISTENCE_PHASE=update --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-update.log"'
+            bash -eo pipefail -c 'flutter drive --driver=test_driver/integration_test.dart --target=integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --keep-app-running --no-dds --dart-define=INTEGRATION_TEST_SHOULD_REPORT_RESULTS_TO_NATIVE=false --dart-define=PERSISTENCE_PHASE=update 2>&1 | tee "$RUNNER_TEMP/local-persistence-update.log"'
             adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
-            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --no-dds --dart-define=PERSISTENCE_PHASE=archive --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-archive.log"'
+            bash -eo pipefail -c 'flutter drive --driver=test_driver/integration_test.dart --target=integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --keep-app-running --no-dds --dart-define=INTEGRATION_TEST_SHOULD_REPORT_RESULTS_TO_NATIVE=false --dart-define=PERSISTENCE_PHASE=archive 2>&1 | tee "$RUNNER_TEMP/local-persistence-archive.log"'
             adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
-            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --no-dds --dart-define=PERSISTENCE_PHASE=verify --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-verify.log"'
+            bash -eo pipefail -c 'flutter drive --driver=test_driver/integration_test.dart --target=integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --keep-app-running --no-dds --dart-define=INTEGRATION_TEST_SHOULD_REPORT_RESULTS_TO_NATIVE=false --dart-define=PERSISTENCE_PHASE=verify 2>&1 | tee "$RUNNER_TEMP/local-persistence-verify.log"'
             bash -eo pipefail -c 'adb -s emulator-5554 shell pm path com.example.lifemate.localtest | grep -q "^package:"'
             adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
             bash -e -c 'if grep -E "Uninstalling old version|Package install error" "$RUNNER_TEMP"/local-persistence-*.log; then echo "An installation reset invalidated the persistence test."; exit 1; fi'
+            flutter build apk --debug --no-pub --target=lib/role_entry_main.dart
+            bash -eo pipefail -c 'cd android && ./gradlew app:connectedDebugAndroidTest -Ptarget="$PWD/../lib/role_entry_main.dart" 2>&1 | tee "$RUNNER_TEMP/local-persistence-native-guard.log"'
       - name: Build local role-entry APK after persistence gates
         run: flutter build apk --release --no-pub --target=lib/role_entry_main.dart
       - name: Upload local test APK
@@ -117,6 +122,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: local-persistence-device-logs
-          path: ${{ runner.temp }}/local-persistence-*.log
+          path: |
+            ${{ runner.temp }}/local-persistence-*.log
+            apps/lifemate/build/app/outputs/androidTest-results/connected/**
+            apps/lifemate/build/app/reports/androidTests/connected/**
           if-no-files-found: warn
           retention-days: 14
