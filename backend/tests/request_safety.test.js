@@ -32,6 +32,7 @@ before(async () => {
       ...process.env,
       PORT: String(port),
       NODE_ENV: 'production',
+      ENABLE_SENSITIVE_FEATURES: 'true', // Explicit synthetic cycle/error fixtures only.
       CORS_ORIGINS: allowedOrigin,
       RATE_LIMIT_AUTH_MAX: '2000',
       RATE_LIMIT_GENERAL_MAX: '2000',

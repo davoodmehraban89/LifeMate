@@ -2,6 +2,7 @@ import express from 'express';
 
 const clampText = (value, max = 4000) =>
   String(value ?? '').trim().slice(0, max);
+const isUuid = (value) => typeof value === 'string' && /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
 
 function safetyClass(text) {
   const value = text.toLowerCase();
@@ -28,75 +29,38 @@ function localGuide(kind, text, klass) {
 }
 
 async function providerGuide(kind, text, klass) {
-  if (klass === 'urgent_review') return localGuide(kind, text, klass);
-
-  const apiKey = process.env.AI_API_KEY;
-  const baseUrl = process.env.AI_BASE_URL;
-  const model = process.env.AI_MODEL;
-  if (!apiKey || !baseUrl || !model) {
-    return localGuide(kind, text, klass);
-  }
-
-  const system = [
-    'You are LifeMate, an age-appropriate Persian companion.',
-    'You are advisory, not a doctor, therapist, diagnostician, or emergency service.',
-    'For study, guide step-by-step and avoid simply giving final homework answers.',
-    'For planning, propose realistic options and preserve user agency.',
-    'For wellbeing, be calm, supportive, non-clinical, and encourage trusted human support when appropriate.',
-    'Never claim to know hidden mental state. Never expose private content to parents.',
-    `Guide mode: ${kind}`,
-  ].join(' ');
-
-  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.4,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: text },
-      ],
-    }),
-  });
-
-  if (!response.ok) return localGuide(kind, text, klass);
-  const body = await response.json();
-  const content = body?.choices?.[0]?.message?.content;
-  return clampText(content, 6000) || localGuide(kind, text, klass);
+  // External AI/voice is not authorized in this package, even if keys exist.
+  return localGuide(kind, text, klass);
 }
 
 async function guardianRelationship(pool, familyId, guardianUserId, minorUserId) {
   const result = await pool.query(
-    `select 1
-       from guardian_relationship g
-       join family_membership gm
-         on gm.family_id=g.family_id
-        and gm.user_id=g.guardian_user_id
-        and gm.ended_at is null
-       join family_membership mm
-         on mm.family_id=g.family_id
-        and mm.user_id=g.minor_user_id
-        and mm.ended_at is null
-      where g.family_id=$1
-        and g.guardian_user_id=$2
-        and g.minor_user_id=$3
-        and g.active=true`,
+    'select is_active_guardian($1,$2,$3) as allowed',
     [familyId, guardianUserId, minorUserId],
   );
-  return result.rowCount > 0;
+  return result.rows[0]?.allowed === true;
 }
 
-export function createPhase4Router({ pool, auth }) {
+export function createPhase4Router({ pool, auth, sensitiveFeaturesEnabled = process.env.ENABLE_SENSITIVE_FEATURES === 'true' }) {
   const router = express.Router();
+  const sensitiveEnabled = sensitiveFeaturesEnabled === true;
+  const requireSensitive = (_req, res, next) => {
+    if (!sensitiveEnabled) return res.status(503).json({ error: 'sensitive_features_disabled' });
+    return next();
+  };
   router.use(auth);
 
   router.post('/learning/goals', async (req, res) => {
     const title = clampText(req.body.title, 240);
     if (!title) return res.status(400).json({ error: 'invalid_input' });
+    if (req.body.subjectId != null && !isUuid(req.body.subjectId)) return res.status(400).json({ error: 'invalid_subject_id' });
+    if (req.body.subjectId) {
+      const subject = await pool.query(
+        'select 1 from subject where id=$1 and student_user_id=$2',
+        [req.body.subjectId, req.identity.sub],
+      );
+      if (!subject.rowCount) return res.status(403).json({ error: 'subject_forbidden' });
+    }
     const result = await pool.query(
       'insert into learning_goal(owner_user_id,subject_id,title,target) values($1,$2,$3,$4) returning *',
       [
@@ -117,6 +81,65 @@ export function createPhase4Router({ pool, auth }) {
     res.json({ items: result.rows });
   });
 
+  router.get('/learning/goals/:id', async (req, res) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ error: 'invalid_goal_id' });
+    const result = await pool.query('select * from learning_goal where id=$1 and owner_user_id=$2', [req.params.id, req.identity.sub]);
+    if (!result.rowCount) return res.status(404).json({ error: 'goal_not_found' });
+    res.json(result.rows[0]);
+  });
+
+  router.patch('/learning/goals/:id', async (req, res) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ error: 'invalid_goal_id' });
+    const body = req.body ?? {};
+    const has = (field) => Object.hasOwn(body, field);
+    if (has('title') && (typeof body.title !== 'string' || !body.title.trim() || body.title.trim().length > 240)) return res.status(400).json({ error: 'invalid_input' });
+    if (has('target') && body.target != null && (typeof body.target !== 'string' || body.target.trim().length > 1000)) return res.status(400).json({ error: 'invalid_input' });
+    if (has('subjectId') && body.subjectId != null && !isUuid(body.subjectId)) return res.status(400).json({ error: 'invalid_subject_id' });
+    if (has('status') && !['active', 'completed', 'archived'].includes(body.status)) return res.status(400).json({ error: 'invalid_status' });
+    const client = await pool.connect();
+    try {
+      await client.query('begin');
+      const goal = await client.query('select status from learning_goal where id=$1 and owner_user_id=$2 for update', [req.params.id, req.identity.sub]);
+      if (!goal.rowCount || goal.rows[0].status === 'archived') {
+        await client.query('rollback');
+        return res.status(goal.rowCount ? 409 : 404).json({ error: goal.rowCount ? 'goal_archived' : 'goal_not_found' });
+      }
+      if (body.subjectId != null) {
+        const subject = await client.query('select 1 from subject where id=$1 and student_user_id=$2', [body.subjectId, req.identity.sub]);
+        if (!subject.rowCount) {
+          await client.query('rollback');
+          return res.status(403).json({ error: 'subject_forbidden' });
+        }
+      }
+      const result = await client.query(
+        `update learning_goal set title=case when $3 then $4 else title end,
+                target=case when $5 then $6 else target end,
+                subject_id=case when $7 then $8::uuid else subject_id end,
+                status=coalesce($9,status),updated_at=now()
+         where id=$1 and owner_user_id=$2 returning *`,
+        [req.params.id, req.identity.sub, has('title'), has('title') ? body.title.trim() : null,
+          has('target'), body.target?.trim() || null, has('subjectId'), body.subjectId ?? null, body.status ?? null],
+      );
+      await client.query('commit');
+      res.json(result.rows[0]);
+    } catch (error) {
+      await client.query('rollback').catch(() => {});
+      throw error;
+    } finally { client.release(); }
+  });
+
+  router.delete('/learning/goals/:id', async (req, res) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ error: 'invalid_goal_id' });
+    const result = await pool.query(
+      `update learning_goal set status='archived',
+              updated_at=case when status='archived' then updated_at else now() end
+       where id=$1 and owner_user_id=$2 returning id`,
+      [req.params.id, req.identity.sub],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: 'goal_not_found' });
+    res.status(204).end();
+  });
+
   router.post('/learning/checkins', async (req, res) => {
     const confidence = Number(req.body.confidence);
     const difficulty = Number(req.body.difficulty);
@@ -129,6 +152,10 @@ export function createPhase4Router({ pool, auth }) {
       difficulty > 5
     ) {
       return res.status(400).json({ error: 'invalid_input' });
+    }
+    if (req.body.learningGoalId) {
+      const goal = await pool.query('select 1 from learning_goal where id=$1 and owner_user_id=$2', [req.body.learningGoalId, req.identity.sub]);
+      if (!goal.rowCount) return res.status(403).json({ error: 'learning_goal_forbidden' });
     }
     const result = await pool.query(
       'insert into learning_checkin(owner_user_id,learning_goal_id,confidence,difficulty,note) values($1,$2,$3,$4,$5) returning *',
@@ -143,7 +170,7 @@ export function createPhase4Router({ pool, auth }) {
     res.status(201).json(result.rows[0]);
   });
 
-  router.post('/wellbeing/checkins', async (req, res) => {
+  router.post('/wellbeing/checkins', requireSensitive, async (req, res) => {
     const mood = Number(req.body.mood);
     const energy = Number(req.body.energy);
     const stress = Number(req.body.stress);
@@ -166,7 +193,7 @@ export function createPhase4Router({ pool, auth }) {
     res.status(201).json(result.rows[0]);
   });
 
-  router.get('/wellbeing/checkins', async (req, res) => {
+  router.get('/wellbeing/checkins', requireSensitive, async (req, res) => {
     const result = await pool.query(
       'select id,mood,energy,stress,visibility,created_at from wellbeing_checkin where owner_user_id=$1 order by created_at desc limit 30',
       [req.identity.sub],
@@ -174,7 +201,7 @@ export function createPhase4Router({ pool, auth }) {
     res.json({ items: result.rows });
   });
 
-  router.get('/families/:familyId/children/:minorUserId/wellbeing-summary', async (req, res) => {
+  router.get('/families/:familyId/children/:minorUserId/wellbeing-summary', requireSensitive, async (req, res) => {
     const allowed = await guardianRelationship(
       pool,
       req.params.familyId,
@@ -212,7 +239,7 @@ export function createPhase4Router({ pool, auth }) {
     });
   });
 
-  router.post('/families/:familyId/children/:minorUserId/family-guidance', async (req, res) => {
+  router.post('/families/:familyId/children/:minorUserId/family-guidance', requireSensitive, async (req, res) => {
     const allowed = await guardianRelationship(
       pool,
       req.params.familyId,
@@ -254,8 +281,8 @@ export function createPhase4Router({ pool, auth }) {
              )
            end as grade_percent
          from plan_item
-        where owner_user_id=$1`,
-        [req.params.minorUserId],
+        where owner_user_id=$1 and can_view_plan_item($2,id)`,
+        [req.params.minorUserId, req.identity.sub],
       ),
       pool.query(
         `select
@@ -327,6 +354,7 @@ export function createPhase4Router({ pool, auth }) {
       ? req.body.kind
       : null;
     if (!kind) return res.status(400).json({ error: 'invalid_kind' });
+    if (kind === 'wellbeing' && !sensitiveEnabled) return res.status(503).json({ error: 'sensitive_features_disabled' });
     const result = await pool.query(
       'insert into ai_guide_session(owner_user_id,guide_kind) values($1,$2) returning *',
       [req.identity.sub, kind],
@@ -342,13 +370,14 @@ export function createPhase4Router({ pool, auth }) {
       [req.params.id, req.identity.sub],
     );
     if (!session.rowCount) return res.status(404).json({ error: 'session_not_found' });
+    if (session.rows[0].guide_kind === 'wellbeing' && !sensitiveEnabled) return res.status(503).json({ error: 'sensitive_features_disabled' });
 
     const klass = safetyClass(text);
     await pool.query(
       "insert into ai_guide_message(session_id,author,body,safety_class) values($1,'user',$2,$3)",
       [req.params.id, text, klass],
     );
-    if (klass === 'urgent_review') {
+    if (klass === 'urgent_review' && sensitiveEnabled) {
       await pool.query(
         "insert into wellbeing_safety_event(owner_user_id,source_session_id,severity) values($1,$2,'urgent_review')",
         [req.identity.sub, req.params.id],
@@ -365,7 +394,7 @@ export function createPhase4Router({ pool, auth }) {
       advisory: true,
       medicalDiagnosis: false,
       automaticAction: false,
-      providerMode: process.env.AI_API_KEY ? 'configured' : 'local_fallback',
+      providerMode: 'local_fallback',
     });
   });
 
@@ -373,6 +402,11 @@ export function createPhase4Router({ pool, auth }) {
     const title = clampText(req.body.title, 240);
     if (!title || !req.body.proposal || typeof req.body.proposal !== 'object') {
       return res.status(400).json({ error: 'invalid_input' });
+    }
+    if (req.body.sessionId) {
+      const session = await pool.query('select guide_kind from ai_guide_session where id=$1 and owner_user_id=$2', [req.body.sessionId, req.identity.sub]);
+      if (!session.rowCount) return res.status(403).json({ error: 'session_forbidden' });
+      if (session.rows[0].guide_kind === 'wellbeing' && !sensitiveEnabled) return res.status(503).json({ error: 'sensitive_features_disabled' });
     }
     const result = await pool.query(
       'insert into ai_plan_proposal(owner_user_id,session_id,title,proposal) values($1,$2,$3,$4) returning *',
@@ -386,6 +420,14 @@ export function createPhase4Router({ pool, auth }) {
       ? req.body.status
       : null;
     if (!status) return res.status(400).json({ error: 'invalid_status' });
+    const proposal = await pool.query(
+      `select s.guide_kind from ai_plan_proposal p
+       left join ai_guide_session s on s.id=p.session_id
+       where p.id=$1 and p.owner_user_id=$2 and p.status='proposed'`,
+      [req.params.id, req.identity.sub],
+    );
+    if (!proposal.rowCount) return res.status(404).json({ error: 'proposal_not_found' });
+    if (proposal.rows[0].guide_kind === 'wellbeing' && !sensitiveEnabled) return res.status(503).json({ error: 'sensitive_features_disabled' });
     const result = await pool.query(
       "update ai_plan_proposal set status=$3,decided_at=now() where id=$1 and owner_user_id=$2 and status='proposed' returning *",
       [req.params.id, req.identity.sub, status],

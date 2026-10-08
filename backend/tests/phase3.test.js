@@ -36,7 +36,7 @@ async function registerVerified(email, displayName) {
   });
   assert.equal(reg.status,201);
   assert.equal((await request('/v1/auth/verify-email',{
-    method:'POST', body:{ token:reg.body.verificationToken },
+    method:'POST', body:{ token:reg.body.verificationToken, newPassword:password },
   })).status,204);
   const login = await request('/v1/auth/login',{
     method:'POST', body:{ email, password },
@@ -162,7 +162,7 @@ test('phase 3 planner school family vertical slice', async () => {
   assert.ok(!parentPrivateAttempt.body.items.some((x)=>x.id===privateTask.body.id));
 
   const grade = await request(`/v1/school/plan-items/${assignment.body.id}/grade`,{
-    method:'PATCH', token:teen.token, body:{points:18,outOf:20},
+    method:'PATCH', token:teen.token, body:{points:18,outOf:20,expectedVersion:Number(assignment.body.version)},
   });
   assert.equal(grade.status,200);
 
@@ -182,7 +182,7 @@ test('phase 3 planner school family vertical slice', async () => {
 
   const rescheduled = new Date(Date.now()+2*60*60*1000).toISOString();
   const update = await request(`/v1/plan-items/${assignment.body.id}`,{
-    method:'PATCH', token:teen.token, body:{dueAt:rescheduled},
+    method:'PATCH', token:teen.token, body:{dueAt:rescheduled,expectedVersion:Number(grade.body.version)},
   });
   assert.equal(update.status,200);
 
@@ -194,7 +194,7 @@ test('phase 3 planner school family vertical slice', async () => {
   assert.ok(reminderRows.rows.every((x)=>x.status==='scheduled'));
 
   const completed = await request(`/v1/plan-items/${assignment.body.id}`,{
-    method:'PATCH', token:teen.token, body:{status:'completed'},
+    method:'PATCH', token:teen.token, body:{status:'completed',expectedVersion:Number(update.body.version)},
   });
   assert.equal(completed.status,200);
   const cancelled = await pool.query(
@@ -208,7 +208,7 @@ test('phase 3 planner school family vertical slice', async () => {
     method:'POST', token:teen.token,
     body:{mutations:[{
       id:mutationId, entityType:'plan_item', entityId:privateTask.body.id,
-      operation:'reschedule', clientUpdatedAt:new Date().toISOString(),
+      operation:'reschedule', expectedVersion:Number(privateTask.body.version),
       payload:{dueAt:rescheduled},
     }]},
   });
@@ -228,7 +228,7 @@ test('phase 3 planner school family vertical slice', async () => {
     method:'POST', token:teen.token,
     body:{mutations:[{
       id:mutationId, entityType:'plan_item', entityId:privateTask.body.id,
-      operation:'reschedule', clientUpdatedAt:new Date().toISOString(),
+      operation:'reschedule', expectedVersion:Number(privateTask.body.version),
       payload:{dueAt:rescheduled},
     }]},
   });

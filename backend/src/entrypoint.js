@@ -2,6 +2,7 @@ const publicPort = Number(process.env.PORT ?? 8080);
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 import express from 'express';
 import {
+  configureTrustedProxy,
   operationalErrorHandler,
   rateLimit,
   requestContext,
@@ -12,6 +13,7 @@ const { app, pool } = await import('./server.js');
 
 const outer = express();
 outer.disable('x-powered-by');
+configureTrustedProxy(outer);
 outer.use(requestContext);
 outer.use(requestTelemetry);
 outer.use(rateLimit);

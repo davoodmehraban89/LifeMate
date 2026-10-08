@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { isIP } from 'node:net';
 
 const buckets = new Map();
 const nowSeconds = () => Math.floor(Date.now() / 1000);
@@ -42,7 +43,22 @@ export function requestTelemetry(req, res, next) {
 }
 
 function clientKey(req) {
-  return req.socket?.remoteAddress || 'unknown';
+  return req.ip || req.socket?.remoteAddress || 'unknown';
+}
+
+// Only an operator-pinned internal gateway may supply forwarding information.
+// Standalone API defaults to ignoring all forwarded headers.
+export function configureTrustedProxy(app, value = process.env.TRUSTED_PROXY_CIDRS ?? '') {
+  const entries = value.split(',').map(x => x.trim()).filter(Boolean);
+  if (entries.length > 8) throw new Error('Invalid trusted proxy allowlist');
+  for (const entry of entries) {
+    const [address, prefix, ...extra] = entry.split('/');
+    const bits = isIP(address) === 4 ? 32 : isIP(address) === 6 ? 128 : 0;
+    if (!bits || extra.length || (prefix !== undefined && (!/^\d+$/.test(prefix) || Number(prefix) < 1 || Number(prefix) > bits))) {
+      throw new Error('Invalid trusted proxy address');
+    }
+  }
+  app.set('trust proxy', entries.length ? entries : false);
 }
 
 function profileFor(req) {

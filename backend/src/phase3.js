@@ -1,9 +1,8 @@
+import crypto from 'node:crypto';
 import express from 'express';
+import { applyPlanMutation, createPlanItem, updatePlanItem, planTransaction, serializePlanItem, validUuid, PlanMutationError } from './plan_mutations.js';
 
 const allowedKinds = new Set(['task','event','routine','goal','assignment','exam','study_session']);
-const allowedStatus = new Set(['planned','in_progress','completed','cancelled']);
-const allowedPriority = new Set(['low','normal','high','urgent']);
-const allowedVisibility = new Set(['private','selected_members','parent_guardian','family']);
 
 function asDate(value) {
   if (value == null || value === '') return null;
@@ -13,22 +12,25 @@ function asDate(value) {
 
 async function familyMember(pool, familyId, userId) {
   const r = await pool.query(
-    'select role,is_admin from family_membership where family_id=$1 and user_id=$2 and ended_at is null',
+    'select m.role,m.is_admin from family_membership m join family_workspace f on f.id=m.family_id where m.family_id=$1 and m.user_id=$2 and m.ended_at is null and f.archived_at is null',
     [familyId, userId],
   );
   return r.rows[0] ?? null;
 }
 
 async function assertPlanWrite(pool, itemId, userId) {
+  if (!validUuid(itemId)) return { error: 'invalid_id', status: 400 };
   const r = await pool.query('select * from plan_item where id=$1', [itemId]);
   if (!r.rowCount) return { error: 'not_found', status: 404 };
   if (r.rows[0].owner_user_id !== userId) {
     return { error: 'forbidden', status: 403 };
   }
+  if (r.rows[0].family_id && !(await familyMember(pool, r.rows[0].family_id, userId))) return { error: 'family_membership_required', status: 403 };
   return { item: r.rows[0] };
 }
 
 async function assertStudentAcademic(pool, studentUserId, viewerUserId) {
+  if (!validUuid(studentUserId)) return false;
   const r = await pool.query(
     'select can_view_student_academic($1,$2) as allowed',
     [viewerUserId, studentUserId],
@@ -60,14 +62,14 @@ export function createPhase3Router({ pool, auth }) {
         order by coalesce(p.starts_at,p.due_at,p.created_at), p.priority desc`,
       [req.identity.sub, from, to],
     );
-    res.json({ items: r.rows });
+    res.json({ items: r.rows.map((item) => serializePlanItem(item, req.identity.sub)), asOf: new Date() });
   });
 
   router.get('/plan-items', auth, async (req, res) => {
     const from = asDate(req.query.from);
     const to = asDate(req.query.to);
     const values = [req.identity.sub];
-    const filters = ['can_view_plan_item($1,p.id)'];
+    const filters = ["can_view_plan_item($1,p.id)", "p.status<>'cancelled'"];
     if (from) {
       values.push(from);
       filters.push(`coalesce(p.starts_at,p.due_at,p.created_at) >= $${values.length}`);
@@ -87,163 +89,29 @@ export function createPhase3Router({ pool, auth }) {
         order by coalesce(p.starts_at,p.due_at,p.created_at), p.created_at`,
       values,
     );
-    res.json({ items: r.rows });
+    res.json({ items: r.rows.map((item) => serializePlanItem(item, req.identity.sub)), asOf: new Date() });
+  });
+
+  router.get('/plan-items/:itemId', auth, async (req, res) => {
+    if (!validUuid(req.params.itemId)) return res.status(400).json({ error: 'invalid_id' });
+    const result = await pool.query('select * from plan_item where id=$1 and can_view_plan_item($2,id)', [req.params.itemId, req.identity.sub]);
+    if (!result.rowCount) return res.status(404).json({ error: 'not_found' });
+    res.json(serializePlanItem(result.rows[0], req.identity.sub));
   });
 
   router.post('/plan-items', auth, async (req, res) => {
-    const kind = String(req.body.kind ?? 'task');
-    const title = String(req.body.title ?? '').trim();
-    const priority = String(req.body.priority ?? 'normal');
-    const visibility = String(req.body.visibility ?? 'private');
-    const familyId = req.body.familyId || null;
-    const startsAt = asDate(req.body.startsAt);
-    const dueAt = asDate(req.body.dueAt);
-    if (!allowedKinds.has(kind) || !title || !allowedPriority.has(priority) || !allowedVisibility.has(visibility)) {
-      return res.status(400).json({ error: 'invalid_plan_item' });
-    }
-    if (familyId) {
-      const member = await familyMember(pool, familyId, req.identity.sub);
-      if (!member) return res.status(403).json({ error: 'family_membership_required' });
-    }
-    if ((visibility === 'family' || visibility === 'parent_guardian') && !familyId) {
-      return res.status(400).json({ error: 'family_required_for_visibility' });
-    }
-    if (req.body.subjectId) {
-      const s = await pool.query('select student_user_id from subject where id=$1', [req.body.subjectId]);
-      if (!s.rowCount || s.rows[0].student_user_id !== req.identity.sub) {
-        return res.status(403).json({ error: 'subject_forbidden' });
-      }
-    }
-
-    const client = await pool.connect();
-    try {
-      await client.query('begin');
-      const r = await client.query(
-        `insert into plan_item(
-           owner_user_id,family_id,subject_id,kind,title,notes,status,priority,visibility,
-           starts_at,due_at,duration_minutes,recurrence_rule,parent_item_id
-         ) values($1,$2,$3,$4,$5,$6,'planned',$7,$8,$9,$10,$11,$12,$13)
-         returning *`,
-        [
-          req.identity.sub, familyId, req.body.subjectId || null, kind, title,
-          req.body.notes || null, priority, visibility, startsAt, dueAt,
-          req.body.durationMinutes || null, req.body.recurrenceRule || null,
-          req.body.parentItemId || null,
-        ],
-      );
-      const item = r.rows[0];
-
-      const selected = Array.isArray(req.body.selectedMemberIds)
-        ? [...new Set(req.body.selectedMemberIds.map(String))]
-        : [];
-      if (visibility === 'selected_members') {
-        if (!familyId || selected.length === 0) {
-          await client.query('rollback');
-          return res.status(400).json({ error: 'selected_members_required' });
-        }
-        for (const userId of selected) {
-          const m = await client.query(
-            'select 1 from family_membership where family_id=$1 and user_id=$2 and ended_at is null',
-            [familyId, userId],
-          );
-          if (!m.rowCount) {
-            await client.query('rollback');
-            return res.status(400).json({ error: 'selected_member_not_in_family' });
-          }
-          await client.query(
-            `insert into sharing_grant(resource_type,resource_id,grantee_user_id,granted_by)
-             values('plan_item',$1,$2,$3)
-             on conflict do nothing`,
-            [item.id, userId, req.identity.sub],
-          );
-        }
-      }
-
-      const leadTimes = Array.isArray(req.body.reminderMinutesBefore)
-        ? [...new Set(req.body.reminderMinutesBefore.map(Number))]
-        : [];
-      const baseTime = startsAt ?? dueAt;
-      if (baseTime) {
-        for (const minutes of leadTimes) {
-          if (!Number.isInteger(minutes) || minutes < 0 || minutes > 10080) continue;
-          await client.query(
-            `insert into reminder(plan_item_id,owner_user_id,minutes_before,scheduled_for)
-             values($1,$2,$3,$4::timestamptz - make_interval(mins => $3))
-             on conflict(plan_item_id,owner_user_id,minutes_before)
-             do update set scheduled_for=excluded.scheduled_for,status='scheduled',claimed_at=null`,
-            [item.id, req.identity.sub, minutes, baseTime],
-          );
-        }
-      }
-
-      await client.query('commit');
-      res.status(201).json(item);
-    } catch (e) {
-      await client.query('rollback').catch(() => {});
-      throw e;
-    } finally {
-      client.release();
-    }
+    const item = await planTransaction(pool, req.identity.sub, (client) => createPlanItem(client, req.identity.sub, req.body, req.body.id ?? crypto.randomUUID()));
+    res.status(201).json(serializePlanItem(item, req.identity.sub));
   });
 
   router.patch('/plan-items/:itemId', auth, async (req, res) => {
-    const access = await assertPlanWrite(pool, req.params.itemId, req.identity.sub);
-    if (access.error) return res.status(access.status).json({ error: access.error });
+    const item = await planTransaction(pool, req.identity.sub, (client) => updatePlanItem(client, req.identity.sub, req.params.itemId, req.body, req.body.expectedVersion));
+    res.json(serializePlanItem(item, req.identity.sub));
+  });
 
-    const fields = [];
-    const values = [req.params.itemId];
-    const add = (column, value, cast = '') => {
-      values.push(value);
-      fields.push(`${column}=$${values.length}${cast}`);
-    };
-    if (req.body.title != null) {
-      const title = String(req.body.title).trim();
-      if (!title) return res.status(400).json({ error: 'invalid_title' });
-      add('title', title);
-    }
-    if (req.body.notes !== undefined) add('notes', req.body.notes || null);
-    if (req.body.status != null) {
-      const status = String(req.body.status);
-      if (!allowedStatus.has(status)) return res.status(400).json({ error: 'invalid_status' });
-      add('status', status);
-      if (status === 'completed') add('completed_at', new Date());
-      if (status !== 'completed') add('completed_at', null);
-    }
-    if (req.body.priority != null) {
-      const priority = String(req.body.priority);
-      if (!allowedPriority.has(priority)) return res.status(400).json({ error: 'invalid_priority' });
-      add('priority', priority);
-    }
-    if (req.body.startsAt !== undefined) add('starts_at', asDate(req.body.startsAt));
-    if (req.body.dueAt !== undefined) add('due_at', asDate(req.body.dueAt));
-    if (req.body.durationMinutes !== undefined) add('duration_minutes', req.body.durationMinutes || null);
-    if (!fields.length) return res.status(400).json({ error: 'no_changes' });
-    fields.push('updated_at=now()');
-
-    const client = await pool.connect();
-    try {
-      await client.query('begin');
-      const r = await client.query(
-        `update plan_item set ${fields.join(',')} where id=$1 returning *`,
-        values,
-      );
-      if (r.rows[0].status === 'completed' || r.rows[0].status === 'cancelled') {
-        await client.query(
-          `update reminder set status='cancelled'
-            where plan_item_id=$1 and status in ('scheduled','claimed')`,
-          [req.params.itemId],
-        );
-      } else {
-        await client.query('select recompute_reminder_schedule($1)', [req.params.itemId]);
-      }
-      await client.query('commit');
-      res.json(r.rows[0]);
-    } catch (e) {
-      await client.query('rollback').catch(() => {});
-      throw e;
-    } finally {
-      client.release();
-    }
+  router.delete('/plan-items/:itemId', auth, async (req, res) => {
+    const item = await planTransaction(pool, req.identity.sub, (client) => updatePlanItem(client, req.identity.sub, req.params.itemId, { status: 'cancelled' }, req.body.expectedVersion));
+    res.json(serializePlanItem(item, req.identity.sub));
   });
 
   router.post('/plan-items/:itemId/reminders', auth, async (req, res) => {
@@ -429,39 +297,43 @@ export function createPhase3Router({ pool, auth }) {
     }
     const [years, subjects, workload, grades] = await Promise.all([
       pool.query(
-        `select * from academic_year where student_user_id=$1 and active order by starts_on desc`,
-        [studentUserId],
+        `select y.* from academic_year y where y.student_user_id=$1 and y.active
+          and ($1=$2 or exists(select 1 from academic_term t join subject s on s.academic_term_id=t.id
+            join plan_item p on p.subject_id=s.id where t.academic_year_id=y.id and can_view_plan_item($2,p.id)))
+          order by y.starts_on desc`,
+        [studentUserId, req.identity.sub],
       ),
       pool.query(
         `select s.*,t.title as term_title,y.title as year_title
            from subject s join academic_term t on t.id=s.academic_term_id
            join academic_year y on y.id=t.academic_year_id
-          where s.student_user_id=$1 order by s.name`,
-        [studentUserId],
+          where s.student_user_id=$1 and ($1=$2 or exists(select 1 from plan_item p
+            where p.subject_id=s.id and can_view_plan_item($2,p.id))) order by s.name`,
+        [studentUserId, req.identity.sub],
       ),
       pool.query(
         `select *
            from plan_item
-          where owner_user_id=$1
+          where owner_user_id=$1 and can_view_plan_item($2,id)
             and kind in ('assignment','exam','study_session')
             and status not in ('completed','cancelled')
           order by coalesce(due_at,starts_at) nulls last`,
-        [studentUserId],
+        [studentUserId, req.identity.sub],
       ),
       pool.query(
         `select id,title,subject_id,grade_points,grade_out_of,due_at
            from plan_item
-          where owner_user_id=$1
+          where owner_user_id=$1 and can_view_plan_item($2,id)
             and grade_points is not null
             and grade_out_of is not null
           order by due_at desc nulls last`,
-        [studentUserId],
+        [studentUserId, req.identity.sub],
       ),
     ]);
     res.json({
       years: years.rows,
       subjects: subjects.rows,
-      workload: workload.rows,
+      workload: workload.rows.map((item) => serializePlanItem(item, req.identity.sub)),
       grades: grades.rows,
     });
   });
@@ -474,9 +346,10 @@ export function createPhase3Router({ pool, auth }) {
       `select c.*,s.name as subject_name,s.color_key
          from class_session c
          join subject s on s.id=c.subject_id
-        where s.student_user_id=$1
+        where s.student_user_id=$1 and ($1=$2 or exists(select 1 from plan_item p
+          where p.subject_id=s.id and can_view_plan_item($2,p.id)))
         order by c.weekday,c.starts_at`,
-      [req.params.studentUserId],
+      [req.params.studentUserId, req.identity.sub],
     );
     res.json({ classes: r.rows });
   });
@@ -492,12 +365,9 @@ export function createPhase3Router({ pool, auth }) {
     if (!Number.isFinite(points) || !Number.isFinite(outOf) || outOf <= 0 || points < 0 || points > outOf) {
       return res.status(400).json({ error: 'invalid_grade' });
     }
-    const r = await pool.query(
-      `update plan_item set grade_points=$2,grade_out_of=$3,updated_at=now()
-        where id=$1 returning *`,
-      [req.params.itemId, points, outOf],
-    );
-    res.json(r.rows[0]);
+    const item = await planTransaction(pool, req.identity.sub, (client) => updatePlanItem(client,
+      req.identity.sub, req.params.itemId, { gradePoints: points, gradeOutOf: outOf }, req.body.expectedVersion));
+    res.json(serializePlanItem(item, req.identity.sub));
   });
 
   router.get('/families/:familyId/calendar', auth, async (req, res) => {
@@ -513,15 +383,14 @@ export function createPhase3Router({ pool, auth }) {
         order by coalesce(p.starts_at,p.due_at,p.created_at)`,
       [req.params.familyId, req.identity.sub],
     );
-    res.json({ items: r.rows });
+    res.json({ items: r.rows.map((item) => serializePlanItem(item, req.identity.sub)), asOf: new Date() });
   });
 
   router.get('/families/:familyId/children/:studentUserId/support-summary', auth, async (req, res) => {
     const familyId = req.params.familyId;
     const studentUserId = req.params.studentUserId;
     const g = await pool.query(
-      `select 1 from guardian_relationship
-        where family_id=$1 and guardian_user_id=$2 and minor_user_id=$3 and active`,
+      `select 1 where is_active_guardian($1,$2,$3)`,
       [familyId, req.identity.sub, studentUserId],
     );
     if (!g.rowCount) return res.status(403).json({ error: 'guardian_required' });
@@ -530,39 +399,40 @@ export function createPhase3Router({ pool, auth }) {
       pool.query(
         `select id,kind,title,due_at,starts_at,priority,status
            from plan_item
-          where owner_user_id=$1
+          where owner_user_id=$1 and family_id=$3 and can_view_plan_item($2,id)
             and kind in ('assignment','exam','study_session')
             and status not in ('completed','cancelled')
             and coalesce(due_at,starts_at) >= now()
             and coalesce(due_at,starts_at) < now()+interval '14 days'
           order by coalesce(due_at,starts_at) limit 20`,
-        [studentUserId],
+        [studentUserId, req.identity.sub, familyId],
       ),
       pool.query(
         `select count(*)::int as n from plan_item
-          where owner_user_id=$1 and kind in ('assignment','study_session') and status='completed'
+          where owner_user_id=$1 and family_id=$3 and can_view_plan_item($2,id) and kind in ('assignment','study_session') and status='completed'
             and completed_at >= now()-interval '7 days'`,
-        [studentUserId],
+        [studentUserId, req.identity.sub, familyId],
       ),
       pool.query(
         `select count(*)::int as n from plan_item
-          where owner_user_id=$1 and kind in ('assignment','study_session')
+          where owner_user_id=$1 and family_id=$3 and can_view_plan_item($2,id) and kind in ('assignment','study_session')
             and status not in ('completed','cancelled') and due_at < now()`,
-        [studentUserId],
+        [studentUserId, req.identity.sub, familyId],
       ),
       pool.query(
-        `select coalesce(sum(duration_minutes),0)::int as minutes
-           from plan_item
-          where owner_user_id=$1 and kind='study_session' and status='completed'
-            and completed_at >= now()-interval '7 days'`,
-        [studentUserId],
+        `select floor(coalesce(sum(greatest(0,extract(epoch from
+            least(coalesce(i.ends_at,now()),now())-greatest(i.starts_at,now()-interval '7 days')))),0))::int as seconds
+           from study_session s join study_interval i on i.session_id=s.id join plan_item p on p.id=s.plan_item_id
+          where s.child_user_id=$1 and s.archived_at is null and p.family_id=$3 and can_view_plan_item($2,p.id)
+            and i.starts_at<now() and coalesce(i.ends_at,now())>now()-interval '7 days'`,
+        [studentUserId, req.identity.sub, familyId],
       ),
       pool.query(
         `select
            case when sum(grade_out_of)>0 then round(sum(grade_points)/sum(grade_out_of)*100,1) end as percent
            from plan_item
-          where owner_user_id=$1 and grade_points is not null and grade_out_of is not null`,
-        [studentUserId],
+          where owner_user_id=$1 and family_id=$3 and can_view_plan_item($2,id) and grade_points is not null and grade_out_of is not null`,
+        [studentUserId, req.identity.sub, familyId],
       ),
     ]);
     await audit(pool, req.identity.sub, familyId, 'parent.support_summary.view', 'student', studentUserId);
@@ -571,157 +441,25 @@ export function createPhase3Router({ pool, auth }) {
       metrics: {
         completedLast7Days: completed.rows[0].n,
         overdue: overdue.rows[0].n,
-        studyMinutesLast7Days: study.rows[0].minutes,
+        studyMinutesLast7Days: Math.floor(study.rows[0].seconds / 60),
+        recordedStudySecondsLast7Days: study.rows[0].seconds,
+        recordedTimeIsProofOfStudy: false,
         gradePercent: grades.rows[0].percent == null ? null : Number(grades.rows[0].percent),
       },
     });
   });
 
   router.post('/sync/mutations', auth, async (req, res) => {
-    const mutations = Array.isArray(req.body.mutations) ? req.body.mutations : [];
-    if (mutations.length > 100) {
-      return res.status(400).json({ error: 'too_many_mutations' });
-    }
-
-    const client = await pool.connect();
+    const mutations = req.body?.mutations;
+    if (!Array.isArray(mutations) || mutations.length > 100) return res.status(400).json({ error: 'invalid_mutations' });
     const results = [];
-    try {
-      for (const mutation of mutations) {
-        const id = String(mutation.id ?? '');
-        const operation = String(mutation.operation ?? '');
-        const entityType = String(mutation.entityType ?? 'plan_item');
-        const entityId = mutation.entityId ? String(mutation.entityId) : null;
-        const clientUpdatedAt = asDate(mutation.clientUpdatedAt);
-        const payload = mutation.payload && typeof mutation.payload === 'object'
-          ? mutation.payload
-          : {};
+    for (const mutation of mutations) results.push(await applyPlanMutation(pool, req.identity.sub, mutation));
+    res.json({ results, asOf: new Date() });
+  });
 
-        if (
-          !id ||
-          entityType !== 'plan_item' ||
-          !entityId ||
-          !clientUpdatedAt ||
-          !['update', 'complete', 'reschedule'].includes(operation)
-        ) {
-          results.push({ id, status: 'rejected', error: 'invalid_mutation' });
-          continue;
-        }
-
-        await client.query('begin');
-        try {
-          const duplicate = await client.query(
-            'select accepted_at from sync_mutation where id=$1 and user_id=$2',
-            [id, req.identity.sub],
-          );
-          if (duplicate.rowCount) {
-            await client.query('rollback');
-            results.push({
-              id,
-              status: 'already_applied',
-              acceptedAt: duplicate.rows[0].accepted_at,
-            });
-            continue;
-          }
-
-          const current = await client.query(
-            'select * from plan_item where id=$1 for update',
-            [entityId],
-          );
-          if (!current.rowCount) {
-            await client.query('rollback');
-            results.push({ id, status: 'rejected', error: 'not_found' });
-            continue;
-          }
-          const item = current.rows[0];
-          if (item.owner_user_id !== req.identity.sub) {
-            await client.query('rollback');
-            results.push({ id, status: 'rejected', error: 'forbidden' });
-            continue;
-          }
-
-          const serverUpdatedAt = new Date(item.updated_at);
-          if (serverUpdatedAt.getTime() > clientUpdatedAt.getTime() + 1000) {
-            await client.query('rollback');
-            results.push({
-              id,
-              status: 'conflict',
-              serverUpdatedAt: serverUpdatedAt.toISOString(),
-            });
-            continue;
-          }
-
-          if (operation === 'complete') {
-            await client.query(
-              `update plan_item
-                  set status='completed',completed_at=now(),updated_at=now()
-                where id=$1`,
-              [entityId],
-            );
-            await client.query(
-              `update reminder set status='cancelled'
-                where plan_item_id=$1 and status in ('scheduled','claimed')`,
-              [entityId],
-            );
-          } else if (operation === 'reschedule') {
-            const dueAt = asDate(payload.dueAt);
-            const startsAt = asDate(payload.startsAt);
-            if (!dueAt && !startsAt) {
-              await client.query('rollback');
-              results.push({ id, status: 'rejected', error: 'invalid_reschedule' });
-              continue;
-            }
-            await client.query(
-              `update plan_item
-                  set due_at=coalesce($2,due_at),
-                      starts_at=coalesce($3,starts_at),
-                      updated_at=now()
-                where id=$1`,
-              [entityId, dueAt, startsAt],
-            );
-            await client.query('select recompute_reminder_schedule($1)', [entityId]);
-          } else {
-            const title = payload.title == null ? null : String(payload.title).trim();
-            const status = payload.status == null ? null : String(payload.status);
-            if (status != null && !allowedStatus.has(status)) {
-              await client.query('rollback');
-              results.push({ id, status: 'rejected', error: 'invalid_status' });
-              continue;
-            }
-            await client.query(
-              `update plan_item
-                  set title=coalesce($2,title),
-                      status=coalesce($3::plan_item_status,status),
-                      updated_at=now()
-                where id=$1`,
-              [entityId, title || null, status],
-            );
-          }
-
-          await client.query(
-            `insert into sync_mutation(
-               id,user_id,entity_type,entity_id,operation,client_updated_at,payload
-             ) values($1,$2,$3,$4,$5,$6,$7::jsonb)`,
-            [
-              id,
-              req.identity.sub,
-              entityType,
-              entityId,
-              operation,
-              clientUpdatedAt,
-              JSON.stringify(payload),
-            ],
-          );
-          await client.query('commit');
-          results.push({ id, status: 'accepted' });
-        } catch (error) {
-          await client.query('rollback').catch(() => {});
-          throw error;
-        }
-      }
-      res.json({ results });
-    } finally {
-      client.release();
-    }
+  router.use((error, _req, res, next) => {
+    if (error instanceof PlanMutationError) return res.status(error.status).json({ error: error.code, ...error.details });
+    next(error);
   });
 
   return router;
