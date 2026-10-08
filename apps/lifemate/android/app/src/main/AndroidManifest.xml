@@ -2,6 +2,8 @@
     <application
         android:label="LifeMate"
         android:name="${applicationName}"
+        android:fullBackupContent="@xml/local_data_backup_rules"
+        android:dataExtractionRules="@xml/local_data_extraction_rules"
         android:icon="@drawable/lifemate_logo">
         <activity
             android:name=".MainActivity"

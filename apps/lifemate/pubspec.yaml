@@ -1,5 +1,5 @@
 name: lifemate
-version: 0.1.0+1
+version: 0.1.1+2
 publish_to: none
 description: LifeMate personal, family and learning companion.
 environment:
