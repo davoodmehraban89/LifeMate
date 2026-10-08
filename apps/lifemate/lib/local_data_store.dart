@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -5,10 +6,43 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api.dart';
 
+/// One local runtime session: shared by all production stores in this isolate.
+/// A failed native write leaves the session unavailable until a real app restart.
+class LocalDataSession {
+  bool _uncertain = false;
+  // All instances share the writer lock: read/modify/write cannot lose a record.
+  Future<void>? _tail;
+
+  Future<T> _run<T>(Future<T> Function() operation) {
+    final previous = _tail;
+    final release = Completer<void>();
+    _tail = release.future;
+    Future<T> run() async {
+      if (previous != null) await previous;
+      try {
+        if (_uncertain) {
+          throw const ApiException(500, 'local_storage_restart_required');
+        }
+        return await operation();
+      } finally {
+        // Don't retain a completed future and its caller's async zone forever.
+        if (identical(_tail, release.future)) _tail = null;
+        release.complete();
+      }
+    }
+
+    return run();
+  }
+}
+
 /// Device-only data for the explicitly separate, unauthenticated test entrypoint.
 /// Never used as an authorization boundary or as a production sync cache.
 class LocalDataStore {
-  LocalDataStore({required this.category, required this.displayName});
+  LocalDataStore(
+      {required this.category,
+      required this.displayName,
+      LocalDataSession? session})
+      : session = session ?? _processSession;
 
   final String category;
   final String displayName;
@@ -25,14 +59,12 @@ class LocalDataStore {
     'study_session'
   };
   static const statuses = {'planned', 'in_progress', 'completed', 'cancelled'};
-  // All instances share the writer lock: read/modify/write cannot lose a record.
-  static Future<void> _tail = Future.value();
+  static const priorities = {'low', 'normal', 'high', 'urgent'};
+  static final _processSession = LocalDataSession();
+  final LocalDataSession session;
 
-  static Future<T> _locked<T>(Future<T> Function() operation) {
-    final task = _tail.then((_) => operation());
-    _tail = task.then<void>((_) {}, onError: (Object _, StackTrace __) {});
-    return task;
-  }
+  Future<T> _locked<T>(Future<T> Function() operation) =>
+      session._run(operation);
 
   static String newId() {
     final random = Random.secure();
@@ -55,6 +87,7 @@ class LocalDataStore {
           (profile['user_id'] as String).isEmpty ||
           profile['display_name'] is! String ||
           (profile['display_name'] as String).trim().isEmpty ||
+          (profile['display_name'] as String).trim().length > 120 ||
           !themes.contains(profile['theme_preference'])) {
         throw const FormatException();
       }
@@ -67,14 +100,27 @@ class LocalDataStore {
             item['owner_user_id'] != profile['user_id'] ||
             item['title'] is! String ||
             (item['title'] as String).trim().isEmpty ||
+            (item['title'] as String).trim().length > 240 ||
             !kinds.contains(item['kind']) ||
             !statuses.contains(item['status']) ||
-            item['visibility'] != 'private') throw const FormatException();
+            !priorities.contains(item['priority']) ||
+            (item['notes'] != null &&
+                (item['notes'] is! String ||
+                    (item['notes'] as String).length > 10000)) ||
+            item['visibility'] != 'private') {
+          throw const FormatException();
+        }
         for (final field in ['starts_at', 'due_at']) {
           if (item[field] != null &&
-              DateTime.tryParse(item[field].toString()) == null) {
+              (item[field] is! String ||
+                  DateTime.tryParse(item[field] as String) == null)) {
             throw const FormatException();
           }
+        }
+        final start = DateTime.tryParse(item['starts_at'] as String? ?? '');
+        final due = DateTime.tryParse(item['due_at'] as String? ?? '');
+        if (start != null && due != null && due.isBefore(start)) {
+          throw const FormatException();
         }
       }
       return data;
@@ -83,43 +129,53 @@ class LocalDataStore {
     }
   }
 
-  static Future<SharedPreferences> _preferences() async {
+  static Future<SharedPreferencesAsync> _preferences() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      // Legacy SharedPreferences caches a value even if the platform write fails.
-      // Always reload the durable platform state before reading it.
-      await prefs.reload();
-      return prefs;
+      // Android default is transactional DataStore. No legacy native/Dart cache.
+      return SharedPreferencesAsync();
     } catch (_) {
       throw const ApiException(500, 'local_storage_failed');
     }
   }
 
-  static Future<void> _write(
-      SharedPreferences prefs, Map<String, dynamic> data) async {
+  static Future<String?> _raw(SharedPreferencesAsync prefs) async {
     try {
-      final raw = jsonEncode(data);
-      // Bounded test storage; fail explicitly rather than risk silent truncation.
-      if (utf8.encode(raw).length > 1024 * 1024 ||
-          !await prefs.setString(key, raw)) {
-        throw const ApiException(500, 'local_storage_failed');
-      }
+      return await prefs.getString(key);
     } catch (_) {
       throw const ApiException(500, 'local_storage_failed');
     }
   }
 
-  static Future<Map<String, dynamic>?> readSavedProfile() => _locked(() async {
+  Future<void> _write(
+      SharedPreferencesAsync prefs, Map<String, dynamic> data) async {
+    final raw = jsonEncode(data);
+    // Prevalidation does not attempt native I/O and must not poison the session.
+    if (utf8.encode(raw).length > 1024 * 1024) {
+      throw const ApiException(500, 'local_storage_failed');
+    }
+    try {
+      await prefs.setString(key, raw);
+    } catch (_) {
+      // Even DataStore may have published a native cache before a rename error.
+      // Prevent later reads/writes from treating that uncertain value as durable.
+      session._uncertain = true;
+      throw const ApiException(500, 'local_storage_restart_required');
+    }
+  }
+
+  static Future<Map<String, dynamic>?> readSavedProfile() =>
+      _processSession._run(() async {
         final prefs = await _preferences();
-        final raw = prefs.getString(key);
+        final raw = await _raw(prefs);
         if (raw == null) return null;
         return _copy(_decode(raw)['profile'] as Map<String, dynamic>);
       });
 
-  Future<Map<String, dynamic>> _load(SharedPreferences prefs) async {
-    final raw = prefs.getString(key);
+  Future<Map<String, dynamic>> _load(String? raw) async {
     if (raw != null) return _decode(raw);
-    if (!categories.contains(category) || displayName.trim().isEmpty) {
+    if (!categories.contains(category) ||
+        displayName.trim().isEmpty ||
+        displayName.trim().length > 120) {
       throw const ApiException(400, 'local_invalid_profile');
     }
     return {
@@ -140,8 +196,9 @@ class LocalDataStore {
 
   Future<Map<String, dynamic>> read() => _locked(() async {
         final prefs = await _preferences();
-        final missing = prefs.getString(key) == null;
-        final data = await _load(prefs);
+        final raw = await _raw(prefs);
+        final missing = raw == null;
+        final data = await _load(raw);
         if (missing) await _write(prefs, data);
         return _copy(data);
       });
@@ -149,7 +206,7 @@ class LocalDataStore {
   Future<T> mutate<T>(T Function(Map<String, dynamic> data) change) =>
       _locked(() async {
         final prefs = await _preferences();
-        final data = await _load(prefs);
+        final data = await _load(await _raw(prefs));
         final result = change(data);
         await _write(prefs, data);
         return result;

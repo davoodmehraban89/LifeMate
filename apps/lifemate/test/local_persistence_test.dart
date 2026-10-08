@@ -1,23 +1,45 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:convert';
+import 'local_test_preferences.dart';
 import 'package:lifemate/local_only_api.dart';
 import 'package:lifemate/api.dart';
 import 'package:lifemate/local_data_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
-class FailedWrites extends InMemorySharedPreferencesStore {
-  FailedWrites(Map<String, Object> data) : super.withData(data);
-
+final class FailedWrites extends InMemorySharedPreferencesAsync {
+  FailedWrites(super.data) : super.withData();
   @override
-  Future<bool> setValue(String valueType, String key, Object value) async =>
-      false;
+  Future<bool> setString(
+      String key, String value, SharedPreferencesOptions options) async {
+    await super.setString(key, value, options);
+    throw StateError('Synthetic native cache publication then rename failure');
+  }
+}
+
+class FailedNativeCommit extends InMemorySharedPreferencesStore {
+  FailedNativeCommit(super.data) : super.withData();
+  @override
+  Future<bool> setValue(String type, String key, Object value) async {
+    await super.setValue(type, key, value);
+    return false; // Android legacy commit can publish memory before disk fails.
+  }
 }
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  late LocalDataSession session;
+  setUp(() {
+    resetLocalPreferences();
+    session = LocalDataSession();
+  });
 
-  LocalOnlyApi open() =>
-      LocalOnlyApi(displayName: 'آرام', category: 'girl_minor');
+  LocalOnlyApi open() => LocalOnlyApi(
+      displayName: 'آرام',
+      category: 'girl_minor',
+      store: LocalDataStore(
+          category: 'girl_minor', displayName: 'آرام', session: session));
 
   test('assignment survives recreation, update and safe archive', () async {
     final created = await open().createPlanItem({
@@ -97,31 +119,104 @@ void main() {
     expect(await open().getToday(from: from, to: to), isEmpty);
   });
 
+  test('today uses start time when a deadline is on another day', () async {
+    final from = DateTime.utc(2026, 10, 8);
+    await open().createPlanItem({
+      'kind': 'assignment',
+      'title': 'امروز',
+      'startsAt': from.add(const Duration(hours: 10)).toIso8601String(),
+      'dueAt': from.add(const Duration(days: 1)).toIso8601String(),
+    });
+    expect(
+        await open()
+            .getToday(from: from, to: from.add(const Duration(days: 1))),
+        hasLength(1));
+  });
+
+  test('numeric dates are rejected instead of coerced into strings', () async {
+    await expectLater(
+        open().createPlanItem({
+          'kind': 'task',
+          'title': 'زمان نامعتبر',
+          'dueAt': 20261008,
+        }),
+        throwsA(isA<ApiException>()));
+  });
+
+  test('valid JSON with corrupt fields cannot be read or overwritten',
+      () async {
+    await open().createPlanItem({'kind': 'task', 'title': 'اول'});
+    final original = await open().store.read();
+    for (final corrupt in <Map<String, dynamic>>[
+      {'notes': <String, dynamic>{}},
+      {'priority': 'wrong'},
+      {'due_at': 20261008},
+      {'starts_at': '2026-10-09T10:00:00Z', 'due_at': '2026-10-08T10:00:00Z'},
+    ]) {
+      final data = jsonDecode(jsonEncode(original)) as Map<String, dynamic>;
+      (data['items'] as List).first.addAll(corrupt);
+      final raw = jsonEncode(data);
+      resetLocalPreferences({LocalDataStore.key: raw});
+      await expectLater(
+          open().listPlanItems(),
+          throwsA(isA<ApiException>()
+              .having((e) => e.code, 'code', 'local_data_corrupt')));
+      await expectLater(open().updateProfile(displayName: 'دوم'),
+          throwsA(isA<ApiException>()));
+      expect(await SharedPreferencesAsync().getString(LocalDataStore.key), raw);
+    }
+  });
+
   test('corrupt data raises error and is never overwritten', () async {
     const bad = '{invalid';
-    SharedPreferences.setMockInitialValues({LocalDataStore.key: bad});
+    resetLocalPreferences({LocalDataStore.key: bad});
     await expectLater(
         open().listPlanItems(),
         throwsA(isA<ApiException>()
             .having((e) => e.code, 'code', 'local_data_corrupt')));
     await expectLater(open().createPlanItem({'kind': 'task', 'title': 'new'}),
         throwsA(isA<ApiException>()));
-    expect(
-        (await SharedPreferences.getInstance()).getString(LocalDataStore.key),
-        bad);
+    expect(await SharedPreferencesAsync().getString(LocalDataStore.key), bad);
   });
 
-  test('failed write reports error and preserves last durable version',
+  test('failed native write requires restart and blocks further operations',
       () async {
     final item = await open().createPlanItem({'kind': 'task', 'title': 'اول'});
-    final raw =
-        (await SharedPreferences.getInstance()).getString(LocalDataStore.key)!;
-    SharedPreferencesStorePlatform.instance =
-        FailedWrites({'flutter.${LocalDataStore.key}': raw});
+    final raw = (await SharedPreferencesAsync().getString(LocalDataStore.key))!;
+    SharedPreferencesAsyncPlatform.instance =
+        FailedWrites({LocalDataStore.key: raw});
     await expectLater(
         open().updatePlanItem(item['id'] as String, {'title': 'دوم'}),
         throwsA(isA<ApiException>()
-            .having((e) => e.code, 'code', 'local_storage_failed')));
+            .having((e) => e.code, 'code', 'local_storage_restart_required')));
+    await expectLater(
+        open().listPlanItems(),
+        throwsA(isA<ApiException>()
+            .having((e) => e.code, 'code', 'local_storage_restart_required')));
+    final uncertain = jsonDecode(
+        (await SharedPreferencesAsync().getString(LocalDataStore.key))!) as Map;
+    expect((uncertain['items'] as List).first['title'], 'دوم');
+    resetLocalPreferences({
+      LocalDataStore.key: raw
+    }); // simulate native process restart + disk read
+    await expectLater(open().listPlanItems(), throwsA(isA<ApiException>()));
+    session = LocalDataSession();
+    expect((await open().listPlanItems()).single['title'], 'اول');
+  });
+
+  test('reads never trust legacy memory published by a failed commit',
+      () async {
+    await open().createPlanItem({'kind': 'task', 'title': 'اول'});
+    final original = await open().store.read();
+    final raw = jsonEncode(original);
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.withData({LocalDataStore.key: raw});
+    SharedPreferencesStorePlatform.instance =
+        FailedNativeCommit({'flutter.${LocalDataStore.key}': raw});
+    (original['items'] as List).first['title'] = 'ذخیره ناموفق';
+    final prefs = await SharedPreferences.getInstance();
+    expect(await prefs.setString(LocalDataStore.key, jsonEncode(original)),
+        isFalse);
     expect((await open().listPlanItems()).single['title'], 'اول');
   });
 

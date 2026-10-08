@@ -4,8 +4,12 @@ import 'local_data_store.dart';
 /// Real device storage, without login, networking, family sharing or server sync.
 /// The authenticated application continues to use HttpIdentityApi exclusively.
 class LocalOnlyApi implements IdentityApi {
-  LocalOnlyApi({required String category, required String displayName})
-      : store = LocalDataStore(category: category, displayName: displayName);
+  LocalOnlyApi(
+      {required String category,
+      required String displayName,
+      LocalDataStore? store})
+      : store = store ??
+            LocalDataStore(category: category, displayName: displayName);
 
   final LocalDataStore store;
 
@@ -32,8 +36,9 @@ class LocalOnlyApi implements IdentityApi {
     return store.mutate((data) {
       final profile = data['profile'] as Map<String, dynamic>;
       if (displayName != null) profile['display_name'] = displayName.trim();
-      if (themePreference != null)
+      if (themePreference != null) {
         profile['theme_preference'] = themePreference;
+      }
       return Map<String, dynamic>.from(profile);
     });
   }
@@ -74,9 +79,13 @@ class LocalOnlyApi implements IdentityApi {
     for (final entry in input.entries) {
       if (entry.key == 'startsAt' || entry.key == 'dueAt') {
         final value = entry.value;
-        final date = value == null ? null : DateTime.tryParse(value.toString());
-        if (value != null && date == null)
+        if (value != null && value is! String) {
           throw const ApiException(400, 'local_invalid_item');
+        }
+        final date = value == null ? null : DateTime.tryParse(value as String);
+        if (value != null && date == null) {
+          throw const ApiException(400, 'local_invalid_item');
+        }
         fields[entry.key == 'startsAt' ? 'starts_at' : 'due_at'] =
             date?.toUtc().toIso8601String();
       } else {
@@ -147,9 +156,11 @@ class LocalOnlyApi implements IdentityApi {
         .map((item) => Map<String, dynamic>.from(item as Map));
     return items.where((item) {
       if (item['status'] == 'cancelled' ||
-          (kind != null && kind != item['kind'])) return false;
+          (kind != null && kind != item['kind'])) {
+        return false;
+      }
       final date = DateTime.tryParse(
-          (item['due_at'] ?? item['starts_at'])?.toString() ?? '');
+          (item['starts_at'] ?? item['due_at'])?.toString() ?? '');
       // Undated records remain visible in the planner; dates use [from, to).
       if (date == null) return true;
       return (from == null || !date.isBefore(from)) &&
