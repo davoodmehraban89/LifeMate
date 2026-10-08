@@ -16,9 +16,30 @@ LifeMate is a cross-platform personal and family companion designed to grow with
 
 ## Current phase
 
-**Discovery / Foundation**
+محصول در مرحله پیاده‌سازی و ممیزی است و آماده انتشار کامل نیست. وضعیت معتبر، محدودیت‌ها و شواهد آزمون در [PROJECT_STATE.md](PROJECT_STATE.md) و [گزارش‌های ممیزی](docs/audits/) آمده‌اند؛ ادعاهای تاریخی COMPLETE/READY تأیید فعلی محسوب نمی‌شوند.
 
-The repository is intentionally starting with product rules, architecture decisions, and project state before application scaffolding is locked in.
+## ساخت و مرز نسخه‌ها
+
+از `apps/lifemate/` با Flutter 3.47.6:
+
+```bash
+flutter pub get
+flutter analyze --no-pub
+flutter test --no-pub
+
+# نسخه مستقل محلی بدون Login؛ شناسه com.example.lifemate.localtest
+ORG_GRADLE_PROJECT_lifemateLocalTest=true flutter build apk --release --target=lib/role_entry_main.dart
+
+# نسخه دارای Login متصل به staging؛ نشانی HTTPS باید صریح باشد
+flutter build apk --release --dart-define=LIFEMATE_API_URL=https://lifemate-api-fn-staging.up.railway.app
+flutter build web --release --dart-define=LIFEMATE_API_URL=https://lifemate-api-fn-staging.up.railway.app
+```
+
+نسخه «آرام (محلی)» پروفایل و تکلیف را فقط روی دستگاه نگه می‌دارد؛ Sync/backup سرور، خانواده، سلامت و AI ندارد. داده نصب قبلی را منتقل نمی‌کند و uninstall می‌تواند داده را حذف کند. بایگانی رکورد را حفظ می‌کند. APK محلی را از workflow `Verify local device persistence` و Artifact `LifeGuide-local-persistence-test-apk` دریافت کنید؛ Artifact استاندارد CI entrypoint دارای Login دارد.
+
+پیش‌فرض `LIFEMATE_API_URL` در کد `http://localhost:8080` و فقط برای توسعه است؛ در Android واقعی، localhost همان دستگاه است. CI و workflow انتشار موجود نشانی HTTPS staging را صریح تزریق می‌کنند. داشتن مجوز INTERNET و endpoint صحیح، اثبات login/CRUD روی دستگاه یا استقرار اصلاحات Backend نیست. تغییرات این بسته روی Railway مستقر نشده‌اند و نقص‌های خانواده/اشتراک هنوز باقی‌اند.
+
+امضای فعلی APKها debug است؛ امضاهای CI قبلی و جدید واقعاً متفاوت بودند. نسخه محلی با شناسه مستقل برای حفظ نصب قبلی ساخته می‌شود؛ نگهداری امن کلید پایدار برای ارتقای نسخه‌های بعد و پذیرش نصب روی گوشی مالک هنوز لازم است. هیچ کلید یا token واقعی نباید در مخزن یا متن چت قرار گیرد.
 
 ## Repository operating documents
 
@@ -28,4 +49,4 @@ The repository is intentionally starting with product rules, architecture decisi
 
 ## Working name
 
-**LifeMate** is approved as the current product name. It may be revisited only through an explicit product decision.
+نام محصول در دستور انتقال مالک «آرام / Life Guide» است؛ نام مخزن و package پروژه همچنان LifeMate است.

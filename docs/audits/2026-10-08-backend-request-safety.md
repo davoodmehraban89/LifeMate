@@ -8,6 +8,7 @@
 - JSON ناقص و body بیش‌ازحد، پاسخ مشخص ۴۰۰ و ۴۱۳ می‌گیرند. لاگ خطا فقط metadata مجاز دارد؛ error/body/password و جزئیات ردیف خصوصی چاپ نمی‌شوند. پس از شروع پاسخ، جریان بسته می‌شود و خطای خام به handler پیش‌فرض منتقل نمی‌شود.
 - JWT معتبر به‌تنهایی برای حساب غیرفعال کافی نیست؛ نشست و refresh با وضعیت فعلی حساب کنترل می‌شوند. بررسی مشترک auth در routerهای اصلی و Phase 6 اجرا می‌شود.
 - import تولیدی `server.js` listener پنهان ایجاد نمی‌کند. entrypoint تنها listener عملیاتی را آغاز می‌کند؛ PORT برای import دستکاری نمی‌شود.
+- APK استاندارد release واقعاً مجوز INTERNET نداشت و هر سه AOT آن localhost را داشتند. مجوز اصلی Android اضافه شد و CI نشانی HTTPS staging موجود در workflow انتشار را صریح برای Web/APK تزریق می‌کند؛ پیش‌فرض localhost برای توسعه حفظ می‌شود. README دستور صحیح ساخت دو نسخه را دارد.
 
 ## شواهد و حدود
 
@@ -25,6 +26,8 @@ RED اولیه: ۱۵ آزمون، ۱۴ شکست و یک پاس؛ نوشتن ۵۰
 | بازبینی مستقل source نهایی | یافته مهم یا بحرانی باز در دامنه این اصلاح گزارش نشد |
 
 Commit کد: `148c260e912dc220f862af27fbe4d34be226dfda`. گزارش نتیجه CI و لینک PR پس از ثبت اجرای GitHub اضافه می‌شود. این commit روی سرویس زنده مستقر نشده است.
+
+ممیزی باینری APK استاندارد run `37732315574`: package `com.example.lifemate`، نسخه `0.1.1+2`، min SDK 24 و target 36؛ INTERNET غایب بود و AOT هر سه ABI از localhost استفاده می‌کرد. SHA256 APK: `c9095426000b1b93b331e8b8ae9ab8bdc3e45d08c28f893a5cf1722514391872`. درخواست‌های read-only به HTTPS staging در ۲۰۲۶-۱۰-۰۸ برای `/live` و `/ready` هر دو HTTP 200 دادند؛ این شاهد اعمال کد این PR یا امنیت و CRUD سرویس نیست. پذیرش شبکه نسخه release پس از اصلاح permission/endpoint هنوز آزمون دستگاه جدا می‌خواهد.
 
 برای تکرار از `backend/`، `DATABASE_URL` به PostgreSQL آزمایشی دارای migrationها و `JWT_SECRET` مصنوعی با حداقل ۳۲ نویسه تنظیم شود؛ `NODE_ENV=test` برای parent و child آزمون با `production` اجرا می‌شود. اطلاعات محرمانه یا token واقعی در سند قرار نمی‌گیرد.
 
