@@ -1,0 +1,145 @@
+name: ${COMPOSE_PROJECT_NAME:-lifeguide-stage0}
+
+x-api-environment: &api-environment
+  NODE_ENV: ${NODE_ENV:-production}
+  PORT: 8080
+  PGHOST: postgres
+  PGPORT: 5432
+  PGDATABASE: ${POSTGRES_DB:-lifemate}
+  PGUSER: ${POSTGRES_USER:-lifeguide}
+  PGPASSWORD: ${POSTGRES_PASSWORD:?Generate POSTGRES_PASSWORD in .env}
+  JWT_SECRET: ${JWT_SECRET:?Generate JWT_SECRET in .env}
+  PUBLIC_APP_URL: ${PUBLIC_APP_URL:?Set the operator-approved HTTPS origin}
+  CORS_ORIGINS: ${CORS_ORIGINS:?Set the operator-approved HTTPS origin}
+  LOG_REQUESTS: ${LOG_REQUESTS:-false}
+  EMAIL_FROM: ${EMAIL_FROM:-}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_SECURE: ${SMTP_SECURE:-false}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMS_PROVIDER: ${SMS_PROVIDER:-disabled}
+  SMS_PROVIDER_URL: ${SMS_PROVIDER_URL:-}
+  SMS_PROVIDER_TOKEN: ${SMS_PROVIDER_TOKEN:-}
+  TRUSTED_PROXY_CIDRS: ${GATEWAY_PROXY_IP:-172.30.86.10}/32
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lifemate}
+      POSTGRES_USER: ${POSTGRES_USER:-lifeguide}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Generate POSTGRES_PASSWORD in .env}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [private]
+
+  migrate:
+    image: ${API_IMAGE:-lifeguide-api:local}
+    build:
+      context: ./backend
+    command: [node, scripts/migrate.js]
+    environment: *api-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+    networks: [private]
+
+  api:
+    image: ${API_IMAGE:-lifeguide-api:local}
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment: *api-environment
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8080/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    # Provider delivery may use outbound networking after owner configuration;
+    # no API host port is published. PostgreSQL remains private-only.
+    networks:
+      private:
+      edge:
+      proxy:
+        aliases: [api-proxy]
+
+  gateway:
+    image: ${WEB_IMAGE:-lifeguide-web:local}
+    build:
+      context: ./apps/lifemate
+    restart: unless-stopped
+    ports:
+      - '${HTTPS_BIND:-0.0.0.0}:${HTTPS_PORT:-443}:443'
+    volumes:
+      - ${TLS_CERT_PATH:-./deployment/tls/server.pem}:/etc/nginx/tls/server.pem:ro
+      - ${TLS_KEY_PATH:-./deployment/tls/server-key.pem}:/etc/nginx/tls/server-key.pem:ro
+      - ./deployment/runtime-config.json:/usr/share/nginx/html/config.json:ro
+      - ./deployment/downloads:/usr/share/nginx/html/downloads:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD-SHELL, 'wget -Y off -q -O /dev/null http://127.0.0.1:8081/gateway-health']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks:
+      edge:
+      proxy:
+        ipv4_address: ${GATEWAY_PROXY_IP:-172.30.86.10}
+
+  backup:
+    build:
+      context: .
+      dockerfile: deployment/backup/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-lifeguide}@postgres:5432/${POSTGRES_DB:-lifemate}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Generate POSTGRES_PASSWORD in .env}
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 2 * * *}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      BACKUP_MAX_AGE_SECONDS: ${BACKUP_MAX_AGE_SECONDS:-93600}
+    volumes:
+      - backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD-SHELL, 'kill -0 1 && test -f /backups/last-success && test "$$(( $$(date +%s) - $$(stat -c %Y /backups/last-success) ))" -lt "$${BACKUP_MAX_AGE_SECONDS:-93600}"']
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    networks: [private]
+
+volumes:
+  postgres-data:
+  backups:
+
+networks:
+  private:
+    internal: true
+  edge:
+  proxy:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${PROXY_SUBNET:-172.30.86.0/24}

@@ -20,3 +20,16 @@ build/
 
 # Android local
 **/android/local.properties
+
+# Local server/build dependencies and private deployment material
+node_modules/
+deployment/downloads/*.apk
+*.dump
+*.jks
+*.keystore
+*.p12
+deployment/tls/*
+!deployment/tls/.gitkeep
+
+__pycache__/
+*.pyc

@@ -1,0 +1,25 @@
+# Optional developer-only trusted proxy. Never needed by the deployed client.
+# Set BUILD_CA_FILE to the PUBLIC corporate/build proxy CA, never a private key.
+# Do not print rendered config if proxy environment variables contain credentials.
+services:
+  api:
+    build:
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+      secrets: [build_ca]
+  migrate:
+    build:
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+      secrets: [build_ca]
+  gateway:
+    build:
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+      secrets: [build_ca]
+secrets:
+  build_ca:
+    file: ${BUILD_CA_FILE:?Set public build-proxy CA path only}

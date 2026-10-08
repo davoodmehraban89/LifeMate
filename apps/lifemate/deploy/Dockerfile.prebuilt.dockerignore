@@ -1,0 +1,9 @@
+**
+!build/
+!build/web/
+!build/web/**
+!deploy/
+!deploy/nginx.conf
+!deploy/security-headers.inc
+!deploy/Dockerfile.prebuilt
+!deploy/Dockerfile.prebuilt.dockerignore

@@ -29,7 +29,7 @@ jobs:
           POSTGRES_DB: lifemate_ci
         ports: ['5432:5432']
         options: >-
-          --health-cmd 'pg_isready -U postgres -d lifemate_ci'
+          --health-cmd "pg_isready -U postgres -d lifemate_ci"
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       PGPASSWORD: synthetic_ci_only
@@ -67,6 +67,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: {flutter-version: '3.47.6', channel: stable, cache: true}
       - run: flutter pub get
+      - run: flutter --version --machine
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
@@ -75,11 +76,18 @@ jobs:
       - run: node tool/test_web_bootstrap.mjs
       - name: Bundle local resources and reject external runtime services
         run: node tool/self_host_web.mjs build/web
+      - name: Check compiled browser requests for local fonts and CanvasKit
+        run: |
+          npm install --no-save --no-package-lock playwright@1.62.1
+          npx playwright install --with-deps chromium
+          node tool/test_web_runtime.cjs build/web
+      - name: Record checked prebuilt web provenance
+        run: node ../../scripts/prebuilt-web-check.mjs . --stamp-after-build
+      - uses: actions/upload-artifact@v4
+        with: {name: LifeGuide-web, path: apps/lifemate/build/web, if-no-files-found: error}
       - name: Build test APK (debug certificate; not a release)
         run: |
           flutter build apk --debug
           cp build/app/outputs/flutter-apk/app-debug.apk build/LifeGuide-debug.apk
-      - uses: actions/upload-artifact@v4
-        with: {name: LifeGuide-web, path: apps/lifemate/build/web, if-no-files-found: error}
       - uses: actions/upload-artifact@v4
         with: {name: LifeGuide-debug-apk, path: apps/lifemate/build/LifeGuide-debug.apk, if-no-files-found: error}
