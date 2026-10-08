@@ -32,6 +32,8 @@ before(async () => {
       ...process.env,
       PORT: String(port),
       NODE_ENV: 'production',
+      SMS_PROVIDER: 'disabled', SMS_PROVIDER_URL: '', SMS_PROVIDER_TOKEN: '',
+      EMAIL_FROM: '', RESEND_API_KEY: '', SMTP_HOST: '',
       ENABLE_SENSITIVE_FEATURES: 'true', // Explicit synthetic cycle/error fixtures only.
       CORS_ORIGINS: allowedOrigin,
       RATE_LIMIT_AUTH_MAX: '2000',
@@ -120,7 +122,7 @@ async function errorEvent(requestId, { errorProcess = child, readErrors = () => 
 test('importing the shared app in production does not leave a second listener open', async () => {
   const imported = spawn(process.execPath, ['--input-type=module', '-e', 'const { pool } = await import("./src/server.js"); await pool.end();'], {
     cwd: new URL('..', import.meta.url),
-    env: { ...process.env, NODE_ENV: 'production', PORT: '0' },
+    env: { ...process.env, NODE_ENV: 'production', SMS_PROVIDER: 'disabled', SMS_PROVIDER_URL: '', SMS_PROVIDER_TOKEN: '', PORT: '0' },
     stdio: 'ignore',
   });
   let timedOut = false;
@@ -275,7 +277,7 @@ test('errors after a partial HTTP response terminate the stream without leaking 
   let fixtureErrors = '';
   const streamServer = spawn(process.execPath, ['tests/fixtures/partial_error_server.js'], {
     cwd: new URL('..', import.meta.url),
-    env: { ...process.env, NODE_ENV: 'production', STREAM_ERROR_MARKER: marker },
+    env: { ...process.env, NODE_ENV: 'production', SMS_PROVIDER: 'disabled', SMS_PROVIDER_URL: '', SMS_PROVIDER_TOKEN: '', STREAM_ERROR_MARKER: marker },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   streamServer.stdout.on('data', (chunk) => { fixtureOutput += chunk.toString(); });

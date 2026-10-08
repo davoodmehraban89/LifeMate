@@ -32,7 +32,7 @@ async function startApi() {
     env: { ...process.env, NODE_ENV: 'test', DATABASE_URL: databaseUrl, JWT_SECRET: secret, PORT: String(port),
       RATE_LIMIT_GENERAL_MAX: '2000', RATE_LIMIT_AUTH_MAX: '2000', ENABLE_SENSITIVE_FEATURES: 'false',
       EMAIL_FROM: '', SMTP_HOST: '', SMTP_PORT: '', RESEND_API_KEY: '',
-      SMS_PROVIDER: '', SMS_PROVIDER_URL: '', SMS_PROVIDER_TOKEN: '', AI_API_KEY: '', AI_BASE_URL: '', AI_MODEL: '' },
+      SMS_PROVIDER: 'disabled', SMS_PROVIDER_URL: '', SMS_PROVIDER_TOKEN: '', AI_API_KEY: '', AI_BASE_URL: '', AI_MODEL: '' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   apiProcess.stdout.on('data', (chunk) => { output += chunk.toString(); });

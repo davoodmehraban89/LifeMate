@@ -22,7 +22,8 @@ async function start() {
   base = `http://127.0.0.1:${port}`;
   let startup = '';
   child = spawn(process.execPath, ['src/entrypoint.js'], {
-    env: { ...process.env, NODE_ENV: 'production', PORT: String(port), EMAIL_FROM: '', RESEND_API_KEY: '', SMTP_HOST: '',
+    env: { ...process.env, NODE_ENV: 'production', PORT: String(port),
+      SMS_PROVIDER: 'disabled', SMS_PROVIDER_URL: '', SMS_PROVIDER_TOKEN: '', EMAIL_FROM: '', RESEND_API_KEY: '', SMTP_HOST: '',
       CORS_ORIGINS: '', TRUSTED_PROXY_CIDRS: '', ENABLE_SENSITIVE_FEATURES: 'false',
       RATE_LIMIT_AUTH_MAX: '2000', RATE_LIMIT_GENERAL_MAX: '4000', RATE_LIMIT_AI_MAX: '2000' },
     stdio: ['ignore', 'pipe', 'pipe'],

@@ -59,6 +59,7 @@ before(async () => {
   child = spawn(process.execPath, ['src/entrypoint.js'], {
     env: {
       ...process.env, NODE_ENV: 'production', PORT: String(port),
+      SMS_PROVIDER: 'disabled', SMS_PROVIDER_URL: '', SMS_PROVIDER_TOKEN: '',
       EMAIL_FROM: 'LifeGuide Test <fixture@example.test>',
       SMTP_HOST: '127.0.0.1', SMTP_PORT: String(smtp.address().port),
       SMTP_SECURE: 'false', SMTP_USER: '', SMTP_PASSWORD: '', RESEND_API_KEY: '',

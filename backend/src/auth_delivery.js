@@ -8,9 +8,56 @@ export class SmsProvider {
   async sendOtp(_message) { return { delivered: false, reason: 'provider_unconfigured' }; }
 }
 
-export function createSmsProvider() {
-  // No SMS carrier is selected or enabled. A real adapter needs explicit setup.
-  return new SmsProvider();
+class WebhookSmsProvider extends SmsProvider {
+  configured = true;
+  status = 'CONFIGURED_UNVERIFIED';
+  #url; #token; #fetch; #timeout;
+  constructor({ url, token, fetchImpl, timeoutMs }) {
+    super();
+    this.#url = url; this.#token = token; this.#fetch = fetchImpl; this.#timeout = timeoutMs;
+  }
+  async sendOtp({ phone, code, expiresIn, idempotencyKey }) {
+    if (typeof phone !== 'string' || typeof code !== 'string' ||
+        !/^\+[1-9]\d{7,14}$/.test(phone) || !/^\d{6}$/.test(code) ||
+        !Number.isInteger(expiresIn) || expiresIn < 1 || expiresIn > 300 ||
+        typeof idempotencyKey !== 'string' || !/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(idempotencyKey)) throw new Error('sms_provider_input_invalid');
+    const signal = AbortSignal.timeout(this.#timeout);
+    let response;
+    try {
+      response = await this.#fetch(this.#url, {
+        method: 'POST', redirect: 'error', signal,
+        headers: { Authorization: `Bearer ${this.#token}`, 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+        body: JSON.stringify({ phone, code, expiresIn }),
+      });
+    } catch {
+      const error = new Error(signal.aborted ? 'sms_provider_timeout' : 'sms_provider_unavailable');
+      // Transport failure has uncertain acceptance; a later explicit retry is safer.
+      error.retryable = false;
+      throw error;
+    }
+    // Do not read or serialize a webhook response body, which may contain secrets.
+    try { await response?.body?.cancel(); } catch { /* Discard only. */ }
+    if (!response?.ok) {
+      const error = new Error('sms_provider_rejected');
+      error.retryable = response?.status === 429 || (response?.status >= 500 && response?.status <= 599);
+      throw error;
+    }
+    // A 2xx confirms webhook acceptance, never handset delivery.
+    return { delivered: true };
+  }
+}
+
+export function createSmsProvider({ env = process.env, fetchImpl = fetch, timeoutMs = 10000 } = {}) {
+  const selection = String(env.SMS_PROVIDER ?? '').trim().toLowerCase();
+  if (['', 'none', 'disabled'].includes(selection)) return new SmsProvider();
+  if (selection !== 'webhook') throw new Error('sms_provider_unsupported');
+  let url;
+  try { url = new URL(env.SMS_PROVIDER_URL); } catch { throw new Error('sms_provider_url_invalid'); }
+  if (url.protocol !== 'https:' || !url.hostname || url.username || url.password || url.hash) throw new Error('sms_provider_url_invalid');
+  const token = env.SMS_PROVIDER_TOKEN;
+  if (typeof token !== 'string' || token.length < 32 || token.length > 4096 || !/^[A-Za-z0-9._~+/-]+=*$/.test(token)) throw new Error('sms_provider_token_invalid');
+  const boundedTimeout = Number.isInteger(timeoutMs) && timeoutMs > 0 && timeoutMs <= 10000 ? timeoutMs : 10000;
+  return new WebhookSmsProvider({ url: url.href, token, fetchImpl, timeoutMs: boundedTimeout });
 }
 
 export function createEmailProvider({ env = process.env, fetchImpl = fetch, transportFactory = nodemailer.createTransport } = {}) {
