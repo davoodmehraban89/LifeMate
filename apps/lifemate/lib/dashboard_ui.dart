@@ -135,7 +135,11 @@ class _LearningReportPageState extends State<LearningReportPage>
     if (busy) return;
     setState(() => busy = true);
     try {
-      final to = DateTime.now().toUtc();
+      final tehranNow =
+          DateTime.now().toUtc().add(const Duration(hours: 3, minutes: 30));
+      final to =
+          DateTime.utc(tehranNow.year, tehranNow.month, tehranNow.day + 1)
+              .subtract(const Duration(hours: 3, minutes: 30));
       final result = await widget.api.getLearningReport(
           widget.familyId, widget.childId,
           from: to.subtract(Duration(days: days)), to: to);

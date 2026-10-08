@@ -9,6 +9,7 @@ import 'package:lifemate/session_store.dart';
 import 'package:lifemate/study_coordinator.dart';
 import 'package:lifemate/study_ui.dart';
 import 'package:lifemate/dashboard_ui.dart';
+import 'package:lifemate/phase3_ui.dart' show shortDate;
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
@@ -239,4 +240,59 @@ void main() {
       api.close();
     });
   }
+
+  testWidgets('weekly and monthly reports include the rest of today in Tehran',
+      (tester) async {
+    final now = DateTime.now().toUtc();
+    final tehran = now.add(const Duration(hours: 3, minutes: 30));
+    final dayEnd = DateTime.utc(tehran.year, tehran.month, tehran.day + 1)
+        .subtract(const Duration(hours: 3, minutes: 30));
+    final laterToday = now.add(dayEnd.difference(now) ~/ 2);
+    final windows = <Map<String, DateTime>>[];
+    final api = apiFor((request) async {
+      final from = DateTime.parse(request.url.queryParameters['from']!);
+      final to = DateTime.parse(request.url.queryParameters['to']!);
+      windows.add({'from': from, 'to': to});
+      final included = !laterToday.isBefore(from) && laterToday.isBefore(to);
+      return jsonResponse({
+        'metrics': {
+          'plannedDurationSeconds': 1800,
+          'plannedInRangeDurationSeconds': included ? 1800 : 0,
+          'recordedDurationSeconds': 1500
+        },
+        'items': [
+          {
+            'id': 'today-plan',
+            'title': 'ریاضی امروز',
+            'kind': 'assignment',
+            'dueAt': laterToday.toIso8601String(),
+            'plannedDurationSeconds': 1800,
+          }
+        ],
+        'daily': [],
+        'subjects': [],
+        'asOf': now.toIso8601String(),
+      });
+    });
+    await tester.pumpWidget(MaterialApp(
+        home: LearningReportPage(
+            api: api,
+            familyId: 'family',
+            childId: 'child',
+            childName: 'فرزند')));
+    await tester.pumpAndSettle();
+    expect(windows.single['to'], dayEnd);
+    expect(windows.single['from'], dayEnd.subtract(const Duration(days: 7)));
+    expect(find.text('زمان برنامه‌ریزی‌شده: 30 دقیقه'), findsOneWidget);
+    expect(find.text('زمان ثبت‌شده: 25 دقیقه'), findsOneWidget);
+    expect(
+        find.textContaining('دریافت سرور: ${shortDate(now)}'), findsOneWidget);
+    await tester.tap(find.text('ماهانه'));
+    await tester.pumpAndSettle();
+    expect(windows.last['to'], dayEnd);
+    expect(windows.last['from'], dayEnd.subtract(const Duration(days: 30)));
+    expect(find.text('زمان برنامه‌ریزی‌شده: 30 دقیقه'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    api.close();
+  });
 }
