@@ -5,13 +5,28 @@ import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api.dart';
+import 'local_write_guard.dart';
 
 /// One local runtime session: shared by all production stores in this isolate.
-/// A failed native write leaves the session unavailable until a real app restart.
+/// Native pending-write state also survives replacement of this Dart session.
 class LocalDataSession {
+  final _guard = const LocalWriteGuard();
   bool _uncertain = false;
   // All instances share the writer lock: read/modify/write cannot lose a record.
   Future<void>? _tail;
+
+  Future<void> _ensureAvailable() async {
+    if (!_uncertain) {
+      try {
+        _uncertain = await _guard.getBlocked();
+      } catch (_) {
+        _uncertain = true;
+      }
+    }
+    if (_uncertain) {
+      throw const ApiException(500, 'local_storage_restart_required');
+    }
+  }
 
   Future<T> _run<T>(Future<T> Function() operation) {
     final previous = _tail;
@@ -20,9 +35,7 @@ class LocalDataSession {
     Future<T> run() async {
       if (previous != null) await previous;
       try {
-        if (_uncertain) {
-          throw const ApiException(500, 'local_storage_restart_required');
-        }
+        await _ensureAvailable();
         return await operation();
       } finally {
         // Don't retain a completed future and its caller's async zone forever.
@@ -138,12 +151,17 @@ class LocalDataStore {
     }
   }
 
-  static Future<String?> _raw(SharedPreferencesAsync prefs) async {
+  static Future<String?> _raw(
+      SharedPreferencesAsync prefs, LocalDataSession session) async {
+    final String? raw;
     try {
-      return await prefs.getString(key);
+      raw = await prefs.getString(key);
     } catch (_) {
       throw const ApiException(500, 'local_storage_failed');
     }
+    // Another engine may begin/publish a native write while this read awaits.
+    await session._ensureAvailable();
+    return raw;
   }
 
   Future<void> _write(
@@ -154,7 +172,11 @@ class LocalDataStore {
       throw const ApiException(500, 'local_storage_failed');
     }
     try {
+      // Ownership is native and is granted before any DataStore write is sent.
+      // Only this opaque token can clear the marker after confirmed success.
+      final token = await session._guard.beginWrite();
       await prefs.setString(key, raw);
+      await session._guard.completeWrite(token);
     } catch (_) {
       // Even DataStore may have published a native cache before a rename error.
       // Prevent later reads/writes from treating that uncertain value as durable.
@@ -166,7 +188,7 @@ class LocalDataStore {
   static Future<Map<String, dynamic>?> readSavedProfile() =>
       _processSession._run(() async {
         final prefs = await _preferences();
-        final raw = await _raw(prefs);
+        final raw = await _raw(prefs, _processSession);
         if (raw == null) return null;
         return _copy(_decode(raw)['profile'] as Map<String, dynamic>);
       });
@@ -196,7 +218,7 @@ class LocalDataStore {
 
   Future<Map<String, dynamic>> read() => _locked(() async {
         final prefs = await _preferences();
-        final raw = await _raw(prefs);
+        final raw = await _raw(prefs, session);
         final missing = raw == null;
         final data = await _load(raw);
         if (missing) await _write(prefs, data);
@@ -206,7 +228,7 @@ class LocalDataStore {
   Future<T> mutate<T>(T Function(Map<String, dynamic> data) change) =>
       _locked(() async {
         final prefs = await _preferences();
-        final data = await _load(await _raw(prefs));
+        final data = await _load(await _raw(prefs, session));
         final result = change(data);
         await _write(prefs, data);
         return result;

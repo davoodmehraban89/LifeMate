@@ -13,6 +13,7 @@ import 'package:shared_preferences_platform_interface/in_memory_shared_preferenc
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
 import 'app_test.dart' show FakeApi;
+import 'local_test_preferences.dart' show resetNativeLocalWriteGuard;
 
 // This simulates the preferences plugin boundary, not Android process restart.
 final class _ControlledWrites extends InMemorySharedPreferencesAsync {
@@ -48,6 +49,16 @@ LocalOnlyApi _open(
 Future<Map<String, dynamic>> _nativeSnapshot() async =>
     jsonDecode((await SharedPreferencesAsync().getString(LocalDataStore.key))!)
         as Map<String, dynamic>;
+
+Future<LocalOnlyApi> _restartProcessMock() async {
+  // This plugin mock fails before publishing, so its snapshot is confirmed disk.
+  // Replace both native process state and the preferences adapter explicitly.
+  final raw = await SharedPreferencesAsync().getString(LocalDataStore.key);
+  resetNativeLocalWriteGuard();
+  SharedPreferencesAsyncPlatform.instance =
+      _ControlledWrites({if (raw != null) LocalDataStore.key: raw});
+  return _open(session: LocalDataSession());
+}
 
 Future<void> _expectRestartRequired(Future<Object?> operation) async {
   await expectLater(
@@ -116,6 +127,7 @@ void _localWidgetTest(String name, Future<void> Function(WidgetTester) body) {
 
 void main() {
   setUp(() {
+    resetNativeLocalWriteGuard();
     _testSession = LocalDataSession();
     SharedPreferences.setMockInitialValues({});
     SharedPreferencesAsyncPlatform.instance = _ControlledWrites({});
@@ -250,8 +262,7 @@ void main() {
     expect((await _nativeSnapshot())['items'], isEmpty);
     await _expectRestartRequired(api.listPlanItems());
 
-    // A new coordinator represents a full process restart in this plugin mock.
-    final restarted = _open(session: LocalDataSession());
+    final restarted = await _restartProcessMock();
     expect(await restarted.listPlanItems(), isEmpty);
     await _planner(tester, restarted);
     await _createForm(tester);
@@ -317,7 +328,7 @@ void main() {
     expect(find.text('تمرین ریاضی'), findsOneWidget);
     await _expectRestartRequired(api.listPlanItems());
 
-    final restarted = _open(session: LocalDataSession());
+    final restarted = await _restartProcessMock();
     expect((await restarted.listPlanItems()).single['status'], 'planned');
     await tester.pumpWidget(MaterialApp(
       key: UniqueKey(),
@@ -360,7 +371,7 @@ void main() {
     expect(find.text(_restartMessage), findsOneWidget);
     await _expectRestartRequired(api.listPlanItems());
 
-    final restarted = _open(session: LocalDataSession());
+    final restarted = await _restartProcessMock();
     expect((await restarted.listPlanItems()).single['starts_at'],
         start.toUtc().toIso8601String());
     await _planner(tester, restarted);
@@ -498,7 +509,7 @@ void main() {
     expect(
         (await _nativeSnapshot())['profile']['display_name'], 'آرام مهرآیین');
 
-    final restarted = _open(session: LocalDataSession());
+    final restarted = await _restartProcessMock();
     expect((await restarted.getProfile())['display_name'], 'آرام مهرآیین');
   });
 

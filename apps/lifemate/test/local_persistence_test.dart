@@ -19,6 +19,19 @@ final class FailedWrites extends InMemorySharedPreferencesAsync {
   }
 }
 
+final class NativeWriteDuringRead extends InMemorySharedPreferencesAsync {
+  NativeWriteDuringRead(super.data, this.guard) : super.withData();
+  final MockNativeLocalWriteGuard guard;
+
+  @override
+  Future<String?> getString(
+      String key, SharedPreferencesOptions options) async {
+    final raw = await super.getString(key, options);
+    guard.beginWrite();
+    return raw;
+  }
+}
+
 class FailedNativeCommit extends InMemorySharedPreferencesStore {
   FailedNativeCommit(super.data) : super.withData();
   @override
@@ -196,6 +209,16 @@ void main() {
     final uncertain = jsonDecode(
         (await SharedPreferencesAsync().getString(LocalDataStore.key))!) as Map;
     expect((uncertain['items'] as List).first['title'], 'دوم');
+    // Flutter engine recreation replaces Dart state, but retains native caches.
+    session = LocalDataSession();
+    await expectLater(
+        open().listPlanItems(),
+        throwsA(isA<ApiException>()
+            .having((e) => e.code, 'code', 'local_storage_restart_required')));
+    await expectLater(
+        open().updatePlanItem(item['id'] as String, {'title': 'سوم'}),
+        throwsA(isA<ApiException>()
+            .having((e) => e.code, 'code', 'local_storage_restart_required')));
     resetLocalPreferences({
       LocalDataStore.key: raw
     }); // simulate native process restart + disk read
@@ -217,6 +240,39 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(await prefs.setString(LocalDataStore.key, jsonEncode(original)),
         isFalse);
+    expect((await open().listPlanItems()).single['title'], 'اول');
+  });
+
+  test('a native write beginning during a read blocks the returned snapshot',
+      () async {
+    await open().createPlanItem({'kind': 'task', 'title': 'ثبت‌شده'});
+    final raw = (await SharedPreferencesAsync().getString(LocalDataStore.key))!;
+    final guard = resetNativeLocalWriteGuard();
+    SharedPreferencesAsyncPlatform.instance =
+        NativeWriteDuringRead({LocalDataStore.key: raw}, guard);
+    await expectLater(
+        open().listPlanItems(),
+        throwsA(isA<ApiException>()
+            .having((e) => e.code, 'code', 'local_storage_restart_required')));
+  });
+
+  test('oversized mutation does not start a native write or replace saved data',
+      () async {
+    final item = await open().createPlanItem({'kind': 'task', 'title': 'اول'});
+    final guard = resetNativeLocalWriteGuard();
+    await expectLater(
+        open().store.mutate((data) {
+          data['items'] = List.generate(
+              200,
+              (index) => {
+                    ...item,
+                    'id': 'synthetic-capacity-item-$index',
+                    'notes': 'x' * 6000,
+                  });
+        }),
+        throwsA(isA<ApiException>()
+            .having((e) => e.code, 'code', 'local_storage_failed')));
+    expect(guard.blocked, isFalse);
     expect((await open().listPlanItems()).single['title'], 'اول');
   });
 
