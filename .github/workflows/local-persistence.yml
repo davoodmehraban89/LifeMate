@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: local-device-persistence-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   flutter-checks:
     runs-on: ubuntu-latest
@@ -41,6 +45,8 @@ jobs:
     needs: flutter-checks
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      ORG_GRADLE_PROJECT_lifemateLocalTest: 'true'
     defaults:
       run:
         working-directory: apps/lifemate
@@ -84,13 +90,14 @@ jobs:
           # --no-uninstall retains SharedPreferences during Flutter test teardown.
           script: |
             bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --dart-define=PERSISTENCE_PHASE=create --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-create.log"'
-            adb -s emulator-5554 shell am force-stop com.example.lifemate
+            adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
             bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --dart-define=PERSISTENCE_PHASE=update --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-update.log"'
-            adb -s emulator-5554 shell am force-stop com.example.lifemate
+            adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
             bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --dart-define=PERSISTENCE_PHASE=archive --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-archive.log"'
-            adb -s emulator-5554 shell am force-stop com.example.lifemate
+            adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
             bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --dart-define=PERSISTENCE_PHASE=verify --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-verify.log"'
-            adb -s emulator-5554 shell am force-stop com.example.lifemate
+            bash -eo pipefail -c 'adb -s emulator-5554 shell pm path com.example.lifemate.localtest | grep -q "^package:"'
+            adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
             bash -e -c 'if grep -E "Uninstalling old version|Package install error" "$RUNNER_TEMP"/local-persistence-*.log; then echo "An installation reset invalidated the persistence test."; exit 1; fi'
       - name: Build local role-entry APK after persistence gates
         run: flutter build apk --release --no-pub --target=lib/role_entry_main.dart
