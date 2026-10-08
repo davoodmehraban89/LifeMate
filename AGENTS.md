@@ -1,7 +1,7 @@
-# LifeMate — Operating Rules
+# LifeGuide — Operating Rules
 
 ## Mission
-Build LifeMate as a maintainable, secure, attractive personal/family/learning companion. The product starts with a teen-and-family use case but must not be hard-coded to one family, one age, or one school year.
+Build LifeGuide as a maintainable, secure, attractive personal/family/learning companion. The product starts with a teen-and-family use case but must not be hard-coded to one family, one age, or one school year.
 
 ## Coordination model
 The coordinating project lead owns prioritization, dependencies, integration, conflict resolution, and final delivery. Five specialist ownership areas are active:

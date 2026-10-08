@@ -4,10 +4,10 @@
 - **Date:** 2026-10-05
 
 ## Context
-LifeMate begins from a teen/student use case but is intended to remain useful across school years and later life. A student-only root model would make later expansion into university, work, personal projects and adult family life structurally expensive.
+LifeGuide begins from a teen/student use case but is intended to remain useful across school years and later life. A student-only root model would make later expansion into university, work, personal projects and adult family life structurally expensive.
 
 ## Decision
-LifeMate is a **Personal, Family & Learning Companion**. The core identity is `Person/Profile`; `Student` is a contextual role/life context. School capabilities are a major initial domain but do not define the root user model.
+LifeGuide is a **Personal, Family & Learning Companion**. The core identity is `Person/Profile`; `Student` is a contextual role/life context. School capabilities are a major initial domain but do not define the root user model.
 
 The product will maintain a deliberately small initial executable scope while keeping domain boundaries extensible.
 

@@ -1,3 +1,5 @@
+**Historical snapshot — retained as decision/evidence history. Current product: LifeGuide; current execution status: PROJECT_STATE.md.**
+
 # Phase 2 — Product Foundation & Identity Implementation Plan
 
 Status: IN PROGRESS

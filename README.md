@@ -1,31 +1,54 @@
-# LifeMate
+# LifeGuide / لایف‌گاید
 
-**Personal, Family & Learning Companion**
+همراه فارسی و راست‌به‌چپ خانواده و آموزش؛ Android و PWA والدین از یک API مبتنی بر Node/Express و PostgreSQL مشترک استفاده می‌کنند. نام مخزن `davoodmehraban89/LifeMate` و قراردادهای قدیمی پایگاه داده و JWT تغییر نمی‌کنند.
 
-LifeMate is a cross-platform personal and family companion designed to grow with its users across life stages. The first product focus is a teen-and-family experience combining planning, school organization, learning support, family coordination, and safe AI-assisted wellbeing guidance.
+این شاخه یک **نامزد آزمون آنلاین با داده ساختگی** است. نسخه کامل عملیاتی یا منتشرشده نیست. پذیرش Android/iPhone/Safari واقعی و دسترسی بدون VPN داخل ایران **UNVERIFIED** است. Backend موجود و Feature 1 ایران حفظ شده‌اند؛ حالت بدون ورودِ محلی جای سیستم چندکاربره نیست.
 
-## Product principles
+## شروع محلی
 
-- One identity, multiple life contexts: student, personal, family, and later work/university.
-- One Family Workspace with independent member accounts and role-based access.
-- Parents can access authorized planning, academic reports, and meaningful support signals without turning the product into continuous surveillance.
-- AI assists with planning, learning, reflection, and parent guidance; it does not impersonate a clinician or replace human professional care.
-- Android installable app + high-quality iPhone/iPad PWA + responsive web, sharing one backend and data model.
-- Persian/RTL quality and an attractive, age-appropriate visual experience are first-class requirements.
-- Security, privacy, safety, and auditability are architectural requirements, not post-release additions.
+Windows/LAN: [راهنمای Stage 0](docs/operations/STAGE0.md). Docker Desktop/Compose و گواهی HTTPS مورد اعتماد دستگاه‌های آزمون لازم‌اند؛ حساب یا پرداخت میزبان لازم نیست.
 
-## Current phase
+```powershell
+./scripts/local-deploy.ps1 -Origin https://192.168.1.10 -Certificate deployment/tls/server.pem -PrivateKey deployment/tls/server-key.pem -Project lifeguide-stage0
+```
 
-**Discovery / Foundation**
+IP نمونه را با IP رایانه عوض کنید. روی Linux، پس از تولید گواهی و انتخاب مبدأ:
 
-The repository is intentionally starting with product rules, architecture decisions, and project state before application scaffolding is locked in.
+```bash
+bash scripts/local-deploy.sh --init https://192.168.1.10
+```
 
-## Repository operating documents
+`.env`، گواهی خصوصی، backup و keystore خارج Git بمانند. API و PostgreSQL پورت عمومی ندارند؛ nginx، PWA و `/api` را از همان HTTPS ارائه می‌کند. `deployment/runtime-config.json` تنظیم عمومی وب است؛ Android از تنظیم داخل برنامه استفاده می‌کند. تغییر سرور، نشست و کش قبلی را پاک می‌کند؛ صف خصوصی به سرور دیگری ارسال نمی‌شود.
 
-- [`AGENTS.md`](AGENTS.md) — operating rules and ownership model.
-- [`PROJECT_STATE.md`](PROJECT_STATE.md) — current checkpoint and change ledger.
-- [`docs/decisions/`](docs/decisions/) — architecture and product decision records.
+## توسعه و آزمون
 
-## Working name
+```bash
+cd backend
+npm ci
+npm run migrate
+npm test
+npm run check
+```
 
-**LifeMate** is approved as the current product name. It may be revisited only through an explicit product decision.
+دیتابیس آزمون باید PostgreSQL16 محلی با **داده ساختگی** باشد؛ `DATABASE_URL` و `JWT_SECRET` را از محیط خصوصی تنظیم کنید. پیش از آزمون، migrationها را اجرا کنید. Flutter3.47.6:
+
+```bash
+cd apps/lifemate
+flutter pub get
+flutter analyze
+flutter test
+flutter build web --release --no-web-resources-cdn --pwa-strategy=none
+node tool/self_host_web.mjs build/web
+```
+
+خروجی وب CanvasKit و فونت‌ها را محلی ارائه می‌کند. انتشار خودکار قبلی حذف شده؛ استقرار و APK امضاشده فقط workflow دستیِ پیش‌فرض خاموش دارند. APK آزمایشی debug را با release رسمی اشتباه نگیرید. شناسه نهایی Android `ir.lifeguide.app` و نام فایل release رسمی `LifeGuide.apk` است؛ ساخت آن به کلید واقعی مالک نیاز دارد.
+
+## داده و حریم خصوصی
+
+PostgreSQL مرجع رکوردها و مجوزهاست؛ کش/صف آفلاین بر اساس کاربر و API جدا می‌شود. شناسه UUID، نسخه و تأیید سرور از تکرار و بازنویسی خاموش جلوگیری می‌کنند. والد فقط تکلیف و گزارش مجاز را می‌بیند. زمان ثبت‌شده تایمر یا گزارش شخصی، مدرک مطالعه واقعی نیست. AI/voice خارجی و قابلیت‌های حساس سلامت/چرخه در این بسته غیرفعال‌اند؛ بررسی حقوقی/رضایت و نگهداری داخلی داده حساس، گیت‌های باز انتشار هستند.
+
+- [وضعیت و شواهد](PROJECT_STATE.md)، [تغییرات](CHANGELOG.md)، [تحلیل شکاف main](docs/audits/2026-10-08-online-gap-analysis.md)
+- [تصمیم میزبانی و تحقیق](docs/decisions/0009-provider-neutral-hosting.md)، [نام و هویت انتشار](docs/decisions/0010-lifeguide-naming.md)
+- [استقرار/بازگشت](docs/operations/SELF_HOSTED_DEPLOYMENT.md)، [تمرین مهاجرت داخلی](docs/operations/DOMESTIC_MIGRATION.md)
+
+میزبانی عمومی، DNS، انتقال داده واقعی، merge و انتشار هنوز انجام نشده‌اند و به مجوز مالک نیاز دارند. گزینه پیشنهادی فعلی Stage 0 رایگان روی LAN است؛ VPS رایگانِ مناسب بدون کارت در تحقیق تأیید نشد.

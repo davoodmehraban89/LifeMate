@@ -1,0 +1,40 @@
+name: LifeGuide operator deploy (DISABLED by default)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Explicit owner approval for this live change: type APPROVE_LIVE_DEPLOY'
+        required: true
+        type: string
+permissions: {contents: read}
+concurrency: {group: lifeguide-operator-deploy, cancel-in-progress: false}
+jobs:
+  deploy:
+    if: vars.LIFEGUIDE_DEPLOY_ENABLED == 'true' && inputs.confirm == 'APPROVE_LIVE_DEPLOY'
+    environment: owner-approved-server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy reviewed commit to operator-configured server
+        env:
+          DEPLOY_HOST: ${{ secrets.LIFEGUIDE_DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.LIFEGUIDE_DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.LIFEGUIDE_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.LIFEGUIDE_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-zA-Z0-9_-]+$ ]]
+          umask 077
+          mkdir -p "$RUNNER_TEMP/lifeguide-ssh"
+          printf '%s\n' "$DEPLOY_KEY" > "$RUNNER_TEMP/lifeguide-ssh/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$RUNNER_TEMP/lifeguide-ssh/known_hosts"
+          ssh_args=(-i "$RUNNER_TEMP/lifeguide-ssh/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/lifeguide-ssh/known_hosts")
+          target="$DEPLOY_USER@$DEPLOY_HOST"
+          release="/opt/lifeguide/releases/$GITHUB_SHA"
+          ssh "${ssh_args[@]}" "$target" "test -f /opt/lifeguide/shared/.env && mkdir -p '$release'"
+          git archive HEAD | ssh "${ssh_args[@]}" "$target" "tar -x -C '$release'"
+          ssh "${ssh_args[@]}" "$target" "cd '$release' && ln -sfn /opt/lifeguide/shared/.env .env && ln -sfn /opt/lifeguide/shared/runtime-config.json deployment/runtime-config.json && rm -rf deployment/downloads && ln -s /opt/lifeguide/shared/downloads deployment/downloads && bash scripts/local-deploy.sh && ln -sfn '$release' /opt/lifeguide/current"
+      - name: Remove deployment credentials
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/lifeguide-ssh"

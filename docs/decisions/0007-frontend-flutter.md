@@ -1,4 +1,4 @@
-# ADR-0004 — Frontend Baseline: Flutter
+# ADR-0007 — Frontend Baseline: Flutter
 
 - **Status:** Accepted for Phase 2 baseline
 - **Date:** 2026-10-05
@@ -7,7 +7,7 @@
 Use **Flutter** as the initial client framework for Android and the app-centric responsive Web/PWA surface, with platform-specific web integration where standards-based PWA behavior requires it.
 
 ## Why
-LifeMate is an app-centric experience rather than a document/SEO site. A shared Dart/Flutter product surface reduces divergence between Android and PWA while preserving high visual fidelity and RTL control. Official Flutter guidance identifies PWAs, SPAs and existing mobile-style applications as suitable Flutter web scenarios.
+LifeGuide is an app-centric experience rather than a document/SEO site. A shared Dart/Flutter product surface reduces divergence between Android and PWA while preserving high visual fidelity and RTL control. Official Flutter guidance identifies PWAs, SPAs and existing mobile-style applications as suitable Flutter web scenarios.
 
 ## Important constraint
 Flutter no longer generates/manages an application caching service worker by default. Offline/PWA caching must therefore be an explicit web concern using a custom standards-based service worker/Workbox or equivalent, not an assumed framework feature.

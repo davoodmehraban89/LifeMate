@@ -1,6 +1,7 @@
 # ADR-0006 — Provider-neutral PostgreSQL Backend
 
-- **Status:** Accepted
+- **Status:** Superseded hosting recommendation; PostgreSQL/adapter invariants retained
+- **Superseded by:** [ADR-0009](0009-provider-neutral-hosting.md) for hosting
 - **Date:** 2026-10-05
 - **Supersedes:** any Phase 2 assumption that Supabase is a mandatory backend platform
 
@@ -10,7 +11,7 @@ Phase 2 originally treated Supabase as the likely combined database/auth/backend
 ## Decision
 LifeMate will use PostgreSQL as its durable relational source of truth while exposing infrastructure through explicit application ports/adapters.
 
-The managed PostgreSQL host is replaceable. Neon is the preferred current target when available, but no domain entity, authorization rule, migration or client contract may require Neon-specific semantics.
+The managed PostgreSQL host is replaceable. The former Neon preference is historical. The active target is self-hosted PostgreSQL in the same provider-neutral Compose package as the API and PWA; managed database services are excluded by ADR-0009.
 
 Required ports:
 - `IdentityProvider`: registration, email verification, login/session, password recovery/change.

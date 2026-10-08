@@ -1,63 +1,40 @@
-# LifeMate — Project State
+# LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
-**Last updated:** 2026-10-05
-**Phase:** Phase 5 — Hardening, Observability & Release — COMPLETE
-**Repository:** `davoodmehraban89/LifeMate`
-**Working product name:** LifeMate — approved
+Updated: 2026-10-08. Backend version: **0.5.0**. Branch: **feat/online-family-stage0**, based on main `abdc9d9d032bc6746c8390b902a2e52d82991530`. Repository remains `davoodmehraban89/LifeMate`.
 
-## Transfer checkpoint
-Phases 1–5 engineering core are complete. LifeMate now has the foundation/identity, planner-school-family core, advisory learning/wellbeing guides, and the operational hardening/release-readiness layer required for a controlled beta. Public production release and minor-sensitive external AI/voice exposure remain intentionally gated and require separate explicit approval.
+**Status: online Stage 0 candidate, integration in progress. Not a complete operational product or public release.** Prior COMPLETE/READY claims are retained only in [historical checkpoint](docs/history/2026-10-05-project-state.md); they do not prove this candidate's acceptance.
 
-## Five-phase roadmap
-1. **Foundation, Product Contract & UX Direction** — COMPLETE
-2. **Product Foundation & Identity** — COMPLETE
-3. **Planner, School & Family Core** — COMPLETE
-4. **AI Guides, Learning & Wellbeing** — COMPLETE
-5. **Hardening, Observability & Release** — COMPLETE
+## Baseline and reuse
 
-## Accepted architecture baseline
-- Flutter Android + responsive Web/PWA; future packaged/native iOS path preserved.
-- Provider-neutral Node API + PostgreSQL; Railway remains staging host.
-- LifeMate-owned identity/session adapter; server-side relationship-aware authorization.
-- Offline client support does not replace server authority.
-- AI guides are advisory and plan proposals require explicit acceptance.
-- Wellbeing/AI transcripts remain owner-private; family membership does not grant transcript access.
+[Main gap analysis](docs/audits/2026-10-08-online-gap-analysis.md) was written before new implementation. GitHub refs verified: local persistence `62e82ba`, backend safety `e5e3e41`, Cloudflare/Neon `7a83ca8`; only isolated backend safety commit reused. Login-free LocalOnlyApi and managed-host adapters were not merged into the online product. Main already contains family/guardian identity, planner/offline queue, authorization tests and **Feature 1** Iranian education/catalog/calendar/preferences; these are preserved. Feature 1 household persona is a preference, not a server grant of parental access. Health/cycle UI and external AI/voice remain disabled.
 
-## Phase 4 completed vertical slice
-Learning goal → learning check-in → wellbeing check-in → AI guide session → safety classification → advisory response → explicit plan proposal → accept/reject decision. No guide response silently mutates planner state.
+## Current implementation
 
-### Verified Phase 4 gates
-- Migration `0004_ai_learning_wellbeing.sql` defines seven Phase 4 tables, including the separate `wellbeing_safety_event` ledger, and owner-oriented indexes.
-- Phase 4 API implements learning goals/check-ins, private/guardian-summary wellbeing check-ins, AI sessions/messages, explicit proposal decisions, guardian wellbeing summaries and privacy-preserving family guidance.
-- High-risk self-harm language follows a fixed urgent-support path and writes a separate safety signal; ordinary family membership never grants raw wellbeing notes or AI transcripts.
-- Study/planner/wellbeing guidance is advisory, non-diagnostic and never silently mutates planner data.
-- Flutter includes interactive guide chat, learning goals/check-ins, wellbeing check-ins, guardian summary and parent family-guidance flows.
-- ADR `docs/decisions/0004-ai-learning-wellbeing-safety.md` records privacy, provider, voice and production safety gates.
+- Shared Node/Express/Argon2id/PostgreSQL with migrations 0007 onward: optional email/phone identity, verification delivery recovery, rate-limited resend, provider port, hashed tokens and refresh rotation.
+- Current family/membership/guardian checks, private notes stripped from shared task views, report metrics scoped per visible task. Family archival and revoked membership/guardian relationships close access. Selected grants do not resurrect after rejoining.
+- Canonical plan creation version1, stable UUID offline mutations, request-hash idempotency, row/owner locks, expected-version conflicts, canonical server acknowledgement; edit and safe archive use real storage.
+- Study sessions/intervals/events survive backend restart; start/pause/resume/stop, corrections/archive, overlap/duplicate protection. Timer/self-reported durations are explicitly not proof of study. Guardian confirmation requires authorized evidence.
+- Persian RTL parent views, allowed learning reports, activity timestamps, last-refresh/error state and polling. Android endpoint settings/fallback selection and web no-store config.json use one chosen HTTPS API; endpoint/account switch clears old credentials/cache.
+- Client queue/cache scoped to endpoint+authenticated user, durable enqueue-before-send, FIFO chains, malformed-ack rejection, conflicts retained, logout generation invalidation. Storage failures are not mistaken for network outages.
+- Self-hosted Compose API/Postgres/nginxTLS + backup cron/healthchecks; tested synthetic backup/restore uses existing scripts. Runtime web fonts/CanvasKit are bundled locally. Notification polling uses a replaceable delivery port; background push is not enabled.
+- Product rebrand **LifeGuide**, Android **ir.lifeguide.app**, release key required from secrets; automatic public publishing and unused fix workflow removed. Deployment and signed-APK workflows are manual and disabled by default.
 
-## Phase 5 completed scope
-- Production-entrypoint request correlation, security headers, privacy-safe structured request/error telemetry and bounded request bodies.
-- Configurable general/auth/AI fixed-window rate limits with HTTP 429 and `Retry-After`.
-- Separate `/live` and database-backed `/ready` operational probes while retaining `/health` compatibility.
-- PostgreSQL-native backup/restore scripts plus an automated CI data round-trip restore drill.
-- Release regression gates for backend tests/syntax/audit/schema, secret scanning, Flutter format/analyze/tests, Web release build, Android build and PWA install/RTL metadata.
-- Deployment, rollback, backup/restore, incident-response and production-readiness runbooks plus changelog/version discipline.
-- Railway staging API function hardened with request IDs, security headers, rate limiting, `/live`, `/ready` and privacy-safe error handling; staging tracing and auto-instrumentation enabled.
+## Execution evidence so far
 
-### Verified Phase 5 gates
-- Red-first operations contract was observed failing before the hardening implementation; subsequent backend contract/integration tests passed.
-- GitHub Actions run 165 at branch commit `125c44f55827dc5ed26d81fe821969348db4598e` completed successfully: security, backend and Flutter jobs all green.
-- Backend run 165 passed migrations, authorization tests, dependency audit, 11 Node tests, syntax checks, 28-table schema verification and the backup/restore data round-trip drill.
-- Flutter run 165 passed formatting, analysis, widget/tests, PWA release metadata checks, Web release build and Android debug build.
-- Railway staging deployment `0cd21bed-5cba-494b-afef-7f45312f2fdf` is SUCCESS/online with no reported warnings or critical issues after Phase 5 hardening.
-- Railway staging source inspection confirms the operational middleware and `/live` + `/ready` routes are deployed; external AI/voice remain unenabled and Phase 4 AI continues in local-fallback mode.
+Actual output is recorded in [Stage 0 verification](docs/audits/2026-10-08-stage0-verification.md). Before final integration, the team executed fresh real PostgreSQL migrations and backend tests (95 passed), an independent HTTP/DB eight-step scenario (9 assertions passed), focused runtime/session/endpoint tests, and focused offline tests. Root executed proxy HTTP tests (3 passed), offline FIFO/ack/scope tests (8 passed), local bootstrap regression and diff checks. These counts are intermediate; final aggregate results belong in the handover report.
 
-## Production-gate items intentionally deferred
-Jurisdiction-specific legal/guardian consent review; final safety severity taxonomy; emergency resource localization; external AI provider privacy/retention review; wellbeing retention/export/deletion policy; voice-provider privacy review; production push-provider configuration; final device beta acceptance. These are release gates, not missing Phase 5 engineering-core work.
+Local Compose PostgreSQL/API/backup are healthy; repeat migrations and scheduled backup plus synthetic restore/privacy/session drill ran successfully. First gateway builds failed (SDK/proxy/source issues), were not counted as success, and are being rebuilt. No live host, DNS, production deploy, real-data migration, merge or public release ran.
 
-## Release status
-Engineering phases 1–5: COMPLETE.
-Controlled family beta: READY FOR OWNER-APPROVED DEVICE TESTING.
-Public production deployment/release: NOT PERFORMED.
+## UNVERIFIED acceptance and remaining gates
 
-## Guardrail
-AI/wellbeing production exposure stays disabled until dedicated safety/legal/provider gates pass. Production deploys, destructive migrations, public release and sensitive access changes require explicit action-specific approval.
+- Real Android three-device lifecycle/install/upgrade; iPhone/iPad Safari login, Add to Home Screen and safe PWA update.
+- Windows PowerShell/WSL2/mkcert owner-PC installation and trusted mobile TLS.
+- VPN-free API/PWA/APK reachability inside Iran; foreign VPS/payment/KYC eligibility. No suitable long-term free/no-card VPS was verified; Stage 0 LAN is the primary recommendation.
+- Real email/SMS delivery/provider/payment, timing-indistinguishability of registration, background push.
+- Owner release keystore/certificate, genuinely signed LifeGuide.apk and public availability.
+- Legal/consent/retention gates for minor wellbeing and cycle data; in-country sensitive storage policy. These gates are flagged, not implemented or certified.
+- Complete lifecycle CRUD for legacy auxiliary school/context/check-in entities and richer report UX must be audited against scope. Existing implementations must not be called complete merely because tests pass.
+
+## Next and operator responsibilities
+
+Finish the local HTTPS/PWA integration and actual aggregate regression; open/update the feature PR with exact evidence and unverified gaps. Owner then runs [Stage 0](docs/operations/STAGE0.md) with synthetic accounts and A–H hardware acceptance. Owner chooses hosting, DNS, SMS/email provider and signing key outside chat; any live change needs its explicit approval. [Hosting ADR](docs/decisions/0009-provider-neutral-hosting.md), [naming ADR](docs/decisions/0010-lifeguide-naming.md), [migration/rollback](docs/operations/DOMESTIC_MIGRATION.md).

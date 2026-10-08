@@ -4,7 +4,7 @@
 - **Date:** 2026-10-05
 
 ## Context
-LifeMate must support meaningful parent involvement for minors while preserving enough personal space for a teen to trust and use the product. Treating all teen data as either fully private or fully parent-visible is unsuitable.
+LifeGuide must support meaningful parent involvement for minors while preserving enough personal space for a teen to trust and use the product. Treating all teen data as either fully private or fully parent-visible is unsuitable.
 
 ## Decision
 Use independent accounts within a dynamic `Family Workspace` and a layered visibility model.

@@ -1,3 +1,5 @@
+**Historical snapshot — retained as decision/evidence history. Current product: LifeGuide; current execution status: PROJECT_STATE.md.**
+
 # LifeMate — Phase 2 Implementation Blueprint
 
 ## Repository structure
