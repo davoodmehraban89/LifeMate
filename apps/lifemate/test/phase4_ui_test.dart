@@ -4,6 +4,8 @@ import 'package:lifemate/api.dart';
 import 'package:lifemate/phase4_ui.dart';
 
 class StubApi extends HttpIdentityApi {
+  StubApi() : super(baseUrl: 'https://fixture.example.test');
+
   @override
   Future<List<Map<String, dynamic>>> listLearningGoals() async => [];
 }

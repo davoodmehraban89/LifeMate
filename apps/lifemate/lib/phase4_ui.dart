@@ -37,7 +37,8 @@ class _Phase4HubState extends State<Phase4Hub> {
             const SizedBox(height: 12),
             TextField(
               controller: target,
-              decoration: const InputDecoration(labelText: 'هدف یا نتیجه مطلوب'),
+              decoration:
+                  const InputDecoration(labelText: 'هدف یا نتیجه مطلوب'),
             ),
           ],
         ),
@@ -213,7 +214,8 @@ class _Phase4HubState extends State<Phase4Hub> {
     note.dispose();
     if (saved == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ثبت شد. متن یادداشت خصوصی باقی می‌ماند.')),
+        const SnackBar(
+            content: Text('ثبت شد. متن یادداشت خصوصی باقی می‌ماند.')),
       );
     }
   }
@@ -258,7 +260,8 @@ class _Phase4HubState extends State<Phase4Hub> {
           _GuideCard(
             icon: Icons.self_improvement_rounded,
             title: 'همراه حال خوب',
-            subtitle: 'گفت‌وگوی حمایتی و غیرتشخیصی برای حال، ارتباط و فشار روزمره.',
+            subtitle:
+                'گفت‌وگوی حمایتی و غیرتشخیصی برای حال، ارتباط و فشار روزمره.',
             onTap: () => openGuide('wellbeing', 'همراه حال خوب'),
           ),
           const SizedBox(height: 8),
@@ -293,7 +296,8 @@ class _Phase4HubState extends State<Phase4Hub> {
             ),
           ),
           const SizedBox(height: 12),
-          Text('هدف‌های یادگیری', style: Theme.of(context).textTheme.titleMedium),
+          Text('هدف‌های یادگیری',
+              style: Theme.of(context).textTheme.titleMedium),
           FutureBuilder<List<Map<String, dynamic>>>(
             future: goals,
             builder: (context, snapshot) {

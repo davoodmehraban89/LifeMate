@@ -1,7 +1,7 @@
 name: lifemate
-version: 0.1.0+1
+version: 0.5.0+3
 publish_to: none
-description: LifeMate personal, family and learning companion.
+description: LifeGuide personal, family and learning companion.
 environment:
   sdk: '>=3.4.0 <4.0.0'
 dependencies:
@@ -9,12 +9,33 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  cupertino_icons: ^1.0.8
   intl: ^0.20.2
   http: ^1.5.0
   shared_preferences: ^2.5.3
+  flutter_secure_storage: ^10.0.0
 dev_dependencies:
+  shared_preferences_platform_interface: ^2.4.2
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
 flutter:
   uses-material-design: true
+  assets:
+    - assets/fonts/OFL-Noto-Arabic.txt
+    - assets/fonts/LICENSE-Noto-Emoji.txt
+    - assets/fonts/LICENSE-Roboto.txt
+  fonts:
+    - family: LifeGuidePersian
+      fonts:
+        - asset: assets/fonts/LifeGuidePersian.ttf
+    - family: LifeGuideLatin
+      fonts:
+        - asset: assets/fonts/LifeGuideLatin.ttf
+    # CanvasKit needs a named Roboto fallback even with an application font.
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/LifeGuideLatin.ttf
+    - family: LifeGuideEmoji
+      fonts:
+        - asset: assets/fonts/LifeGuideEmoji.ttf

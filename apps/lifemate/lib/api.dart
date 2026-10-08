@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'runtime_config.dart';
+import 'runtime_http_client.dart';
+import 'session_store.dart';
 
 abstract class IdentityApi {
   String? get accessToken;
@@ -11,7 +15,7 @@ abstract class IdentityApi {
     required String password,
   });
 
-  Future<void> verifyEmail(String token);
+  Future<void> verifyEmail(String token, {required String newPassword});
   Future<void> login(String email, String password);
   Future<void> forgotPassword(String email);
   Future<void> resetPassword(String token, String newPassword);
@@ -21,6 +25,7 @@ abstract class IdentityApi {
     String? displayName,
     String? birthDate,
     String? themePreference,
+    String? profileCategory,
   });
   Future<List<Map<String, dynamic>>> listFamilies();
   Future<List<Map<String, dynamic>>> listFamilyMembers(String familyId);
@@ -124,9 +129,10 @@ abstract class IdentityApi {
 }
 
 class ApiException implements Exception {
-  const ApiException(this.statusCode, this.code);
+  const ApiException(this.statusCode, this.code, {this.details = const {}});
   final int statusCode;
   final String code;
+  final Map<String, dynamic> details;
 
   @override
   String toString() => 'ApiException($statusCode, $code)';
@@ -136,21 +142,163 @@ class HttpIdentityApi implements IdentityApi {
   HttpIdentityApi({
     String? baseUrl,
     http.Client? client,
-  })  : baseUrl = baseUrl ??
-            const String.fromEnvironment(
-              'LIFEMATE_API_URL',
-              defaultValue: 'http://localhost:8080',
-            ),
-        _client = client ?? http.Client();
+    SessionStore? sessionStore,
+    this.onSessionChanged,
+    this.onScopeDiscarded,
+  })  : baseUrl = normalizeApiUrl(
+            baseUrl ?? (throw ArgumentError('API configuration is required.'))),
+        _client = client ?? createRuntimeHttpClient(),
+        _sessionStore = sessionStore == null
+            ? createSessionStore()
+            : sessionStore is SerializedSessionStore
+                ? sessionStore
+                : SerializedSessionStore(sessionStore);
 
   final String baseUrl;
   final http.Client _client;
+  final SessionStore _sessionStore;
+  void Function()? onSessionChanged;
+  Future<void> Function(String)? onScopeDiscarded;
+  Future<void>? _refreshing;
+  int _sessionGeneration = 0;
+  String? currentUserId;
+  String get endpointIdentity => baseUrl;
+  String? get cacheNamespace => accessToken == null || currentUserId == null
+      ? null
+      : '$endpointIdentity|$currentUserId';
 
   @override
   String? accessToken;
   String? _refreshToken;
 
-  Uri _uri(String path) => Uri.parse('$baseUrl$path');
+  Uri _uri(String path) {
+    if (!path.startsWith('/') ||
+        path.startsWith('//') ||
+        path.contains('://')) {
+      throw ArgumentError('Requests must use a path on the configured API.');
+    }
+    return Uri.parse('$baseUrl$path');
+  }
+
+  Future<Map<String, dynamic>> requestJson(String method, String path,
+          {Map<String, dynamic>? body, bool auth = true}) =>
+      _json(method, path, body: body, auth: auth);
+
+  void close() {
+    _sessionGeneration++;
+    _client.close();
+  }
+
+  Future<void> _acceptTokens(Map<String, dynamic> result,
+      {int? generation}) async {
+    if (generation != null && generation != _sessionGeneration) {
+      throw const ApiException(401, 'session_expired');
+    }
+    final access = result['accessToken'];
+    final refresh = result['refreshToken'];
+    String? userId;
+    try {
+      final claims = jsonDecode(utf8.decode(base64Url.decode(
+          base64Url.normalize((access as String).split('.')[1])))) as Map;
+      userId = claims['sub'] as String?;
+    } catch (_) {
+      throw const ApiException(502, 'invalid_api_response');
+    }
+    if (refresh is! String ||
+        refresh.isEmpty ||
+        userId == null ||
+        userId.isEmpty) {
+      throw const ApiException(502, 'invalid_api_response');
+    }
+    if (currentUserId != null && currentUserId != userId) {
+      await _clearSession();
+    }
+    if (generation != null && generation != _sessionGeneration) {
+      throw const ApiException(401, 'session_expired');
+    }
+    await _sessionStore.write(jsonEncode({
+      'endpoint': endpointIdentity,
+      'refreshToken': refresh,
+      'userId': userId
+    }));
+    if (generation != null && generation != _sessionGeneration) {
+      throw const ApiException(401, 'session_expired');
+    }
+    accessToken = access;
+    _refreshToken = refresh;
+    currentUserId = userId;
+    onSessionChanged?.call();
+  }
+
+  Future<bool> restoreSession() async {
+    final raw = await _sessionStore.read();
+    if (raw == null) return false;
+    late Map<String, dynamic> session;
+    try {
+      session = jsonDecode(raw) as Map<String, dynamic>;
+    } catch (_) {
+      await logout(revoke: false);
+      return false;
+    }
+    if (session['endpoint'] != endpointIdentity ||
+        session['refreshToken'] is! String ||
+        (session['refreshToken'] as String).isEmpty ||
+        session['userId'] is! String) {
+      if (session['endpoint'] is String && session['userId'] is String) {
+        await onScopeDiscarded
+            ?.call('${session['endpoint']}|${session['userId']}');
+      }
+      await logout(revoke: false);
+      return false;
+    }
+    _refreshToken = session['refreshToken'] as String;
+    currentUserId = session['userId'] as String;
+    try {
+      await _refresh();
+      return true;
+    } on ApiException catch (error) {
+      if (error.statusCode == 401 || error.statusCode == 403) return false;
+      rethrow;
+    }
+  }
+
+  Future<void> logout({bool revoke = true}) async {
+    final token = _refreshToken;
+    _sessionGeneration++;
+    await _clearSession();
+    if (revoke && token != null) {
+      try {
+        await _json('POST', '/v1/auth/logout',
+            body: {'refreshToken': token}, retry: false);
+      } catch (_) {/* Local credentials are cleared even when offline. */}
+    }
+  }
+
+  Future<void> _clearSession() async {
+    final scope =
+        currentUserId == null ? null : '$endpointIdentity|$currentUserId';
+    accessToken = null;
+    _refreshToken = null;
+    currentUserId = null;
+    onSessionChanged?.call();
+    Object? failure;
+    StackTrace? failureStack;
+    try {
+      await _sessionStore.clear();
+    } catch (error, stack) {
+      failure = error;
+      failureStack = stack;
+    }
+    try {
+      if (scope != null) await onScopeDiscarded?.call(scope);
+    } catch (error, stack) {
+      failure ??= error;
+      failureStack ??= stack;
+    }
+    if (failure != null) {
+      Error.throwWithStackTrace(failure, failureStack!);
+    }
+  }
 
   Map<String, String> _headers({bool auth = false}) => {
         'content-type': 'application/json',
@@ -164,12 +312,28 @@ class HttpIdentityApi implements IdentityApi {
     bool auth = false,
     bool retry = true,
   }) async {
+    final requestGeneration = _sessionGeneration;
+    if (auth && accessToken == null) {
+      throw const ApiException(401, 'session_expired');
+    }
     final request = http.Request(method, _uri(path))
       ..headers.addAll(_headers(auth: auth));
     if (body != null) request.body = jsonEncode(body);
 
-    final streamed = await _client.send(request);
-    final response = await http.Response.fromStream(streamed);
+    late http.Response response;
+    try {
+      response = await (() async =>
+              http.Response.fromStream(await _client.send(request)))()
+          .timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw const ApiException(0, 'request_timeout');
+    } on http.ClientException {
+      throw const ApiException(0, 'network_unavailable');
+    }
+
+    if (auth && requestGeneration != _sessionGeneration) {
+      throw const ApiException(401, 'session_changed');
+    }
 
     if (response.statusCode == 401 && auth && retry && _refreshToken != null) {
       await _refresh();
@@ -177,32 +341,48 @@ class HttpIdentityApi implements IdentityApi {
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (response.statusCode == 401 && auth) await logout(revoke: false);
       var code = 'request_failed';
+      var details = <String, dynamic>{};
       if (response.body.isNotEmpty) {
         try {
-          code = (jsonDecode(response.body) as Map<String, dynamic>)['error']
-                  ?.toString() ??
-              code;
+          details = jsonDecode(response.body) as Map<String, dynamic>;
+          code = details['error']?.toString() ?? code;
         } catch (_) {}
       }
-      throw ApiException(response.statusCode, code);
+      throw ApiException(response.statusCode, code, details: details);
     }
 
     if (response.body.isEmpty) return <String, dynamic>{};
-    return jsonDecode(response.body) as Map<String, dynamic>;
+    try {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      throw const ApiException(502, 'invalid_api_response');
+    }
   }
 
-  Future<void> _refresh() async {
+  Future<void> _refresh() =>
+      _refreshing ??= _performRefresh().whenComplete(() => _refreshing = null);
+
+  Future<void> _performRefresh() async {
     final token = _refreshToken;
     if (token == null) throw const ApiException(401, 'session_expired');
-    final result = await _json(
-      'POST',
-      '/v1/auth/refresh',
-      body: {'refreshToken': token},
-      retry: false,
-    );
-    accessToken = result['accessToken']?.toString();
-    _refreshToken = result['refreshToken']?.toString();
+    final generation = _sessionGeneration;
+    try {
+      final result = await _json(
+        'POST',
+        '/v1/auth/refresh',
+        body: {'refreshToken': token},
+        retry: false,
+      );
+      await _acceptTokens(result, generation: generation);
+    } on ApiException catch (error) {
+      if (generation == _sessionGeneration &&
+          (error.statusCode == 401 || error.statusCode == 403)) {
+        await logout(revoke: false);
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -219,18 +399,100 @@ class HttpIdentityApi implements IdentityApi {
   }
 
   @override
-  Future<void> verifyEmail(String token) async {
-    await _json('POST', '/v1/auth/verify-email', body: {'token': token});
+  Future<void> verifyEmail(String token, {required String newPassword}) async {
+    await _json('POST', '/v1/auth/verify-email',
+        body: {'token': token, 'newPassword': newPassword});
   }
 
   @override
   Future<void> login(String email, String password) async {
+    final generation = ++_sessionGeneration;
     final result = await _json('POST', '/v1/auth/login', body: {
-      'email': email,
+      'identifier': email,
       'password': password,
     });
-    accessToken = result['accessToken']?.toString();
-    _refreshToken = result['refreshToken']?.toString();
+    await _acceptTokens(result, generation: generation);
+  }
+
+  Future<Map<String, dynamic>> registerContact(
+      {required String displayName,
+      required String password,
+      String? email,
+      String? phone}) {
+    return _json('POST', '/v1/auth/register', body: {
+      'displayName': displayName,
+      'password': password,
+      if (email != null) 'email': email,
+      if (phone != null) 'phone': phone
+    });
+  }
+
+  Future<Map<String, dynamic>> authCapabilities() =>
+      _json('GET', '/v1/auth/capabilities');
+  Future<Map<String, dynamic>> resendVerification(String email) =>
+      _json('POST', '/v1/auth/resend-verification', body: {'email': email});
+  Future<Map<String, dynamic>> requestPhoneOtp(String phone,
+          {String purpose = 'login'}) =>
+      _json('POST', '/v1/auth/phone/request-otp',
+          body: {'phone': phone, 'purpose': purpose});
+  Future<void> verifyPhoneOtp(String challengeId, String code,
+      {String? newPassword}) async {
+    final generation = ++_sessionGeneration;
+    final result = await _json('POST', '/v1/auth/phone/verify-otp', body: {
+      'challengeId': challengeId,
+      'code': code,
+      if (newPassword != null) 'newPassword': newPassword
+    });
+    await _acceptTokens(result, generation: generation);
+  }
+
+  Future<Map<String, dynamic>> startStudySession(Map<String, dynamic> body) =>
+      requestJson('POST', '/v1/study/sessions', body: body);
+  Future<Map<String, dynamic>> recordStudySessionEvent(
+          String id, Map<String, dynamic> body) =>
+      requestJson(
+          'POST', '/v1/study/sessions/${Uri.encodeComponent(id)}/events',
+          body: body);
+  Future<List<Map<String, dynamic>>> listStudySessions(
+      {String? planItemId}) async {
+    final suffix = planItemId == null
+        ? ''
+        : '?${Uri(queryParameters: {'planItemId': planItemId}).query}';
+    final result = await requestJson('GET', '/v1/study/sessions$suffix');
+    return (result['sessions'] as List)
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+  }
+
+  Future<Map<String, dynamic>> getStudySession(String id) async =>
+      Map<String, dynamic>.from((await requestJson('GET',
+          '/v1/study/sessions/${Uri.encodeComponent(id)}'))['session'] as Map);
+  Future<Map<String, dynamic>> archiveStudySession(
+          String id, Map<String, dynamic> body) =>
+      requestJson('DELETE', '/v1/study/sessions/${Uri.encodeComponent(id)}',
+          body: body);
+  Future<Map<String, dynamic>> recordActivityState(
+          String id, Map<String, dynamic> body) =>
+      requestJson(
+          'POST', '/v1/plan-items/${Uri.encodeComponent(id)}/activity-state',
+          body: body);
+  Future<Map<String, dynamic>> getActivityState(String id) => requestJson(
+      'GET', '/v1/plan-items/${Uri.encodeComponent(id)}/activity-state');
+  Future<Map<String, dynamic>> updateStudySession(
+          String id, Map<String, dynamic> body) =>
+      requestJson('PATCH', '/v1/study/sessions/${Uri.encodeComponent(id)}',
+          body: body);
+  Future<Map<String, dynamic>> getLearningReport(
+      String familyId, String childId,
+      {DateTime? from, DateTime? to}) {
+    final params = <String, String>{
+      if (from != null) 'from': from.toUtc().toIso8601String(),
+      if (to != null) 'to': to.toUtc().toIso8601String()
+    };
+    final suffix =
+        params.isEmpty ? '' : '?${Uri(queryParameters: params).query}';
+    return requestJson('GET',
+        '/v1/families/${Uri.encodeComponent(familyId)}/children/${Uri.encodeComponent(childId)}/learning-report$suffix');
   }
 
   @override
@@ -266,11 +528,13 @@ class HttpIdentityApi implements IdentityApi {
     String? displayName,
     String? birthDate,
     String? themePreference,
+    String? profileCategory,
   }) =>
       _json('PATCH', '/v1/profile', auth: true, body: {
         if (displayName != null) 'displayName': displayName,
         if (birthDate != null) 'birthDate': birthDate,
         if (themePreference != null) 'themePreference': themePreference,
+        if (profileCategory != null) 'profileCategory': profileCategory,
       });
 
   @override
@@ -324,6 +588,22 @@ class HttpIdentityApi implements IdentityApi {
     );
   }
 
+  Future<Map<String, dynamic>> createFamilyInvitation({
+    required String familyId,
+    String? email,
+    String? phone,
+    required String role,
+    String? themePreference,
+  }) =>
+      requestJson(
+          'POST', '/v1/families/${Uri.encodeComponent(familyId)}/invitations',
+          body: {
+            if (email != null) 'email': email,
+            if (phone != null) 'phone': phone,
+            'role': role,
+            if (themePreference != null) 'themePreference': themePreference,
+          });
+
   @override
   Future<void> acceptInvitation(String token) async {
     await _json(
@@ -350,6 +630,7 @@ class HttpIdentityApi implements IdentityApi {
       },
     );
   }
+
   @override
   Future<List<Map<String, dynamic>>> getToday({
     required DateTime from,
@@ -375,7 +656,8 @@ class HttpIdentityApi implements IdentityApi {
     if (from != null) params['from'] = from.toUtc().toIso8601String();
     if (to != null) params['to'] = to.toUtc().toIso8601String();
     if (kind != null) params['kind'] = kind;
-    final suffix = params.isEmpty ? '' : '?${Uri(queryParameters: params).query}';
+    final suffix =
+        params.isEmpty ? '' : '?${Uri(queryParameters: params).query}';
     final result = await _json('GET', '/v1/plan-items$suffix', auth: true);
     return (result['items'] as List<dynamic>? ?? const [])
         .map((item) => Map<String, dynamic>.from(item as Map))
@@ -628,5 +910,4 @@ class HttpIdentityApi implements IdentityApi {
         auth: true,
         body: {'question': question},
       );
-
 }

@@ -1,0 +1,2 @@
+# Preserve the upstream license text verbatim, including its line-end spaces.
+apps/lifemate/assets/fonts/*.txt whitespace=-blank-at-eol
