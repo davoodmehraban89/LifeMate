@@ -62,6 +62,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -88,14 +91,15 @@ jobs:
           working-directory: apps/lifemate
           # Each command runs in its own shell. Keep pipefail with each test.
           # --no-uninstall retains SharedPreferences during Flutter test teardown.
+          # Direct VM service avoids the observed DDS startup failure between phases.
           script: |
-            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --dart-define=PERSISTENCE_PHASE=create --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-create.log"'
+            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --no-dds --dart-define=PERSISTENCE_PHASE=create --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-create.log"'
             adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
-            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --dart-define=PERSISTENCE_PHASE=update --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-update.log"'
+            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --no-dds --dart-define=PERSISTENCE_PHASE=update --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-update.log"'
             adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
-            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --dart-define=PERSISTENCE_PHASE=archive --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-archive.log"'
+            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --no-dds --dart-define=PERSISTENCE_PHASE=archive --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-archive.log"'
             adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
-            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --dart-define=PERSISTENCE_PHASE=verify --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-verify.log"'
+            bash -eo pipefail -c 'flutter test integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --no-uninstall --no-dds --dart-define=PERSISTENCE_PHASE=verify --reporter expanded 2>&1 | tee "$RUNNER_TEMP/local-persistence-verify.log"'
             bash -eo pipefail -c 'adb -s emulator-5554 shell pm path com.example.lifemate.localtest | grep -q "^package:"'
             adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
             bash -e -c 'if grep -E "Uninstalling old version|Package install error" "$RUNNER_TEMP"/local-persistence-*.log; then echo "An installation reset invalidated the persistence test."; exit 1; fi'
