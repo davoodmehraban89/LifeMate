@@ -140,36 +140,6 @@ export function createPhase4Router({ pool, auth, sensitiveFeaturesEnabled = proc
     res.status(204).end();
   });
 
-  router.post('/learning/checkins', async (req, res) => {
-    const confidence = Number(req.body.confidence);
-    const difficulty = Number(req.body.difficulty);
-    if (
-      !Number.isInteger(confidence) ||
-      confidence < 1 ||
-      confidence > 5 ||
-      !Number.isInteger(difficulty) ||
-      difficulty < 1 ||
-      difficulty > 5
-    ) {
-      return res.status(400).json({ error: 'invalid_input' });
-    }
-    if (req.body.learningGoalId) {
-      const goal = await pool.query('select 1 from learning_goal where id=$1 and owner_user_id=$2', [req.body.learningGoalId, req.identity.sub]);
-      if (!goal.rowCount) return res.status(403).json({ error: 'learning_goal_forbidden' });
-    }
-    const result = await pool.query(
-      'insert into learning_checkin(owner_user_id,learning_goal_id,confidence,difficulty,note) values($1,$2,$3,$4,$5) returning *',
-      [
-        req.identity.sub,
-        req.body.learningGoalId || null,
-        confidence,
-        difficulty,
-        clampText(req.body.note, 2000) || null,
-      ],
-    );
-    res.status(201).json(result.rows[0]);
-  });
-
   router.post('/wellbeing/checkins', requireSensitive, async (req, res) => {
     const mood = Number(req.body.mood);
     const energy = Number(req.body.energy);

@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import pg from 'pg';
 import { createPhase4Router } from '../src/phase4.js';
 import { createPhase6Router } from '../src/phase6.js';
+import { createSchoolCrudRouter } from '../src/school_crud_router.js';
 import { createSessionAuth } from '../src/session_auth.js';
 import { operationalErrorHandler } from '../src/operations.js';
 
@@ -23,6 +24,7 @@ async function serve(options) {
   const app = express();
   app.use(express.json({ limit: '64kb' }));
   const auth = createSessionAuth({ pool, jwtSecret: secret });
+  app.use('/v1', createSchoolCrudRouter({ pool, auth }));
   app.use('/v1', createPhase4Router({ pool, auth, ...options }));
   app.use('/v1', createPhase6Router({ pool, auth, ...options }));
   app.use(operationalErrorHandler);

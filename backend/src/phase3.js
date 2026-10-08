@@ -3,6 +3,13 @@ import express from 'express';
 import { applyPlanMutation, createPlanItem, updatePlanItem, planTransaction, serializePlanItem, validUuid, PlanMutationError } from './plan_mutations.js';
 
 const allowedKinds = new Set(['task','event','routine','goal','assignment','exam','study_session']);
+const schoolText = (value, max = 120) => typeof value === 'string' && Boolean(value.trim()) && value.trim().length <= max;
+const schoolOptionalText = (value, max = 120) => value == null || (typeof value === 'string' && value.trim().length <= max);
+function schoolDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value) || value.startsWith('0000-')) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
 
 function asDate(value) {
   if (value == null || value === '') return null;
@@ -213,10 +220,14 @@ export function createPhase3Router({ pool, auth }) {
   });
 
   router.post('/school/years', auth, async (req, res) => {
-    const title = String(req.body.title ?? '').trim();
-    const startsOn = req.body.startsOn;
-    const endsOn = req.body.endsOn;
-    const lifeContextId = req.body.lifeContextId;
+    const body = req.body ?? {};
+    const title = String(body.title ?? '').trim();
+    const startsOn = body.startsOn;
+    const endsOn = body.endsOn;
+    const lifeContextId = body.lifeContextId;
+    if (!validUuid(lifeContextId) || !schoolText(body.title) || !schoolDate(startsOn) || !schoolDate(endsOn) || endsOn < startsOn) {
+      return res.status(400).json({ error: 'invalid_academic_year' });
+    }
     const ctx = await pool.query(
       `select 1 from life_context
         where id=$1 and user_id=$2 and kind='student' and active`,
@@ -234,58 +245,52 @@ export function createPhase3Router({ pool, auth }) {
   });
 
   router.post('/school/years/:yearId/terms', auth, async (req, res) => {
+    const body = req.body ?? {};
+    if (!validUuid(req.params.yearId) || !schoolText(body.title) || !schoolDate(body.startsOn) || !schoolDate(body.endsOn) || body.endsOn < body.startsOn) {
+      return res.status(400).json({ error: 'invalid_academic_term' });
+    }
     const y = await pool.query(
-      'select student_user_id from academic_year where id=$1',
+      'select student_user_id,active,starts_on::text,ends_on::text from academic_year where id=$1',
       [req.params.yearId],
     );
     if (!y.rowCount) return res.status(404).json({ error: 'not_found' });
     if (y.rows[0].student_user_id !== req.identity.sub) {
       return res.status(403).json({ error: 'forbidden' });
     }
+    if (!y.rows[0].active || body.startsOn < y.rows[0].starts_on || body.endsOn > y.rows[0].ends_on) {
+      return res.status(400).json({ error: 'invalid_academic_term' });
+    }
     const r = await pool.query(
       `insert into academic_term(academic_year_id,title,starts_on,ends_on)
        values($1,$2,$3,$4) returning *`,
-      [req.params.yearId, String(req.body.title ?? '').trim(), req.body.startsOn, req.body.endsOn],
+      [req.params.yearId, String(body.title ?? '').trim(), body.startsOn, body.endsOn],
     );
     res.status(201).json(r.rows[0]);
   });
 
   router.post('/school/terms/:termId/subjects', auth, async (req, res) => {
+    const body = req.body ?? {};
+    if (!validUuid(req.params.termId) || !schoolText(body.name) ||
+        !schoolOptionalText(body.teacherName) ||
+        !schoolOptionalText(body.colorKey, 40)) return res.status(400).json({ error: 'invalid_subject' });
     const t = await pool.query(
       `select y.student_user_id
          from academic_term t
          join academic_year y on y.id=t.academic_year_id
-        where t.id=$1`,
+         join life_context l on l.id=y.life_context_id
+        where t.id=$1 and y.active and l.active`,
       [req.params.termId],
     );
     if (!t.rowCount) return res.status(404).json({ error: 'not_found' });
     if (t.rows[0].student_user_id !== req.identity.sub) {
       return res.status(403).json({ error: 'forbidden' });
     }
-    const name = String(req.body.name ?? '').trim();
+    const name = String(body.name ?? '').trim();
     if (!name) return res.status(400).json({ error: 'invalid_subject' });
     const r = await pool.query(
       `insert into subject(student_user_id,academic_term_id,name,teacher_name,color_key)
        values($1,$2,$3,$4,$5) returning *`,
-      [req.identity.sub, req.params.termId, name, req.body.teacherName || null, req.body.colorKey || null],
-    );
-    res.status(201).json(r.rows[0]);
-  });
-
-  router.post('/school/subjects/:subjectId/classes', auth, async (req, res) => {
-    const s = await pool.query('select student_user_id from subject where id=$1', [req.params.subjectId]);
-    if (!s.rowCount) return res.status(404).json({ error: 'not_found' });
-    if (s.rows[0].student_user_id !== req.identity.sub) {
-      return res.status(403).json({ error: 'forbidden' });
-    }
-    const weekday = Number(req.body.weekday);
-    if (!Number.isInteger(weekday) || weekday < 1 || weekday > 7) {
-      return res.status(400).json({ error: 'invalid_weekday' });
-    }
-    const r = await pool.query(
-      `insert into class_session(subject_id,weekday,starts_at,ends_at,location,recurrence_until)
-       values($1,$2,$3,$4,$5,$6) returning *`,
-      [req.params.subjectId, weekday, req.body.startsAt, req.body.endsAt, req.body.location || null, req.body.recurrenceUntil || null],
+      [req.identity.sub, req.params.termId, name, body.teacherName?.trim() || null, body.colorKey?.trim() || null],
     );
     res.status(201).json(r.rows[0]);
   });
@@ -307,7 +312,7 @@ export function createPhase3Router({ pool, auth }) {
         `select s.*,t.title as term_title,y.title as year_title
            from subject s join academic_term t on t.id=s.academic_term_id
            join academic_year y on y.id=t.academic_year_id
-          where s.student_user_id=$1 and ($1=$2 or exists(select 1 from plan_item p
+          where s.student_user_id=$1 and s.archived_at is null and ($1=$2 or exists(select 1 from plan_item p
             where p.subject_id=s.id and can_view_plan_item($2,p.id))) order by s.name`,
         [studentUserId, req.identity.sub],
       ),
@@ -346,7 +351,7 @@ export function createPhase3Router({ pool, auth }) {
       `select c.*,s.name as subject_name,s.color_key
          from class_session c
          join subject s on s.id=c.subject_id
-        where s.student_user_id=$1 and ($1=$2 or exists(select 1 from plan_item p
+        where s.student_user_id=$1 and s.archived_at is null and c.archived_at is null and ($1=$2 or exists(select 1 from plan_item p
           where p.subject_id=s.id and can_view_plan_item($2,p.id)))
         order by c.weekday,c.starts_at`,
       [req.params.studentUserId, req.identity.sub],

@@ -11,6 +11,7 @@ import { createSessionAuth } from './session_auth.js';
 import { createAuthRouter } from './auth_router.js';
 import { createStudySessionsRouter } from './study_sessions.js';
 import { createProfileRouter } from './profile_router.js';
+import { createSchoolCrudRouter } from './school_crud_router.js';
 import { normalizeEmail, normalizePhone, isEmail } from './auth_contacts.js';
 import { createEmailProvider, safelyDeliver } from './auth_delivery.js';
 
@@ -383,6 +384,7 @@ app.delete('/v1/families/:familyId/guardians', auth, async (req, res) => {
   familyResponse(res, result);
 });
 
+app.use('/v1', createSchoolCrudRouter({ pool, auth }));
 app.use('/v1', createPhase3Router({ pool, auth }));
 app.use('/v1', createPhase4Router({ pool, auth }));
 app.use('/v1', createPhase6Router({ pool, auth }));
