@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- The local record/profile document is intentionally device-only. -->
+    <exclude domain="file" path="datastore/FlutterSharedPreferences.preferences_pb" />
+        <exclude domain="file" path="datastore/FlutterSharedPreferences.preferences_pb.tmp" />
+</full-backup-content>

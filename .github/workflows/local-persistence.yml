@@ -1,0 +1,130 @@
+name: Verify local device persistence
+
+on:
+  push:
+    branches: [fix/local-task-persistence]
+    paths:
+      - 'apps/lifemate/**'
+      - '.github/workflows/local-persistence.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: local-device-persistence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: apps/lifemate
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.6'
+          cache: true
+      - run: flutter pub get
+      - name: Check formatting in persistence change files
+        run: |
+          dart format --output=none --set-exit-if-changed \
+            lib/main.dart lib/phase3_ui.dart lib/role_entry_main.dart \
+            lib/local_data_store.dart lib/local_only_api.dart lib/local_write_guard.dart \
+            test/app_test.dart test/local_persistence_test.dart \
+            test/local_persistence_ui_test.dart test/local_test_preferences.dart \
+            integration_test test_driver
+      - run: flutter analyze --no-pub
+      - run: flutter test --no-pub --reporter expanded
+
+  android-persistence:
+    needs: flutter-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ORG_GRADLE_PROJECT_lifemateLocalTest: 'true'
+    defaults:
+      run:
+        working-directory: apps/lifemate
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Free unused runtimes on the disposable Android runner
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+          df -h "$RUNNER_TEMP"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.6'
+          cache: true
+      - run: flutter pub get
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Verify Android storage and guard lifetime
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          emulator-port: 5554
+          force-avd-creation: true
+          disk-size: 2048M
+          emulator-boot-timeout: 300
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          working-directory: apps/lifemate
+          # Each command runs in its own shell. Keep pipefail with each test.
+          # The official integration driver avoids Flutter 3.47.6 test's custom
+          # golden VM stream, which requires DDS. --no-dds avoids the observed
+          # DDS startup failure. Drive normally uninstalls at teardown, so retain
+          # the app with --keep-app-running and stop each process explicitly.
+          script: |
+            bash -eo pipefail -c 'flutter drive --driver=test_driver/integration_test.dart --target=integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --keep-app-running --no-dds --dart-define=INTEGRATION_TEST_SHOULD_REPORT_RESULTS_TO_NATIVE=false --dart-define=PERSISTENCE_PHASE=create 2>&1 | tee "$RUNNER_TEMP/local-persistence-create.log"'
+            adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
+            bash -eo pipefail -c 'flutter drive --driver=test_driver/integration_test.dart --target=integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --keep-app-running --no-dds --dart-define=INTEGRATION_TEST_SHOULD_REPORT_RESULTS_TO_NATIVE=false --dart-define=PERSISTENCE_PHASE=update 2>&1 | tee "$RUNNER_TEMP/local-persistence-update.log"'
+            adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
+            bash -eo pipefail -c 'flutter drive --driver=test_driver/integration_test.dart --target=integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --keep-app-running --no-dds --dart-define=INTEGRATION_TEST_SHOULD_REPORT_RESULTS_TO_NATIVE=false --dart-define=PERSISTENCE_PHASE=archive 2>&1 | tee "$RUNNER_TEMP/local-persistence-archive.log"'
+            adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
+            bash -eo pipefail -c 'flutter drive --driver=test_driver/integration_test.dart --target=integration_test/local_persistence_device_test.dart -d emulator-5554 --no-pub --keep-app-running --no-dds --dart-define=INTEGRATION_TEST_SHOULD_REPORT_RESULTS_TO_NATIVE=false --dart-define=PERSISTENCE_PHASE=verify 2>&1 | tee "$RUNNER_TEMP/local-persistence-verify.log"'
+            bash -eo pipefail -c 'adb -s emulator-5554 shell pm path com.example.lifemate.localtest | grep -q "^package:"'
+            adb -s emulator-5554 shell am force-stop com.example.lifemate.localtest
+            bash -e -c 'if grep -E "Uninstalling old version|Package install error" "$RUNNER_TEMP"/local-persistence-*.log; then echo "An installation reset invalidated the persistence test."; exit 1; fi'
+            flutter build apk --debug --no-pub --target=lib/role_entry_main.dart
+            bash -eo pipefail -c 'cd android && ./gradlew app:connectedDebugAndroidTest -Ptarget="$PWD/../lib/role_entry_main.dart" 2>&1 | tee "$RUNNER_TEMP/local-persistence-native-guard.log"'
+      - name: Build local role-entry APK after persistence gates
+        run: flutter build apk --release --no-pub --target=lib/role_entry_main.dart
+      - name: Upload local test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LifeGuide-local-persistence-test-apk
+          path: apps/lifemate/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload persistence phase logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-persistence-device-logs
+          path: |
+            ${{ runner.temp }}/local-persistence-*.log
+            apps/lifemate/build/app/outputs/androidTest-results/connected/**
+            apps/lifemate/build/app/reports/androidTests/connected/**
+          if-no-files-found: warn
+          retention-days: 14

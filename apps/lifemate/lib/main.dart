@@ -18,8 +18,9 @@ class LifeMateApp extends StatelessWidget {
     final token = uri.queryParameters['token'];
     Widget entry = SignInPage(
       api: api,
-      invitationToken:
-          token != null && uri.path.contains('accept-invitation') ? token : null,
+      invitationToken: token != null && uri.path.contains('accept-invitation')
+          ? token
+          : null,
     );
     if (token != null && uri.path.contains('verify-email')) {
       entry = VerifyEmailPage(api: api, token: token);
@@ -206,7 +207,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
           displayName: name.text, email: email.text, password: password.text);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('حساب ساخته شد. ایمیل تأیید را بررسی کن.')),
+        const SnackBar(
+            content: Text('حساب ساخته شد. ایمیل تأیید را بررسی کن.')),
       );
       Navigator.pop(context);
     } catch (e) {
@@ -234,7 +236,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
           TextField(
               controller: password,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'رمز عبور')),
+              decoration: const InputDecoration(
+                  labelText: 'رمز عبور', helperText: 'حداقل ۱۰ کاراکتر')),
           TextField(
               controller: confirm,
               obscureText: true,
@@ -481,8 +484,15 @@ class SimpleFormPage extends StatelessWidget {
 }
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key, required this.api});
+  const HomeShell({
+    super.key,
+    required this.api,
+    this.localOnly = false,
+    this.profileCategory,
+  });
   final IdentityApi api;
+  final bool localOnly;
+  final String? profileCategory;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -492,6 +502,8 @@ class _HomeShellState extends State<HomeShell> {
   int index = 0;
   String themePreference = 'adult_blue';
   bool adultShell = false;
+  String displayName = '';
+  String? contextError;
 
   static const studentPages = [
     'امروز',
@@ -514,83 +526,138 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
+    adultShell = widget.profileCategory == 'adult';
     loadContext();
   }
 
   Future<void> loadContext() async {
     try {
       final profile = await widget.api.getProfile();
-      final families = await widget.api.listFamilies();
-      final hasAdultRole = families.any(
-        (family) =>
+      final category = widget.profileCategory ?? profile['profile_category'];
+      var hasAdultRole = category == 'adult';
+      if (category != 'adult' &&
+          category != 'girl_minor' &&
+          category != 'boy_minor' &&
+          !widget.localOnly) {
+        final families = await widget.api.listFamilies();
+        hasAdultRole = families.any((family) =>
             family['role'] == 'parent_guardian' ||
-            family['role'] == 'adult_member',
-      );
+            family['role'] == 'adult_member');
+      }
       if (mounted) {
         setState(() {
           themePreference =
               profile['theme_preference']?.toString() ?? 'adult_blue';
+          displayName = profile['display_name']?.toString() ?? '';
           adultShell = hasAdultRole;
-          index = 0;
+          if (index >= pages.length) index = pages.length - 1;
+          contextError = null;
         });
       }
-    } catch (_) {}
+    } catch (error) {
+      if (mounted && widget.localOnly) {
+        setState(() => contextError = localDataErrorText(error));
+      }
+    }
   }
 
-  List<String> get pages => adultShell ? adultPages : studentPages;
+  List<String> get pages => widget.localOnly
+      ? ['امروز', adultShell ? 'برنامه‌ریز' : 'برنامه هفتگی', 'من']
+      : adultShell
+          ? adultPages
+          : studentPages;
 
   Color get accent => themePreference == 'girl_pink'
       ? const Color(0xFFE58FB0)
       : const Color(0xFF4D86E8);
 
-  List<NavigationDestination> get destinations => adultShell
-      ? const [
+  List<NavigationDestination> get destinations => widget.localOnly
+      ? [
+          const NavigationDestination(
+              icon: Icon(Icons.home_outlined), label: 'امروز'),
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            label: 'امروز',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.event_note_outlined),
-            label: 'برنامه‌ریز',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.family_restroom_outlined),
-            label: 'خانواده',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.assistant_outlined),
-            label: 'راهنما',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            label: 'من',
-          ),
+              icon: const Icon(Icons.event_note_outlined),
+              label: adultShell ? 'برنامه‌ریز' : 'برنامه'),
+          const NavigationDestination(
+              icon: Icon(Icons.person_outline), label: 'من'),
         ]
-      : const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            label: 'امروز',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.schedule_outlined),
-            label: 'برنامه',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            label: 'تقویم',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.task_alt_outlined),
-            label: 'کارها',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.school_outlined),
-            label: 'امتحان‌ها',
-          ),
-        ];
+      : adultShell
+          ? const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                label: 'امروز',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.event_note_outlined),
+                label: 'برنامه‌ریز',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.family_restroom_outlined),
+                label: 'خانواده',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.assistant_outlined),
+                label: 'راهنما',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                label: 'من',
+              ),
+            ]
+          : const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                label: 'امروز',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.schedule_outlined),
+                label: 'برنامه',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.calendar_month_outlined),
+                label: 'تقویم',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.task_alt_outlined),
+                label: 'کارها',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.school_outlined),
+                label: 'امتحان‌ها',
+              ),
+            ];
 
   void selectPage(int next) {
     setState(() => index = next);
+  }
+
+  Future<void> openProfile() async {
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) =>
+          ProfileFamilyPage(api: widget.api, localOnly: widget.localOnly),
+    ));
+    if (mounted) await loadContext();
+  }
+
+  Widget get content {
+    if (pages[index] == 'من') {
+      return ProfileFamilyPage(
+        api: widget.api,
+        localOnly: widget.localOnly,
+        showAppBar: false,
+        onProfileUpdated: loadContext,
+      );
+    }
+    if (!widget.localOnly &&
+        (pages[index] == 'همراه هوشمند' || pages[index] == 'راهنما')) {
+      return Phase4Hub(api: widget.api, adultShell: adultShell);
+    }
+    return Phase3HomeContent(
+      api: widget.api,
+      page: pages[index],
+      adultShell: adultShell,
+      localOnly: widget.localOnly,
+    );
   }
 
   @override
@@ -601,61 +668,69 @@ class _HomeShellState extends State<HomeShell> {
         ),
         child: Scaffold(
           appBar: AppBar(
-            title: Text(pages[index]),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(pages[index]),
+                if (widget.localOnly && displayName.isNotEmpty)
+                  Text(displayName,
+                      style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
             actions: [
               IconButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ProfileFamilyPage(api: widget.api),
-                  ),
-                ),
+                tooltip: 'پروفایل',
+                onPressed: openProfile,
                 icon: const Icon(Icons.person_outline),
               ),
             ],
           ),
-          body: (pages[index] == 'همراه هوشمند' || pages[index] == 'راهنما')
-              ? Phase4Hub(api: widget.api, adultShell: adultShell)
-              : Phase3HomeContent(
-                  api: widget.api,
-                  page: pages[index],
-                  adultShell: adultShell,
-                ),
+          body: widget.localOnly
+              ? Column(children: [
+                  const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: LocalDataNotice()),
+                  if (contextError != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(children: [
+                        Expanded(child: Text(contextError!)),
+                        TextButton(
+                            onPressed: loadContext,
+                            child: const Text('تلاش دوباره')),
+                      ]),
+                    ),
+                  Expanded(child: content),
+                ])
+              : content,
           bottomNavigationBar: NavigationBar(
-            selectedIndex: index > 4 ? 0 : index,
+            selectedIndex: index >= destinations.length ? 0 : index,
             onDestinationSelected: selectPage,
             destinations: destinations,
           ),
           drawer: Drawer(
             child: SafeArea(
-              child: ListView(
-                children: [
-                  const ListTile(
-                    title: Text('LifeMate'),
-                    subtitle: Text('منوی اصلی'),
+              child: ListView(children: [
+                const ListTile(
+                    title: Text('LifeMate'), subtitle: Text('منوی اصلی')),
+                ...pages.asMap().entries.map((entry) => ListTile(
+                      title: Text(entry.value),
+                      onTap: () {
+                        selectPage(entry.key);
+                        Navigator.pop(context);
+                      },
+                    )),
+                if (widget.localOnly)
+                  const LocalFeaturesNotice()
+                else if (!adultShell) ...[
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.family_restroom),
+                    title: const Text('خانواده'),
+                    onTap: openProfile,
                   ),
-                  ...pages.asMap().entries.map(
-                        (entry) => ListTile(
-                          title: Text(entry.value),
-                          onTap: () {
-                            selectPage(entry.key);
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                  if (!adultShell) ...[
-                    const Divider(),
-                    ListTile(
-                      leading: const Icon(Icons.family_restroom),
-                      title: const Text('خانواده'),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ProfileFamilyPage(api: widget.api),
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
-              ),
+              ]),
             ),
           ),
         ),
@@ -663,8 +738,16 @@ class _HomeShellState extends State<HomeShell> {
 }
 
 class ProfileFamilyPage extends StatefulWidget {
-  const ProfileFamilyPage({super.key, required this.api});
+  const ProfileFamilyPage(
+      {super.key,
+      required this.api,
+      this.localOnly = false,
+      this.showAppBar = true,
+      this.onProfileUpdated});
   final IdentityApi api;
+  final bool localOnly;
+  final bool showAppBar;
+  final Future<void> Function()? onProfileUpdated;
   @override
   State<ProfileFamilyPage> createState() => _ProfileFamilyPageState();
 }
@@ -677,61 +760,38 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
     data = load();
   }
 
-  Future<List<dynamic>> load() async =>
-      [await widget.api.getProfile(), await widget.api.listFamilies()];
+  Future<List<dynamic>> load() async => [
+        await widget.api.getProfile(),
+        widget.localOnly
+            ? <Map<String, dynamic>>[]
+            : await widget.api.listFamilies(),
+      ];
+
+  Future<void> retryLoad() async {
+    setState(() {
+      data = load();
+    });
+    try {
+      await data;
+    } catch (_) {}
+  }
 
   Future<void> editProfile(Map<String, dynamic> profile) async {
-    final name = TextEditingController(
-        text: profile['display_name']?.toString() ?? '');
-    final theme = ValueNotifier<String>(
-        profile['theme_preference']?.toString() ?? 'adult_blue');
     final saved = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('ویرایش پروفایل'),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(
-              controller: name,
-              decoration: const InputDecoration(labelText: 'نام')),
-          const SizedBox(height: 12),
-          ValueListenableBuilder<String>(
-            valueListenable: theme,
-            builder: (_, value, __) => DropdownButtonFormField<String>(
-              initialValue: value,
-              decoration: const InputDecoration(labelText: 'تم'),
-              items: const [
-                DropdownMenuItem(
-                    value: 'girl_pink', child: Text('سفید / صورتی')),
-                DropdownMenuItem(
-                    value: 'boy_blue', child: Text('سفید / آبی نوجوان')),
-                DropdownMenuItem(
-                    value: 'adult_blue', child: Text('سفید / آبی بزرگسال')),
-              ],
-              onChanged: (v) {
-                if (v != null) theme.value = v;
-              },
-            ),
-          ),
-        ]),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('انصراف')),
-          FilledButton(
-            onPressed: () async {
-              await widget.api.updateProfile(
-                  displayName: name.text.trim(),
-                  themePreference: theme.value);
-              if (dialogContext.mounted) Navigator.pop(dialogContext, true);
-            },
-            child: const Text('ذخیره'),
-          ),
-        ],
+      barrierDismissible: false,
+      builder: (_) => _ProfileEditDialog(
+        api: widget.api,
+        profile: profile,
+        localOnly: widget.localOnly,
       ),
     );
-    name.dispose();
-    theme.dispose();
-    if (saved == true && mounted) setState(() => data = load());
+    if (saved == true && mounted) {
+      setState(() {
+        data = load();
+      });
+      await widget.onProfileUpdated?.call();
+    }
   }
 
   Future<void> createFamily() async {
@@ -760,7 +820,11 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
       ),
     );
     name.dispose();
-    if (created == true && mounted) setState(() => data = load());
+    if (created == true && mounted) {
+      setState(() {
+        data = load();
+      });
+    }
   }
 
   Future<void> invite(String familyId) async {
@@ -783,7 +847,8 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
               decoration: const InputDecoration(labelText: 'نوع عضو'),
               items: const [
                 DropdownMenuItem(
-                    value: 'daughter', child: Text('فرزند دختر — سفید / صورتی')),
+                    value: 'daughter',
+                    child: Text('فرزند دختر — سفید / صورتی')),
                 DropdownMenuItem(
                     value: 'son', child: Text('فرزند پسر — سفید / آبی')),
                 DropdownMenuItem(
@@ -836,18 +901,56 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('پروفایل و خانواده')),
+        appBar: widget.showAppBar
+            ? AppBar(
+                title: Text(
+                    widget.localOnly ? 'پروفایل محلی' : 'پروفایل و خانواده'))
+            : null,
         body: FutureBuilder<List<dynamic>>(
           future: data,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return Center(child: Text(errorText(snapshot.error!)));
+              return Center(
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Text(widget.localOnly
+                      ? localDataErrorText(snapshot.error!)
+                      : errorText(snapshot.error!)),
+                  TextButton(
+                      onPressed: retryLoad, child: const Text('تلاش دوباره')),
+                ]),
+              );
             }
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
             final profile = snapshot.data![0] as Map<String, dynamic>;
             final families = snapshot.data![1] as List<Map<String, dynamic>>;
+            if (widget.localOnly) {
+              final theme = profile['theme_preference']?.toString();
+              return ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  if (widget.showAppBar) const LocalDataNotice(),
+                  Card(
+                      child: ListTile(
+                    leading: const CircleAvatar(child: Icon(Icons.person)),
+                    title: Text(
+                        profile['display_name']?.toString() ?? 'پروفایل من'),
+                    subtitle: Text(theme == 'girl_pink'
+                        ? 'سفید / صورتی'
+                        : theme == 'boy_blue'
+                            ? 'سفید / آبی نوجوان'
+                            : 'سفید / آبی بزرگسال'),
+                    trailing: IconButton(
+                      tooltip: 'ویرایش پروفایل',
+                      onPressed: () => editProfile(profile),
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
+                  )),
+                  const LocalFeaturesNotice(),
+                ],
+              );
+            }
             return ListView(
               padding: const EdgeInsets.all(20),
               children: [
@@ -870,16 +973,14 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
                       leading: const Icon(Icons.family_restroom),
                       title: const Text('هنوز فضای خانواده ساخته نشده'),
                       trailing: IconButton(
-                          onPressed: createFamily,
-                          icon: const Icon(Icons.add)),
+                          onPressed: createFamily, icon: const Icon(Icons.add)),
                     ),
                   )
                 else
                   ...families.map((family) => Card(
                         child: ListTile(
                           leading: const Icon(Icons.family_restroom),
-                          title:
-                              Text(family['name']?.toString() ?? 'خانواده'),
+                          title: Text(family['name']?.toString() ?? 'خانواده'),
                           subtitle: Text(
                               '${family['is_admin'] == true ? 'مدیر خانواده · ' : ''}${family['role'] ?? ''}'),
                           onTap: () => Navigator.of(context).push(
@@ -901,9 +1002,11 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
                 ListTile(
                   leading: const Icon(Icons.public),
                   title: const Text('خانواده و یادگیری ایران'),
-                  subtitle: const Text('نقش‌ها، پایه تحصیلی، کتاب‌ها، تقویم و یادآوری'),
+                  subtitle: const Text(
+                      'نقش‌ها، پایه تحصیلی، کتاب‌ها، تقویم و یادآوری'),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => IranianFamilyLearningHub(identity: widget.api),
+                    builder: (_) =>
+                        IranianFamilyLearningHub(identity: widget.api),
                   )),
                 ),
                 ListTile(
@@ -922,10 +1025,119 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
             );
           },
         ),
-        floatingActionButton: FloatingActionButton.extended(
-            onPressed: createFamily,
-            icon: const Icon(Icons.add),
-            label: const Text('خانواده')),
+        floatingActionButton: widget.localOnly
+            ? null
+            : FloatingActionButton.extended(
+                onPressed: createFamily,
+                icon: const Icon(Icons.add),
+                label: const Text('خانواده')),
+      );
+}
+
+class _ProfileEditDialog extends StatefulWidget {
+  const _ProfileEditDialog(
+      {required this.api, required this.profile, required this.localOnly});
+  final IdentityApi api;
+  final Map<String, dynamic> profile;
+  final bool localOnly;
+
+  @override
+  State<_ProfileEditDialog> createState() => _ProfileEditDialogState();
+}
+
+class _ProfileEditDialogState extends State<_ProfileEditDialog> {
+  late final TextEditingController name;
+  late String theme;
+  bool saving = false;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    name = TextEditingController(
+        text: widget.profile['display_name']?.toString() ?? '');
+    theme = widget.profile['theme_preference']?.toString() ?? 'adult_blue';
+  }
+
+  @override
+  void dispose() {
+    name.dispose();
+    super.dispose();
+  }
+
+  Future<void> save() async {
+    if (saving) return;
+    if (name.text.trim().isEmpty) {
+      setState(() => error = 'نام را وارد کن.');
+      return;
+    }
+    setState(() {
+      saving = true;
+      error = null;
+    });
+    try {
+      await widget.api
+          .updateProfile(displayName: name.text.trim(), themePreference: theme);
+      if (mounted) Navigator.pop(context, true);
+    } catch (failure) {
+      if (mounted) {
+        setState(() => error = widget.localOnly
+            ? localDataErrorText(failure)
+            : errorText(failure));
+      }
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => PopScope(
+        canPop: !saving,
+        child: AlertDialog(
+          title: const Text('ویرایش پروفایل'),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextField(
+                key: const Key('profile-name'),
+                controller: name,
+                enabled: !saving,
+                decoration: const InputDecoration(labelText: 'نام'),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: theme,
+                decoration: const InputDecoration(labelText: 'تم'),
+                items: const [
+                  DropdownMenuItem(
+                      value: 'girl_pink', child: Text('سفید / صورتی')),
+                  DropdownMenuItem(
+                      value: 'boy_blue', child: Text('سفید / آبی نوجوان')),
+                  DropdownMenuItem(
+                      value: 'adult_blue', child: Text('سفید / آبی بزرگسال')),
+                ],
+                onChanged: saving
+                    ? null
+                    : (value) {
+                        if (value != null) setState(() => theme = value);
+                      },
+              ),
+              if (error != null) ...[
+                const SizedBox(height: 12),
+                Text(error!,
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error)),
+              ],
+            ]),
+          ),
+          actions: [
+            TextButton(
+                onPressed: saving ? null : () => Navigator.pop(context, false),
+                child: const Text('انصراف')),
+            FilledButton(
+                onPressed: saving ? null : save,
+                child: Text(saving ? 'در حال ذخیره...' : 'ذخیره')),
+          ],
+        ),
       );
 }
 
@@ -966,7 +1178,8 @@ class _FamilyMembersPageState extends State<FamilyMembersPage> {
     final minors = items.where((m) => m['role'] == 'teen_minor').toList();
     if (guardians.isEmpty || minors.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('برای ثبت سرپرستی، حداقل یک والد و یک فرزند لازم است.')));
+          content:
+              Text('برای ثبت سرپرستی، حداقل یک والد و یک فرزند لازم است.')));
       return;
     }
     final guardianId =
@@ -1029,8 +1242,8 @@ class _FamilyMembersPageState extends State<FamilyMembersPage> {
     guardianId.dispose();
     minorId.dispose();
     if (saved == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('رابطه سرپرستی ثبت شد.')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('رابطه سرپرستی ثبت شد.')));
     }
   }
 
@@ -1054,8 +1267,7 @@ class _FamilyMembersPageState extends State<FamilyMembersPage> {
                   Card(
                     child: ListTile(
                       leading: const CircleAvatar(child: Icon(Icons.person)),
-                      title:
-                          Text(member['display_name']?.toString() ?? 'عضو'),
+                      title: Text(member['display_name']?.toString() ?? 'عضو'),
                       subtitle:
                           Text(roleLabel(member['role']?.toString() ?? '')),
                       trailing: member['is_admin'] == true
