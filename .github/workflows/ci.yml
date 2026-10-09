@@ -50,6 +50,27 @@ jobs:
           for test in backend/tests/*schema_test.sql; do psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$test"; done
       - run: npm test && npm run check && npm audit --audit-level=high
         working-directory: backend
+      - name: Verify isolated database roles and runtime family scenario
+        working-directory: backend
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: lifemate_ci
+        run: |
+          export API_DB_PASSWORD=$(node -p "require('crypto').randomBytes(32).toString('hex')")
+          export MIGRATOR_DB_PASSWORD=$(node -p "require('crypto').randomBytes(32).toString('hex')")
+          export BACKUP_DB_PASSWORD=$(node -p "require('crypto').randomBytes(32).toString('hex')")
+          export ROLE_TEST_STATE_FILE="$RUNNER_TEMP/lifeguide-role-state.json"
+          trap 'if [ -f "$ROLE_TEST_STATE_FILE" ]; then node scripts/test-db-roles.js --cleanup; fi' EXIT
+          node scripts/test-db-roles.js --synthetic-only
+          source_db=$(node -p "JSON.parse(require('fs').readFileSync(process.env.ROLE_TEST_STATE_FILE)).source_db")
+          target_db=$(node -p "JSON.parse(require('fs').readFileSync(process.env.ROLE_TEST_STATE_FILE)).target_db")
+          PGPASSWORD="$BACKUP_DB_PASSWORD" docker exec -e PGPASSWORD "$PG_CONTAINER" pg_dump -h 127.0.0.1 -U lifeguide_backup -d "$source_db" --format=custom --no-owner --no-privileges --file=/tmp/lifeguide-roles.dump
+          docker exec "$PG_CONTAINER" pg_restore --list /tmp/lifeguide-roles.dump >/dev/null
+          PGPASSWORD="$MIGRATOR_DB_PASSWORD" docker exec -e PGPASSWORD "$PG_CONTAINER" pg_restore -h 127.0.0.1 -U lifeguide_migrator -d "$target_db" --clean --if-exists --no-owner --no-privileges --exit-on-error /tmp/lifeguide-roles.dump
+          node scripts/test-db-roles.js --verify-restored
       - name: Backup and restore synthetic database
         env:
           PG_CONTAINER: ${{ job.services.postgres.id }}
@@ -84,6 +105,13 @@ jobs:
           npm install --no-save --no-package-lock playwright@1.62.1
           npx playwright install --with-deps chromium
           node tool/test_web_runtime.cjs build/web
+      - name: Check exclusive web instance before session and cache access
+        run: |
+          node tool/test_web_instance.cjs
+          CHROME_EXECUTABLE="$(node -p 'require("playwright").chromium.executablePath()')" flutter test --platform chrome test/web/instance_guard_browser.dart --reporter expanded
+          node tool/test_web_instance.cjs --compiled build/web
+      - name: Preserve unsent changes across forced session expiry
+        run: node tool/test_web_session_expiry.cjs --artifact=build/web
       - name: Record checked prebuilt web provenance
         run: node ../../scripts/prebuilt-web-check.mjs . --stamp-after-build
       - uses: actions/upload-artifact@v4
@@ -92,5 +120,14 @@ jobs:
         run: |
           flutter build apk --debug
           cp build/app/outputs/flutter-apk/app-debug.apk build/LifeGuide-debug.apk
+      - name: Inspect the actual APK manifest and debug signature
+        run: |
+          python3 tool/check_apk_manifest.py build/LifeGuide-debug.apk --mode debug
+          sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          test -n "$sdk_root"
+          signer=$(find "$sdk_root/build-tools" -mindepth 2 -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)
+          test -n "$signer"
+          "$signer" verify --verbose --print-certs build/LifeGuide-debug.apk | tee build/debug-signature-check.txt
+          grep -F 'CN=Android Debug' build/debug-signature-check.txt
       - uses: actions/upload-artifact@v4
         with: {name: LifeGuide-debug-apk, path: apps/lifemate/build/LifeGuide-debug.apk, if-no-files-found: error}
