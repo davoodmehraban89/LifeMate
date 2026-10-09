@@ -17,13 +17,14 @@ async function request(path, { method = 'GET', json, token } = {}) {
   if (url.origin !== origin.origin) throw new Error('Cross-origin request refused');
   const body = json === undefined ? undefined : JSON.stringify(json);
   return await new Promise((resolve, reject) => {
-    const req = https.request(url, { method, ca, timeout: 15000, headers: {
+    const req = https.request(url, { method, ca, rejectUnauthorized: true, timeout: 15000, headers: {
       ...(body ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     } }, res => {
+      const tls = res.socket?.authorized;
       const chunks = []; let size = 0;
       res.on('data', chunk => { size += chunk.length; if (size > 4 * 1024 * 1024) req.destroy(new Error('Oversize response')); else chunks.push(chunk); });
-      res.on('end', () => resolve({ status: res.statusCode, text: Buffer.concat(chunks).toString('utf8'), headers: res.headers, tls: res.socket?.authorized }));
+      res.on('end', () => resolve({ status: res.statusCode, text: Buffer.concat(chunks).toString('utf8'), headers: res.headers, tls }));
     });
     req.on('timeout', () => req.destroy(new Error('Timeout')));
     req.on('error', reject);
@@ -34,6 +35,7 @@ async function request(path, { method = 'GET', json, token } = {}) {
 function assert(condition, message) { if (!condition) throw new Error(message); }
 try {
   const health = await request('/health');
+  assert(health.tls === true, 'TLS certificate chain and hostname are not verified');
   record('TLS', 'PASS', 'Certificate chain and hostname verified by Node TLS');
   currentCheck = '/health';
   assert(health.status === 200 && JSON.parse(health.text).status === 'ok', `health HTTP ${health.status}`);
