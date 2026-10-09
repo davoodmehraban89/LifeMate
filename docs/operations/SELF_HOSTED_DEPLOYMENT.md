@@ -1,6 +1,6 @@
 # LifeGuide — بسته مستقل از میزبان
 
-Compose مشترک از `docker-compose.yml` استفاده می‌کند: API با Node22 و Argon2 native، PostgreSQL16 داخلی، migration با ledger موجود، nginx TLS برای PWA/API/APK و cron backup با scripts موجود. `/api` از همان origin به API می‌رود. `deployment/runtime-config.json` در runtime mount می‌شود و `Cache-Control: no-store` دارد؛ API URL داخل Dockerfile نیست. فونت/CanvasKit باید از artifact محلی PWA ارائه شوند؛ check ساخت کلاینت این شرط را بررسی می‌کند.
+Compose مشترک از `docker-compose.yml` استفاده می‌کند: API با Node22 و Argon2 native، PostgreSQL16 داخلی، migration با ledger موجود، nginx TLS برای PWA/API/APK و cron backup با scripts موجود. API/migrator/backup اکنون نقش محدود و credential مستقل دارند؛ [DATABASE_ROLES.md](DATABASE_ROLES.md) ترتیب provisioning/grants و adoption صریح volume قدیمی را توضیح می‌دهد. `/api` از همان origin به API می‌رود. `deployment/runtime-config.json` در runtime mount می‌شود و `Cache-Control: no-store` دارد؛ API URL داخل Dockerfile نیست. فونت/CanvasKit باید از artifact محلی PWA ارائه شوند؛ check ساخت کلاینت این شرط را بررسی می‌کند.
 
 Stage 0 محلی در [STAGE0.md](STAGE0.md) است. انتقال این بسته به سرور داخلی انتخاب‌شده، ثبت حساب، هزینه، DNS، deploy زنده و تغییر سرور **فقط پس از تصمیم و مجوز صریح مالک** است. در این کار اجرا نشده‌اند و **UNVERIFIED** هستند. Railway و معماری managed خارجی مسیر فعال این بسته نیستند.
 
@@ -13,7 +13,7 @@ Stage 0 محلی در [STAGE0.md](STAGE0.md) است. انتقال این بست�
 3. `.env.example` را به `.env` کپی و secretها را در محیط/secret management میزبان تولید کنید. نام schemaها، JWT issuer=`lifemate` و audience=`lifemate-api` تغییر نمی‌کند. روی انتقال دیتابیس، secret JWT را مطابق سیاست نشست حفظ یا با اطلاع کاربر rotate کنید؛ عوض کردن آن کاربران را خارج می‌کند.
 4. گواهی معتبر برای همان origin را **مالک/اپراتور** تهیه و مسیرهای `TLS_CERT_PATH`/`TLS_KEY_PATH` را تنظیم کند. Compose به‌صورت خودکار Let's Encrypt، DNS یا سرویس خارجی را تغییر نمی‌دهد. برای عمومی کردن سرویس، mkcert مناسب کاربران عمومی نیست. تمدید گواهی باید توسط اپراتور زمان‌بندی و بعد از آن `docker compose exec gateway nginx -s reload` اجرا شود.
 5. فقط پورت HTTPS لازم را در فایروال مجاز کنید. PostgreSQL/API port مستقیم منتشر نشود. `PUBLIC_APP_URL`/`CORS_ORIGINS` و runtime config باید به همان مبدأ اشاره کنند؛ redirect/CDN خارجی اضافه نشود.
-6. بعد از backup و مجوز migrations، Compose را build/load کنید، DB را بالا بیاورید، `docker compose run --rm migrate` و سپس API/gateway/backup را با `--wait` اجرا کنید. این دستورات برای اپراتور هستند؛ تیم این نوبت آن‌ها را روی میزبان زنده اجرا نکرده است.
+6. بعد از backup و مجوز migrations، Compose را build/load کنید، DB را بالا بیاورید و به‌ترتیب `docker compose run --rm --no-deps db-provision`، `migrate` و `db-grants` را اجرا کنید؛ سپس API/gateway/backup با `--wait` شروع شوند. volume قدیمی قبل از این ترتیب به adoption صریح معتبر نیاز دارد؛ دستور عادی آن را تغییر نمی‌دهد. این دستورات برای اپراتور هستند؛ تیم این نوبت آن‌ها را روی میزبان زنده اجرا نکرده است.
 7. smoke test با TLS معتبر و credential ساختگی و پذیرش Android/Safari/مجوزها را ثبت کنید. provider ایمیل/SMS تا انتخاب و پیکربندی مالک غیرفعال است؛ ثبت حساب pending، تحویل واقعی پیام نیست.
 
 ## rollback

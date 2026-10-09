@@ -10,9 +10,9 @@
 bash scripts/restore-drill.sh --synthetic-only
 ```
 
-script از Docker محلی استفاده می‌کند، دو نام DB تازه با prefix `lifeguide_drill_` می‌سازد، migrations موجود را اجرا، fixture موجود `backend/scripts/restore-smoke.sql` و fixture خانواده ساختگی `deployment/restore-fixture.sql` را درج و scripts موجود `backup.sh`/`restore.sh` را اجرا می‌کند. در مقصد، حساب/profile، شمار کامل migrationها، دسترسی guardian مجاز، عدم دسترسی او به تکلیف خصوصی، عدم دسترسی والد نامرتبط و مجموع ۶۰۰ ثانیه interval مطالعه با وقفه را بررسی و فقط همین دو DB تازه را پاک می‌کند. دیتابیس برنامه و volume آن دست‌نخورده‌اند. خروجی `PASS ... preserved` شاهد drill است؛ موفقیت syntax/build به‌تنهایی شاهد restore نیست.
+script از Docker محلی استفاده می‌کند و سناریوی [نقش‌های محدود](DATABASE_ROLES.md) را اجرا می‌کند: دو نام DB تازه با prefix `lifeguide_roles_` می‌سازد، migrations موجود با migrator اجرا، fixture موجود `backend/scripts/restore-smoke.sql` و fixture خانواده ساختگی `deployment/restore-fixture.sql` را درج و scripts موجود `backup.sh`/`restore.sh` را با backup فقط‌خواندنی و restore migrator اجرا می‌کند. در مقصد، حساب/profile،12checksum ledger، مالکیت، SQL forbidden، guardian مجاز، تکلیف خصوصی/والد نامرتبط و مجموع۶۰۰ثانیه interval مطالعه با وقفه را بررسی و فقط همین دو DB تازه را با marker دقیق همان run پاک می‌کند. دیتابیس برنامه و volume آن restore/drop نمی‌شوند. خروجی `PASS local least-privilege ...` شاهد drill است؛ موفقیت syntax/build به‌تنهایی شاهد restore نیست.
 
-آخرین اجرای محلی Linux/Docker مورخ ۲۰۲۶-۱۰-۰۸، ۱۶:۴۶ UTC با PostgreSQL16 و image نهایی API، **PASS** بود: `identity, family permissions, private task, paused study intervals and 12 migrations preserved`. query مستقل بعد از cleanup، تعداد DBهای drill باقی‌مانده را صفر نشان داد. این شاهد، انتقال واقعی، DNS و سرور داخلی مالک را تأیید نمی‌کند.
+اجرای قبلی محلی ۲۰۲۶-۱۰-۰۸،۱۶:۴۶UTC با PostgreSQL16، حفظ12migration را نشان داد. اجرای نهایی جدید ۲۰۲۶-۱۰-۰۹ با نقش‌های جدا، **PASS** بود: runtime HTTP9/9،17منع SQL در source و restore،12checksum ledger و policy/intervalهای مقصد. query مستقل بعد از cleanup، تعداد DBهای role-test باقی‌مانده را صفر نشان داد. این شاهد، انتقال واقعی، DNS و سرور داخلی مالک را تأیید نمی‌کند.
 
 ## مراحل دستی انتقال واقعی، فقط پس از مجوز
 
@@ -20,7 +20,7 @@ script از Docker محلی استفاده می‌کند، دو نام DB تاز
 2. schema/version، migration ledger، roleهای DB و envهای لازم را فهرست کنید. secretها فقط کانال امن/secret management؛ در issue/chat/docs قرار نگیرند. نام جدول/SQL function و قراردادهای JWT تغییر نمی‌کنند. زمان UTC، CORS و PUBLIC_APP_URL مطابق origin مقصد شوند. API/PWA/APK همه همان origin هستند.
 3. بازه توقف نوشتن را تعیین و مشتری‌ها را از maintenance آگاه کنید. API/gateway قدیمی را متوقف یا route نوشتن را در لایه مالک مسدود کنید؛ فقط نمایش stale/offline معتبر مجاز است. queueهای دستگاه تا پایان انتقال server acknowledgement جدید نمی‌گیرند.
 4. از دیتابیس منبع `pg_dump --format=custom --no-owner --no-privileges` با `backend/scripts/backup.sh` بگیرید. checksum SHA256 و snapshot/backup قبل از انتقال را ثبت کنید. dump را رمزگذاری و از مسیر امن به **داخل کشور** انتقال دهید؛ به مقصد خارجی یا CDN منتقل نشود.
-5. روی DB تازه مقصد و فقط با مجوز restore، `backend/scripts/restore.sh` را با DATABASE_URL و PGPASSWORD امن اجرا کنید. script از `--clean --if-exists` استفاده می‌کند؛ **نباید به DB دارای داده جدید اشاره کند**. نسخه source/backups را حفظ کنید. سپس migration ledger و `docker compose run --rm migrate` را با نسخه تاییدشده بررسی کنید.
+5. روی DB تازه مقصد، ابتدا نقش‌ها/public را با `db-provision` آماده و فقط با مجوز restore، service دستی `restore` را با credential migrator اجرا کنید. script از `--clean --if-exists` استفاده می‌کند؛ **نباید به DB دارای داده جدید اشاره کند**. backup credential فقط‌خواندنی است و برای restore مناسب نیست. مقصد خالی، مالک درست extension pgcrypto را نیز حفظ می‌کند؛ هیچ catalog update برای مالک آن نکنید. نسخه source/backups را حفظ کنید. سپس migration ledger، `migrate` و `db-grants` را با نسخه تاییدشده بررسی کنید.
 6. تعداد رکوردهای کلیدی، مالکیت، خانواده/guardian، تاریخ‌ها، revoked sessions و policyهای خصوصی را با query و API مستقل بررسی کنید؛ private data در log نیاید. سناریوی ۸ مرحله‌ای با fixture جدید و تست restore نشست/Sync را اجرا کنید. مقصد هنوز public نیست.
 7. مالک پس از پذیرش، DNS/endpoint را cutover کند. TTL قبلی و مدت caching را در نظر بگیرید؛ endpoint runtime با `config.json` no-store و تنظیم Android قابل تغییر است. همه originهای fallback باید متعلق به همان سامانه تأییدشده باشند؛ fallback به DB مستقل جدید، Sync امن نیست. TLS hostname و Safari نصب‌شده را دوباره آزمون کنید.
 8. منبع قدیمی را تا پایان بازه rollback حفظ و در حالت **بدون نوشتن** نگه دارید. دو DB هم‌زمان قابل نوشتن باعث divergence می‌شوند. پس از پایان بازه و مجوز مالک، خاموشی/حذف منبع انجام شود.
@@ -36,10 +36,13 @@ sha256sum LifeGuide-transfer.dump
 # انتقال امن/رمزگذاری‌شده dump، imageها و env توسط اپراتور؛ هیچ upload خودکار ندارد.
 
 # TARGET تازه، با TLS/env آماده، پیش از public کردن
-docker compose up -d --wait postgres backup
-docker compose cp ./LifeGuide-transfer.dump backup:/backups/LifeGuide-transfer.dump
-docker compose exec -T backup /opt/lifeguide/restore.sh /backups/LifeGuide-transfer.dump
-docker compose run --rm migrate
+docker compose up -d --wait postgres
+docker compose run --rm --no-deps db-provision
+docker compose --profile ops create --no-deps restore
+docker compose cp ./LifeGuide-transfer.dump restore:/backups/LifeGuide-transfer.dump
+docker compose run --rm --no-deps restore /backups/LifeGuide-transfer.dump
+docker compose run --rm --no-deps migrate
+docker compose run --rm --no-deps db-grants
 docker compose up -d --wait api gateway
 node scripts/reachability-smoke.mjs https://OWNER_APPROVED_ORIGIN
 ```

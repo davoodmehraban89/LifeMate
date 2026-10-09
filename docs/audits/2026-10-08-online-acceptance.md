@@ -2,6 +2,8 @@
 
 تاریخ: ۲۰۲۶-۱۰-۰۸ UTC. شاخه `feat/online-family-stage0`، Backend **0.5.0**، Flutter **0.5.0+3**. PR: [#10](https://github.com/davoodmehraban89/LifeMate/pull/10). main مبنا `abdc9d9d032bc6746c8390b902a2e52d82991530` است. فقط داده ساختگی روی محیط توسعه و Docker محلی استفاده شد؛ deploy زنده، DNS، انتقال داده واقعی، merge و انتشار عمومی انجام نشدند.
 
+این جدول، receipt نسخه0.5.0 است. اصلاحات0.5.1 نقش DB/نشست وب و receipt جدید در [گزارش جداسازی](2026-10-09-isolation-verification.md) ثبت شده‌اند؛ گیت‌های بسته‌شدهٔ نسخه جدید با محدودیت تاریخی زیر اشتباه نشوند.
+
 ## اجراهای واقعی
 
 | اجرا | خروجی مشاهده‌شده | دامنه اعتبار |
@@ -28,7 +30,7 @@
 
 یک اجرای ابتدایی عامل هنگام افزودن جداسازی env با cwd نادرست، پیش از اصلاح runner انجام شد و شکست خورد؛ ممکن است یک درخواست احرازنشده با credential کاملاً مصنوعی به Resend فرستاده باشد. نبود ترافیک خارجی آن اجرا **UNVERIFIED** است؛ پیام/کلید واقعی استفاده نشده و ادعای تحویل ایمیل ندارد. runner نهایی EMAIL/SMS/AI ارث‌رسیده را حذف می‌کند؛ خروجی تمیز و بازاجرای مستقل ۱۳۰/۱۳۰ مرجع این تحویل‌اند.
 
-**به‌روزرسانی ۲۰۲۶-۱۰-۰۹:** commit مستندات/helper `1c162a5` در [run 37813595994](https://github.com/davoodmehraban89/LifeMate/actions/runs/37813595994) پیش از تخصیص runner/اجرای هر step با محدودیت پرداخت یا سقف هزینه حساب GitHub متوقف شد. تست/build روی این head **UNVERIFIED** است؛ این شکست، نتیجه آزمون کد نیست. [پیام دقیق و مسیر بدون پرداخت](2026-10-09-ci-billing-block.md). diff کد برنامه/Backend/deployment نسبت به `7d93668` خالی بررسی شد؛ CI موفق بالا شاهد همان منبع است. تنظیم حساب، پرداخت و افزایش سقف هزینه انجام نشده‌اند. اصلاح نهایی فقط مستندات است و `[skip ci]` دارد، پس موفقیت CI روی آخرین head ادعا نمی‌شود.
+**به‌روزرسانی ۲۰۲۶-۱۰-۰۹:** [attempt1، run37813595994](https://github.com/davoodmehraban89/LifeMate/actions/runs/37813595994/attempts/1) پیش از runner به محدودیت حساب رسید؛ پس از اعلام رفع محدودیت مالک، rerun واقعاً انجام و [attempt2](https://github.com/davoodmehraban89/LifeMate/actions/runs/37813595994/attempts/2) روی همان `1c162a5` با۱۳۰ Backend،۶۴ Flutter، web و debugAPK موفق شد. [receipt دقیق رفع مانع](2026-10-09-ci-billing-block.md). CI جدید0.5.1 روی source مستقل، در [گزارش جداسازی](2026-10-09-isolation-verification.md) ثبت می‌شود؛ هیچ تنظیم حساب/پرداخت انجام نشد.
 
 ## ماتریس A–H و سناریوی هشت‌مرحله‌ای
 
@@ -61,9 +63,9 @@
 2. SMTP/SMS واقعی انتخاب یا ارسال نشده‌اند؛ adapter عمومی SMS قرارداد webhook دارد و جای adapter اختصاصی carrier منتخب نیست. بدون delivery تنظیم‌شده، کاربران جدید pending هستند؛ fixtureهای verified فقط آزمون محلی‌اند.
 3. کلید انتشار مالک موجود نیست؛ `LifeGuide.apk` رسمی ساخته/امضاشده نیست. APK debug واقعاً در CI ساخته شد، اما جای کلید رسمی یا پذیرش دستگاه نیست.
 4. Dockerfile کامل SDK در این محیط با snapshot/دیسک fail شد؛ build کامل آن **UNVERIFIED** است. مسیر prebuilt همان source واقعاً buildشده را با provenance بررسی می‌کند؛ نتیجه Compose جدا ثبت است.
-5. API در Compose فعلاً از PostgreSQL bootstrap role استفاده می‌کند؛ تفکیک role migration/runtime با حداقل privileges، پیش از داده واقعی گیت سخت‌سازی است. backup volume محلی، خودکار رمزگذاری/off-PC نمی‌شود؛ export امن و restore دوره‌ای لازم‌اند.
+5. محدودیت bootstrap role در0.5.0 با سه credential مستقل0.5.1 بسته شد؛ نقش‌های واقعی SQL، runtimeHTTP، backup فقط‌خواندنی و restore migrator آزموده شدند. transition روی سرور زنده همچنان **UNVERIFIED/نیازمند مجوز** است. backup محلی خودکار رمزگذاری/off-PC نمی‌شود؛ export امن و restore دوره‌ای لازم‌اند.
 6. تغییر contact/بستن حساب، انتقال مدیریت خانواده و تغییر نقش عضو فعال API کامل ندارند. life-context/year/term قدیمی عمدتاً create/read هستند؛ UI کامل CRUD درس/کلاس/check-in و گزارش تفصیلی امتحان/نمره هنوز نیاز به تکمیل دارد.
-7. service worker فقط assetهای عمومی را cache می‌کند؛ API/config/auth cache نمی‌شوند. نصب/تازه‌سازی Safari، cold-start کاملاً آفلاین و eviction/quota دستگاه **UNVERIFIED** هستند. محافظ write در Android و mutex درون runtime وجود دارد؛ هماهنگی cache/token بین tabهای هم‌زمان وب پیاده/آزموده نشده است، پس این candidate فقط با یک tab/PWA فعال در هر browser profile آزمون شود. event مطالعه ارسال‌نشده قبل از ادامه تایمر باید ACK بگیرد.
+7. service worker فقط assetهای عمومی را cache می‌کند؛ API/config/auth cache نمی‌شوند. نصب/تازه‌سازی Safari، cold-start کاملاً آفلاین و eviction/quota دستگاه **UNVERIFIED** هستند. محافظ write در Android و mutex درون runtime وجود دارد؛ در0.5.1 یک Web Lock قبل از Flutter/session/cache به هر origin/profile فقط یک instance فعال می‌دهد و gate آن در Chromium آزموده شد؛ Safari واقعی و BFCache حقیقی **UNVERIFIED** هستند. پیش از upgrade همه instanceهای قدیمی یک‌بار بسته شوند. event مطالعه ارسال‌نشده قبل از ادامه تایمر باید ACK بگیرد.
 8. AI/voice خارجی خاموش‌اند؛ health/cycle/اطلاعات روانی کودک پشت feature gate خاموش‌اند. رضایت/سن/قانون/retention و نگهداری حساس داخل کشور صرفاً flag شده‌اند، پیاده یا تأیید حقوقی نشده‌اند.
 9. تست امنیت/نحو/dependency audit شاهد محدودی از این نسخه است؛ مقاومت کامل در برابر همه حملات، timing indistinguishability و availability عمومی ادعا نشده است.
 

@@ -1,0 +1,40 @@
+{
+  "mode": "actual local HTTPS gateway, normal browser trust, real API",
+  "browser": "151.0.7922.173",
+  "http": 200,
+  "requestCount": 23,
+  "externalRequests": [],
+  "failedRequests": [],
+  "browserErrors": [],
+  "httpErrors": [],
+  "syntheticParentLogin": true,
+  "syntheticParentAuthenticated": true,
+  "permittedChildReportRendered": true,
+  "serverReportBodyVerified": true,
+  "reportBodyLimit": null,
+  "resumedPersistedParentSession": false,
+  "authResponses": [
+    {
+      "path": "/api/v1/auth/login",
+      "status": 200
+    }
+  ],
+  "reportedTask": {
+    "title": "تمرین ریاضی آزمایشی ee13aeae",
+    "status": "completed",
+    "recordedDurationSeconds": 1500,
+    "plannedDurationSeconds": 1800,
+    "activityState": "completed"
+  },
+  "fonts": [
+    "/assets/fonts/MaterialIcons-Regular.otf",
+    "/assets/assets/fonts/LifeGuidePersian.ttf",
+    "/assets/assets/fonts/LifeGuideLatin.ttf",
+    "/assets/assets/fonts/LifeGuideLatin.ttf",
+    "/assets/assets/fonts/LifeGuideEmoji.ttf",
+    "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+  ],
+  "inputLabels": [],
+  "serviceWorkers": 1,
+  "limitations": "Safari install, Android, three physical devices and Iran reachability UNVERIFIED"
+}

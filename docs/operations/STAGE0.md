@@ -5,7 +5,7 @@
 ## آماده‌سازی Windows
 
 1. Docker Desktop با WSL2، Git، Node >=22 و mkcert را نصب کنید. گوشی‌ها و PC به LAN مورد اعتماد متصل باشند. IP محلی PC را با `ipconfig` پیدا و DHCP آن را ثابت کنید. دریافت اولیه وابستگی‌ها ممکن است به VPN توسعه‌دهنده نیاز داشته باشد؛ اجرای کلاینت CDN خارجی ندارد.
-2. ابتدا خروجی بررسی‌شده وب را طبق بخش «بسته‌بندی PWA» آماده کنید: artifact کامل [LifeGuide-web](https://github.com/davoodmehraban89/LifeMate/actions/runs/37810558847/artifacts/11563914781) را همراه provenance در `apps/lifemate/build/web` استخراج کنید، یا build واقعی محلی را انجام دهید. سپس از ریشه مخزن، در PowerShell، IP نمونه را عوض کنید:
+2. ابتدا خروجی بررسی‌شده وب را طبق بخش «بسته‌بندی PWA» آماده کنید: artifact کامل [LifeGuide-web همین منبع](https://github.com/davoodmehraban89/LifeMate/actions/runs/37893432018/artifacts/11600220473) را همراه provenance در `apps/lifemate/build/web` استخراج کنید، یا build واقعی محلی را انجام دهید. سپس از ریشه مخزن، در PowerShell، IP نمونه را عوض کنید:
 
    ```powershell
    New-Item -ItemType Directory -Force deployment/tls | Out-Null
@@ -16,7 +16,7 @@
    ./scripts/local-deploy.ps1 -Origin https://192.168.1.10 -PrebuiltWeb
    ```
 
-   اولین اجرا `.env` را با secretهای تصادفی می‌سازد؛ اجراهای بعدی آن را حفظ می‌کنند. فایل `.env`، کلید سرور و rootCA-key خصوصی هستند و باید خارج Git بمانند. فقط **گواهی عمومی** rootCA.pem را به گوشی آزمون منتقل کنید. CA خصوصی را هرگز منتقل نکنید.
+   اولین اجرا `.env` را با secretهای تصادفی می‌سازد؛ اجراهای بعدی مقدارهای موجود را حفظ و متغیرهای مفقود نقش‌های DB را مستقل آماده می‌کنند. API، migration و backup اکنون سه credential محدود جدا دارند؛ bootstrap فقط برای مدیر PostgreSQL و jobs کوتاه‌مدت است. روی volume قدیمی، مالکیت خودکار منتقل نمی‌شود: ابتدا [runbook نقش‌های دیتابیس](DATABASE_ROLES.md) و backup/adoption صریح را انجام دهید. فایل `.env`، کلید سرور و rootCA-key خصوصی هستند و باید خارج Git بمانند. فقط **گواهی عمومی** rootCA.pem را به گوشی آزمون منتقل کنید. CA خصوصی را هرگز منتقل نکنید.
 3. فقط در صورت نیاز، PowerShell مدیر، rule فایروال محدود به LAN بسازید:
 
    ```powershell
@@ -76,7 +76,7 @@ docker compose exec -e ALLOW_SYNTHETIC_SEED=yes -e SYNTHETIC_PASSWORD api node s
 
 حساب‌های `stage0-child@lifeguide.test`، `stage0-mother@lifeguide.test` و `stage0-father@lifeguide.test` با همان رمز آزمایشی ساخته می‌شوند؛ عضویت و دو رابطه guardian در DB مشترک‌اند. script حساب/family غیرfixture را تغییر نمی‌دهد. تأیید ایمیل این fixture مستقیم و صریحاً آزمایشی است؛ تحویل ایمیل/SMS محصول را اثبات نمی‌کند. Android فرزند و PWA هر والد باید با حساب مستقل وارد همان origin شوند. سناریوی واقعی تکلیف/مطالعه/تازه‌سازی را از API عادی انجام دهید؛ موفقیت seed جای پذیرش سه دستگاه نیست.
 
-هر والد روی دستگاه یا browser profile مستقل، فقط **یک تب/PWA فعال LifeGuide** داشته باشد. هماهنگی token/cache بین تب‌های هم‌زمان هنوز پیاده‌سازی و آزموده نشده است؛ private-mode/پاک‌کردن storage نیز صف ارسال‌نشده را حذف می‌کند. قبل از خروج یا تغییر سرور، وضعیت صف و تأیید آخرین sync را بررسی کنید.
+هر والد روی دستگاه یا browser profile مستقل وارد شود. bootstrap جدید با Web Lock فقط **یک تب/PWA فعال LifeGuide** در هر origin/profile را راه می‌دهد؛ تب دوم صفحهٔ فارسی انتظار/retry می‌بیند و به نشست یا cache دسترسی ندارد. پیش از ارتقا، همه تب‌های نسخه قدیمی را یک‌بار ببندید. مرورگر فاقد Web Locks متوقف می‌شود؛ Safari واقعی هنوز **UNVERIFIED** است. انقضای ناخواسته نشست، تغییرات ارسال‌نشده را برای ورود دوباره همان حساب/API حفظ می‌کند؛ خروج عمدی/تغییر سرور همچنان پیامد حذف دارد. private-mode/پاک‌کردن storage نیز صف را حذف می‌کند. پیش از خروج یا تغییر سرور وضعیت صف و تأیید آخرین sync را بررسی کنید.
 
 پس از پایان آزمون، متغیرهای رمز را پاک کنید:
 
@@ -100,7 +100,7 @@ docker compose start
 
 `stop/start` و `down` بدون `-v` volume داده را حفظ می‌کنند. **`down -v` داده و backupها را حذف می‌کند؛ برای استفاده معمول اجرا نکنید.** script اجرای محلی endpoint Docker از نوع SSH/TCP را رد می‌کند. PostgreSQL هیچ host port ندارد. `.env` را `source` نکنید؛ `docker compose config` بدون `--quiet` می‌تواند secretها را چاپ کند.
 
-backup در volume جدا، هنگام startup و طبق cron UTC ساخته می‌شود؛ `/backups/last-success` وضعیت آخرین موفقیت است. این نسخه، backup را خودکار رمزگذاری یا از PC خارج نمی‌کند. مالک باید نسخه رمزگذاری‌شده روی فضای محلی جدا نگه دارد و بازیابی را آزمون کند. خاموشی/خواب PC و توقف Docker باعث قطع سرویس LAN می‌شود. برای خروج، CA آزمون و rule فایروال را از دستگاه‌های آزمون حذف کنید.
+backup در volume جدا، با نقش فقط‌خواندنی، هنگام startup و طبق cron UTC ساخته می‌شود؛ `/backups/last-success` وضعیت آخرین موفقیت است. restore با نقش migrator و مقصد تازه انجام می‌شود؛ از password backup برای restore استفاده نکنید. این نسخه، backup را خودکار رمزگذاری یا از PC خارج نمی‌کند. مالک باید نسخه رمزگذاری‌شده روی فضای محلی جدا نگه دارد و بازیابی را آزمون کند. خاموشی/خواب PC و توقف Docker باعث قطع سرویس LAN می‌شود. برای خروج، CA آزمون و rule فایروال را از دستگاه‌های آزمون حذف کنید.
 
 ## APK
 

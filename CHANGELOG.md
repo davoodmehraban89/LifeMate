@@ -1,5 +1,14 @@
 # LifeGuide Changelog
 
+## 0.5.1 — 2026-10-09 — online isolation hardening
+
+- Separate PostgreSQL bootstrap, migration, API and read-only backup credentials; reject excessive existing ownership/privileges before provisioning.
+- Require explicit, backup-validated adoption of existing application objects; retain current migrations and server-side family permissions.
+- Acquire an exclusive browser Web Lock before Flutter, session or cache startup; show a Persian retry screen for a second instance or unsupported browsers.
+- Preserve account-scoped unsent mutations on forced session expiry; invalidate stale handles and recover only after the same account authenticates again. Deliberate logout/server switch retains its discard policy.
+- Add real PostgreSQL role/restore and compiled Chromium regressions to CI, plus inspection of the actual debug APK manifest/signature.
+- Real-device/Safari, Windows, Iran reachability, live providers and owner-signed release remain UNVERIFIED. See PROJECT_STATE.md for execution evidence.
+
 ## 0.5.0 — 2026-10-08 — online Stage 0 candidate
 
 - Rebrand product as LifeGuide / لایف‌گاید; preserve repository, schema and JWT protocol identifiers.
