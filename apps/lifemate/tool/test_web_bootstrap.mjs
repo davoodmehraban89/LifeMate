@@ -7,19 +7,32 @@ const script = (await readFile(new URL('../web/flutter_bootstrap.js', import.met
 let engineConfig;
 let removed = false;
 const status = {remove() { removed = true; }};
-const result = vm.runInNewContext(script, {
+let ready;
+const started = new Promise(resolve => { ready = resolve; });
+const window = {isSecureContext:true,addEventListener() {}};
+vm.runInNewContext(script, {
   URL,
-  navigator: {},
-  document: {baseURI: 'https://family.example.test/', getElementById: () => status},
+  window,
+  navigator: {locks: {request(name, options, callback) {
+    assert.equal(name,'lifeguide.active-instance.v1');
+    assert.equal(options.mode,'exclusive');
+    assert.equal(options.ifAvailable,true);
+    callback({name});
+    return new Promise(() => {});
+  }}},
+  document: {baseURI: 'https://family.example.test/',
+    getElementById: id => id === 'startup-status' ? status : null},
   _flutter: {loader: {async load(options) {
     assert.equal(options.config.canvasKitBaseUrl, 'https://family.example.test/canvaskit/');
     await options.onEntrypointLoaded({async initializeEngine(config) {
       engineConfig = config;
       return {async runApp() {}};
     }});
+    ready();
   }}},
 });
-await result;
+await started;
+assert.equal(window.lifeguideInstanceOwned,true);
 assert.equal(engineConfig?.fontFallbackBaseUrl, 'https://family.example.test/assets/fonts/fallback/');
 assert.equal(removed, true);
 console.log('Custom bootstrap passes the local font configuration to the Flutter engine.');

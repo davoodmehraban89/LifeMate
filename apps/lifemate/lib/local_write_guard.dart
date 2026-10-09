@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'web_instance.dart';
 
 /// Android process lifetime protection, independent of a Flutter engine/isolate.
 /// An unconfirmed write can only be recovered by killing the Android process.
@@ -11,12 +12,14 @@ final class LocalWriteGuard {
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   Future<bool> getBlocked() async {
+    requireWebInstanceOwnership();
     if (!_native) return false;
     // A missing/invalid native response must never grant access to cached data.
     return await _channel.invokeMethod<bool>('getBlocked') ?? true;
   }
 
   Future<String?> beginWrite() async {
+    requireWebInstanceOwnership();
     if (!_native) return null;
     final token = await _channel.invokeMethod<String>('beginWrite');
     if (token == null || token.isEmpty) {
@@ -26,6 +29,7 @@ final class LocalWriteGuard {
   }
 
   Future<void> completeWrite(String? token) async {
+    requireWebInstanceOwnership();
     if (!_native) return;
     if (token == null ||
         await _channel.invokeMethod<bool>('completeWrite', token) != true) {

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'runtime_config.dart';
 import 'runtime_http_client.dart';
 import 'session_store.dart';
+import 'web_instance.dart';
 
 abstract class IdentityApi {
   String? get accessToken;
@@ -145,6 +146,7 @@ class HttpIdentityApi implements IdentityApi {
     SessionStore? sessionStore,
     this.onSessionChanged,
     this.onScopeDiscarded,
+    this.onScopeQuarantined,
   })  : baseUrl = normalizeApiUrl(
             baseUrl ?? (throw ArgumentError('API configuration is required.'))),
         _client = client ?? createRuntimeHttpClient(),
@@ -159,6 +161,8 @@ class HttpIdentityApi implements IdentityApi {
   final SessionStore _sessionStore;
   void Function()? onSessionChanged;
   Future<void> Function(String)? onScopeDiscarded;
+  Future<void> Function(String)? onScopeQuarantined;
+  bool hasQuarantinedSession = false;
   Future<void>? _refreshing;
   int _sessionGeneration = 0;
   String? currentUserId;
@@ -227,6 +231,7 @@ class HttpIdentityApi implements IdentityApi {
     accessToken = access;
     _refreshToken = refresh;
     currentUserId = userId;
+    hasQuarantinedSession = false;
     onSessionChanged?.call();
   }
 
@@ -237,18 +242,18 @@ class HttpIdentityApi implements IdentityApi {
     try {
       session = jsonDecode(raw) as Map<String, dynamic>;
     } catch (_) {
-      await logout(revoke: false);
+      await _expireSession();
       return false;
     }
     if (session['endpoint'] != endpointIdentity ||
         session['refreshToken'] is! String ||
         (session['refreshToken'] as String).isEmpty ||
         session['userId'] is! String) {
-      if (session['endpoint'] is String && session['userId'] is String) {
-        await onScopeDiscarded
-            ?.call('${session['endpoint']}|${session['userId']}');
-      }
-      await logout(revoke: false);
+      final oldScope =
+          session['endpoint'] is String && session['userId'] is String
+              ? '${session['endpoint']}|${session['userId']}'
+              : null;
+      await _expireSession(scopeOverride: oldScope);
       return false;
     }
     _refreshToken = session['refreshToken'] as String;
@@ -265,6 +270,7 @@ class HttpIdentityApi implements IdentityApi {
   Future<void> logout({bool revoke = true}) async {
     final token = _refreshToken;
     _sessionGeneration++;
+    hasQuarantinedSession = false;
     await _clearSession();
     if (revoke && token != null) {
       try {
@@ -274,23 +280,46 @@ class HttpIdentityApi implements IdentityApi {
     }
   }
 
-  Future<void> _clearSession() async {
-    final scope =
-        currentUserId == null ? null : '$endpointIdentity|$currentUserId';
+  /// Forced expiry never represents user consent to erase unsent work.
+  Future<void> _expireSession({String? scopeOverride}) async {
+    _sessionGeneration++;
+    hasQuarantinedSession = true;
+    await _clearSession(quarantine: true, scopeOverride: scopeOverride);
+  }
+
+  Future<void> _clearSession(
+      {bool quarantine = false, String? scopeOverride}) async {
+    final scope = scopeOverride ??
+        (currentUserId == null ? null : '$endpointIdentity|$currentUserId');
     accessToken = null;
     _refreshToken = null;
     currentUserId = null;
-    onSessionChanged?.call();
     Object? failure;
     StackTrace? failureStack;
+    Future<void>? quarantinePending;
+    // Invalidate old cache handles synchronously, before notifying the signed
+    // out UI or awaiting credential storage. Quarantine performs no disk writes.
     try {
-      await _sessionStore.clear();
+      if (quarantine && scope != null) {
+        quarantinePending = onScopeQuarantined?.call(scope);
+      }
     } catch (error, stack) {
       failure = error;
       failureStack = stack;
     }
+    onSessionChanged?.call();
     try {
-      if (scope != null) await onScopeDiscarded?.call(scope);
+      await _sessionStore.clear();
+    } catch (error, stack) {
+      failure ??= error;
+      failureStack ??= stack;
+    }
+    try {
+      if (quarantine) {
+        await quarantinePending;
+      } else if (scope != null) {
+        await onScopeDiscarded?.call(scope);
+      }
     } catch (error, stack) {
       failure ??= error;
       failureStack ??= stack;
@@ -312,6 +341,7 @@ class HttpIdentityApi implements IdentityApi {
     bool auth = false,
     bool retry = true,
   }) async {
+    requireWebInstanceOwnership();
     final requestGeneration = _sessionGeneration;
     if (auth && accessToken == null) {
       throw const ApiException(401, 'session_expired');
@@ -331,6 +361,7 @@ class HttpIdentityApi implements IdentityApi {
       throw const ApiException(0, 'network_unavailable');
     }
 
+    requireWebInstanceOwnership();
     if (auth && requestGeneration != _sessionGeneration) {
       throw const ApiException(401, 'session_changed');
     }
@@ -341,7 +372,7 @@ class HttpIdentityApi implements IdentityApi {
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      if (response.statusCode == 401 && auth) await logout(revoke: false);
+      if (response.statusCode == 401 && auth) await _expireSession();
       var code = 'request_failed';
       var details = <String, dynamic>{};
       if (response.body.isNotEmpty) {
@@ -379,7 +410,7 @@ class HttpIdentityApi implements IdentityApi {
     } on ApiException catch (error) {
       if (generation == _sessionGeneration &&
           (error.statusCode == 401 || error.statusCode == 403)) {
-        await logout(revoke: false);
+        await _expireSession();
       }
       rethrow;
     }

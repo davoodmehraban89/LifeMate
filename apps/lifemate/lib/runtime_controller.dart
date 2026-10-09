@@ -2,12 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'api.dart';
 import 'runtime_config.dart';
 import 'session_store.dart';
+import 'web_instance.dart';
 
 class RuntimeController extends ChangeNotifier {
   RuntimeController(
       {RuntimeConfigStore? configStore,
       SessionStore? sessionStore,
       this.onScopeDiscarded,
+      this.onScopeQuarantined,
       HttpIdentityApi Function(RuntimeConfig)? apiFactory})
       : _configStore = configStore ?? RuntimeConfigStore(),
         _sessionStore = sessionStore ?? createSessionStore(),
@@ -15,6 +17,7 @@ class RuntimeController extends ChangeNotifier {
   final RuntimeConfigStore _configStore;
   final SessionStore _sessionStore;
   final Future<void> Function(String)? onScopeDiscarded;
+  final Future<void> Function(String)? onScopeQuarantined;
   final HttpIdentityApi Function(RuntimeConfig)? _apiFactory;
   RuntimeConfig config = RuntimeConfig();
   HttpIdentityApi? api;
@@ -33,6 +36,7 @@ class RuntimeController extends ChangeNotifier {
             baseUrl: config.apiBaseUrl!, sessionStore: _sessionStore);
     next.onSessionChanged = _notify;
     next.onScopeDiscarded = onScopeDiscarded;
+    next.onScopeQuarantined = onScopeQuarantined;
     return next;
   }
 
@@ -43,6 +47,7 @@ class RuntimeController extends ChangeNotifier {
     api?.close();
     api = null;
     try {
+      requireWebInstanceOwnership();
       final loaded = await _configStore.load();
       if (_disposed || generation != _generation) return;
       config = loaded;
@@ -62,6 +67,7 @@ class RuntimeController extends ChangeNotifier {
   /// Server switches invalidate the session before any new endpoint is used.
   /// Caller discards its previous user/endpoint cache and queued mutations.
   Future<void> updateEndpoints(RuntimeConfig next) async {
+    requireWebInstanceOwnership();
     if (_disposed) return;
     _generation++;
     try {
@@ -84,6 +90,7 @@ class RuntimeController extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    requireWebInstanceOwnership();
     try {
       await api?.logout();
       error = null;

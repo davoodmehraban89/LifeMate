@@ -10,9 +10,11 @@ import 'endpoint_settings.dart';
 import 'offline_store.dart';
 import 'notifications_ui.dart';
 import 'sync_changes_ui.dart';
+import 'web_instance.dart';
 import 'package:flutter/foundation.dart';
 
 void main() {
+  requireWebInstanceOwnership();
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const LifeMateApp());
 }
@@ -37,7 +39,9 @@ class _LifeMateAppState extends State<LifeMateApp> {
     super.initState();
     if (widget.api == null) {
       runtime = widget.runtime ??
-          RuntimeController(onScopeDiscarded: OfflineStore.clearNamespace);
+          RuntimeController(
+              onScopeDiscarded: OfflineStore.clearNamespace,
+              onScopeQuarantined: OfflineStore.invalidateNamespace);
       if (!runtime!.initialized) runtime!.initialize();
     }
   }
@@ -95,6 +99,7 @@ class _LifeMateAppState extends State<LifeMateApp> {
         api: api,
         invitationToken: invitation,
         runtimeManaged: managed,
+        sessionQuarantined: api is HttpIdentityApi && api.hasQuarantinedSession,
         onEndpointSettings: managed ? editEndpoints : null);
   }
 
@@ -291,10 +296,12 @@ class SignInPage extends StatefulWidget {
       required this.api,
       this.invitationToken,
       this.runtimeManaged = false,
+      this.sessionQuarantined = false,
       this.onEndpointSettings});
   final IdentityApi api;
   final String? invitationToken;
   final bool runtimeManaged;
+  final bool sessionQuarantined;
   final Future<void> Function()? onEndpointSettings;
   @override
   State<SignInPage> createState() => _SignInPageState();
@@ -346,6 +353,16 @@ class _SignInPageState extends State<SignInPage> {
                   const Text('لایف‌گاید · همراه تحصیلی و خانوادگی',
                       textAlign: TextAlign.center),
                   const SizedBox(height: 28),
+                  if (widget.sessionQuarantined) ...[
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: Text(
+                            'نشستت پایان یافته است. تغییرهای ارسال‌نشده این دستگاه حذف نشده‌اند. برای ادامه با همان حساب و سرویس دوباره وارد شو.'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   if (widget.invitationToken != null) ...[
                     const Card(
                       child: Padding(

@@ -286,12 +286,14 @@ void main() {
       });
     var sent = 0;
     final discarded = <String>[];
+    final quarantined = <String>[];
     final api = HttpIdentityApi(
         baseUrl: 'https://new.example.test',
         sessionStore: store,
         onScopeDiscarded: (scope) async {
           discarded.add(scope);
         },
+        onScopeQuarantined: (scope) async => quarantined.add(scope),
         client: MockClient((_) async {
           sent++;
           return http.Response('{}', 200);
@@ -299,10 +301,11 @@ void main() {
     expect(await api.restoreSession(), isFalse);
     expect(sent, 0);
     expect(store.value, isNull);
-    expect(discarded, ['https://old.example.test|user-1']);
+    expect(discarded, isEmpty);
+    expect(quarantined, ['https://old.example.test|user-1']);
   });
   test(
-      'revoked refresh token clears the old cache scope without anonymous access',
+      'revoked refresh token quarantines the old scope without anonymous access',
       () async {
     final store = MemorySessionStore()
       ..value = jsonEncode({
@@ -311,18 +314,21 @@ void main() {
         'userId': 'user-1'
       });
     final discarded = <String>[];
+    final quarantined = <String>[];
     final api = HttpIdentityApi(
         baseUrl: 'https://api.example.test',
         sessionStore: store,
         onScopeDiscarded: (scope) async {
           discarded.add(scope);
         },
+        onScopeQuarantined: (scope) async => quarantined.add(scope),
         client: MockClient((_) async =>
             http.Response('{"error":"invalid_refresh_token"}', 401)));
     expect(await api.restoreSession(), isFalse);
     expect(store.value, isNull);
     expect(api.cacheNamespace, isNull);
-    expect(discarded, ['https://api.example.test|user-1']);
+    expect(discarded, isEmpty);
+    expect(quarantined, ['https://api.example.test|user-1']);
   });
   test('late refresh after logout cannot revive or overwrite a new session',
       () async {

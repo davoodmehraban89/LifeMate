@@ -88,6 +88,14 @@ class OfflineStore {
   final String scope;
   String get _key =>
       'lifeguide.offline.v2.${base64Url.encode(utf8.encode(scope))}';
+
+  /// Stop every existing handle before identity changes without deleting its
+  /// durable work. A fresh authenticated handle can reopen the same namespace.
+  static Future<void> invalidateNamespace(String scope) {
+    _generations[scope] = (_generations[scope] ?? 0) + 1;
+    return Future<void>.value();
+  }
+
   static Future<void> clearNamespace(String scope) {
     // Invalidate old stores immediately, including futures waiting for the lock.
     _generations[scope] = (_generations[scope] ?? 0) + 1;
