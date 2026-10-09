@@ -40,6 +40,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: 22, cache: npm, cache-dependency-path: backend/package-lock.json}
+      - name: Verify reachability smoke rejects untrusted TLS
+        run: node --test scripts/test-reachability-smoke.mjs
       - run: npm ci
         working-directory: backend
       - name: Apply migrations and verify repeat run
@@ -114,6 +116,8 @@ jobs:
         run: node tool/test_web_session_expiry.cjs --artifact=build/web
       - name: Record checked prebuilt web provenance
         run: node ../../scripts/prebuilt-web-check.mjs . --stamp-after-build
+      - name: Verify Windows checkout preserves the checked web artifact
+        run: node ../../scripts/test-prebuilt-checkout.mjs
       - uses: actions/upload-artifact@v4
         with: {name: LifeGuide-web, path: apps/lifemate/build/web, if-no-files-found: error}
       - name: Build test APK (debug certificate; not a release)

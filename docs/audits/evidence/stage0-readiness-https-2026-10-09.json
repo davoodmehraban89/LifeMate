@@ -1,0 +1,36 @@
+{
+  "origin": "https://127.0.0.1:8443",
+  "at": "2026-10-09T07:43:47.247Z",
+  "results": [
+    {
+      "name": "TLS",
+      "status": "PASS",
+      "detail": "Certificate chain and hostname verified by Node TLS"
+    },
+    {
+      "name": "/health",
+      "status": "PASS",
+      "detail": "HTTP 200 and database-backed status ok"
+    },
+    {
+      "name": "PWA",
+      "status": "PASS",
+      "detail": "HTTPS HTML and standalone manifest loaded; Safari installation UNVERIFIED"
+    },
+    {
+      "name": "runtime config",
+      "status": "PASS",
+      "detail": "Same-origin /api; no-store"
+    },
+    {
+      "name": "API auth boundary",
+      "status": "PASS",
+      "detail": "Anonymous planner request rejected with 401"
+    },
+    {
+      "name": "API round-trip",
+      "status": "UNVERIFIED",
+      "detail": "Set SMOKE_ALLOW_SYNTHETIC_WRITE=yes and synthetic SMOKE_EMAIL/SMOKE_PASSWORD to run"
+    }
+  ]
+}

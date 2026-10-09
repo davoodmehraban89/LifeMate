@@ -8,6 +8,8 @@
 
 Windows/LAN: [راهنمای Stage 0](docs/operations/STAGE0.md). Docker Desktop/Compose و گواهی HTTPS مورد اعتماد دستگاه‌های آزمون لازم‌اند؛ حساب یا پرداخت میزبان لازم نیست. مسیر بررسی‌شده، بسته‌بندی وب از خروجی واقعی build است: [LifeGuide-web از CI همین منبع](https://github.com/davoodmehraban89/LifeMate/actions/runs/37893432018/artifacts/11600220473) را همراه فایل provenance در `apps/lifemate/build/web` استخراج کنید، یا مطابق راهنما با Flutter3.47.6 بسازید. checkout باید شامل همان کد برنامه باشد؛ checker خروجی قدیمی یا نامنطبق را رد می‌کند.
 
+اگر به رایانه دسترسی ندارید، فعلاً اقدامی لازم نیست. [دامنهٔ عمومی](docs/audits/2026-10-09-public-domain.md) هنوز نسخهٔ قدیمی است؛ آزمون بستهٔ جدید پس از دسترسی به PC/LAN انجام می‌شود. policy پایان خط در `.gitattributes`، ورودی‌های متنی را حتی با تنظیم رایج Git ویندوز به‌صورت LF نگه می‌دارد؛ فونت‌ها و آیکون‌های باینری تغییر نمی‌کنند. hash نامنطبق را با stamp دوباره دور نزنید.
+
 ```powershell
 node scripts/prebuilt-web-check.mjs apps/lifemate
 ./scripts/local-deploy.ps1 -Origin https://192.168.1.10 -Certificate deployment/tls/server.pem -PrivateKey deployment/tls/server-key.pem -PrebuiltWeb

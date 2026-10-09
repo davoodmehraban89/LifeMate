@@ -1,10 +1,14 @@
 # LifeGuide0.5.1 — اقدام‌های دستی مالک
 
-کد آزموده‌شده `7c4ca78` و خروجی‌های [run37893432018](https://github.com/davoodmehraban89/LifeMate/actions/runs/37893432018) هستند. commit تحویل بعدی فقط مستندات است. نصب Windows/Android/Safari و دسترسی بدون VPN ایران **UNVERIFIED**؛ فقط حساب‌های ساختگی برای پذیرش استفاده شوند. هیچ گام این صفحه توسط تیم روی سرور زنده انجام نشده است.
+کد برنامهٔ آزموده‌شده `7c4ca78` و خروجی‌های [run37893432018](https://github.com/davoodmehraban89/LifeMate/actions/runs/37893432018) هستند. commit `6e9d27d` فقط مستندات تحویل بود؛ [بستهٔ آماده‌سازی بعدی](../audits/2026-10-09-stage0-readiness.md) policy checkout، بررسی سخت‌گیرانهٔ TLS ابزار اتصال و آزمون‌های مربوط را اضافه می‌کند و کد برنامه/خروجی build را تغییر نمی‌دهد. نصب Windows/Android/Safari و دسترسی بدون VPN ایران **UNVERIFIED**؛ فقط حساب‌های ساختگی برای پذیرش استفاده شوند. هیچ گام این صفحه توسط تیم روی سرور زنده انجام نشده است.
+
+اگر اکنون به رایانه دسترسی ندارید، **فعلاً اقدامی لازم نیست**؛ گام‌های زیر برای زمان دسترسی به PC/LAN هستند. دامنهٔ `app.lifeguide.ir` در [بررسی خواندنی 2026-10-09](../audits/2026-10-09-public-domain.md) هنوز نسخهٔ عمومی قدیمی `0.1.0`/build `1` را نشان داد؛ لینک آزمون بستهٔ جدید نیست. تنظیمات DNS/آروان را تا آماده‌شدن مقصد جایگزین و تأیید صریح انتقال حفظ کنید.
 
 ## 1. Stage0 رایگان؛ نیازی به انتخاب VPS فعلی نیست
 
-checkout شاخه `feat/online-family-stage0` را در پوشهٔ آزمون مستقل آماده کنید. [LifeGuide-web](https://github.com/davoodmehraban89/LifeMate/actions/runs/37893432018/artifacts/11600220473) را همراه `build-provenance.json` در `apps/lifemate/build/web` استخراج کنید. Docker Desktop/WSL2، Node22 و mkcert لازم‌اند. IP نمونه را با IP واقعی PC عوض کنید؛ port-forward/tunnel/DNS عمومی نسازید.
+checkout شاخه `feat/online-family-stage0` را در پوشهٔ آزمون مستقل و تازه آماده کنید؛ فایل‌های ویرایش‌شدهٔ checkout قدیمی را با reset/force حذف نکنید. [LifeGuide-web](https://github.com/davoodmehraban89/LifeMate/actions/runs/37893432018/artifacts/11600220473) را همراه `build-provenance.json` در `apps/lifemate/build/web` استخراج کنید. Docker Desktop/WSL2، Node22 و mkcert لازم‌اند. IP نمونه را با IP واقعی PC عوض کنید؛ port-forward/tunnel/DNS عمومی نسازید.
+
+`.gitattributes` ورودی‌های متنی را با LF و فایل‌های باینری را بدون تغییر نگه می‌دارد؛ آزمون checkout واقعیِ Git با `core.autocrlf=true` در محیط تیم انجام می‌شود و اجرای واقعی Windows را جایگزین نمی‌کند. پس از checkout جدید، خطای checker به‌معنی ورودی/خروجی نامنطبق است؛ فایل provenance را دوباره stamp نکنید مگر build واقعیِ همان منبع اجرا شده باشد.
 
 description فعلی GitHub هنوز نام قدیمی دارد؛ اگر مالک metadata را اصلاح کرد، فقط description به LifeGuide تغییر کند، نه نام/URL مخزن. این تنظیم خارجی توسط تیم تغییر نکرده است.
 
