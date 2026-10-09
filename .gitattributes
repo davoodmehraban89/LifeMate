@@ -1,2 +1,6 @@
+# CI artifacts hash source bytes and Linux containers execute these scripts.
+# Preserve LF on every platform; Git's auto detection leaves binaries intact.
+* text=auto eol=lf
+
 # Preserve the upstream license text verbatim, including its line-end spaces.
 apps/lifemate/assets/fonts/*.txt whitespace=-blank-at-eol
