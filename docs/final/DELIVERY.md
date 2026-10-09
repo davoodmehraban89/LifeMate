@@ -1,3 +1,5 @@
+**Historical snapshot — retained as decision/evidence history. Current product: LifeGuide; current execution status: PROJECT_STATE.md.**
+
 # LifeMate Feature 1 — Final Delivery
 
 ## Installable outputs

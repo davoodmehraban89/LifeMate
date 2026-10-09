@@ -1,0 +1,63 @@
+{
+  "run": 37893432018,
+  "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/37893432018",
+  "source": "7c4ca78ffe55ce37d0b94984c205b6ba592cf722",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": {
+    "backend": 113699263054,
+    "flutter": 113699262974,
+    "security": 113699262752
+  },
+  "observedOutput": {
+    "backend": "tests130;pass130;fail0;skipped0",
+    "runtimeFamily": "tests9;pass9;fail0;skipped0",
+    "flutter": "🎉68 tests passed.",
+    "chromeGuard": "00:00+3:All tests passed!",
+    "compiledInstanceCases": 8,
+    "forcedExpiry": {
+      "beforePending": 1,
+      "latePending": 1,
+      "reopenPending": 1,
+      "reopenSessionPresent": false,
+      "refreshes": 2,
+      "unchangedDurableBytes": true
+    },
+    "runtimeAssetRequests": 13,
+    "externalRequests": 0,
+    "restoredMigrationChecksums": 12
+  },
+  "apk": {
+    "manifest": "PASS",
+    "package": "ir.lifeguide.app",
+    "versionName": "0.5.1",
+    "versionCode": 4,
+    "label": "لایف‌گاید",
+    "debuggable": true,
+    "allowBackup": false,
+    "usesCleartextTraffic": false,
+    "internetPermission": true,
+    "minSdkVersion": 24,
+    "targetSdkVersion": 36,
+    "sha256": "0b23e4fa242b0ee5e35186e49537bcf67c2753211e33aa3d69789576aba0f044",
+    "signature": "apksigner: Verifies; v2=true",
+    "certificateDN": "C=US, O=Android, CN=Android Debug",
+    "certificateSha256": "3179f7325a42b6f5de9a85699e54097075886e48e974fdcd511f6eb6447cdd41",
+    "release": false
+  },
+  "artifacts": [
+    {
+      "id": 11600220473,
+      "name": "LifeGuide-web",
+      "zipSha256": "d7acfe7d619a47c077167a982f582337e821b26db4507bf88fe7920b5e236c42",
+      "zipBytes": 18932576
+    },
+    {
+      "id": 11600076483,
+      "name": "LifeGuide-debug-apk",
+      "zipSha256": "71954bddac25cacf29b9f2115b62de8eb576c763d4e5e26495b0e98c0d8add1f",
+      "zipBytes": 86928494
+    }
+  ],
+  "limitations": "CI runner output and uploaded archives observed; no independent local APK download/extraction/install or real Android/Safari/Windows/Iran reachability. Synthetic data only; no release or live deployment."
+}

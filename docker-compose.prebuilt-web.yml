@@ -1,0 +1,7 @@
+# Developer/CI artifact path: compile and self-host-check web first, then package
+# only the exact checked output with the same gateway/TLS configuration.
+services:
+  gateway:
+    build:
+      context: ./apps/lifemate
+      dockerfile: deploy/Dockerfile.prebuilt

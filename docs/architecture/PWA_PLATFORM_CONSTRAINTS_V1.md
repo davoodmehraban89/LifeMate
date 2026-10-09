@@ -1,3 +1,5 @@
+**Historical snapshot — retained as decision/evidence history. Current product: LifeGuide; current execution status: PROJECT_STATE.md.**
+
 # LifeMate — PWA Platform Constraints v1
 
 ## iPhone/iPad install model

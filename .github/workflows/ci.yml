@@ -1,114 +1,137 @@
-name: LifeMate CI
-
+name: LifeGuide CI
 on:
   push:
     branches: [main]
   pull_request:
-
+  workflow_dispatch:
 permissions:
   contents: read
-
+concurrency:
+  group: lifeguide-ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Reject committed environment files
+      - name: Reject tracked credentials and private artifacts
         run: |
-          bad_files=$(find . -type f \( -name '.env' -o -name '.env.*' \) ! -name '.env.example' ! -path './.git/*')
-          if [ -n "$bad_files" ]; then echo "Committed environment files detected:"; echo "$bad_files"; exit 1; fi
-      - name: Scan high-confidence secret patterns
-        run: |
-          if git grep -I -n -E '(-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9_]{30,}|sk_live_[A-Za-z0-9]{20,})' -- .; then echo "Potential committed secret detected."; exit 1; fi
-
-  flutter:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/lifemate
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-      - run: flutter pub get
-      - run: dart format lib test
-      - run: flutter analyze
-      - run: flutter test
-      - name: Verify PWA release metadata
-        run: |
-          grep -q 'manifest.json' web/index.html
-          grep -q 'theme-color' web/index.html
-          grep -q 'apple-touch-icon' web/index.html
-          grep -q 'dir="rtl"' web/index.html
-          test -f web/manifest.json
-      - run: flutter build web --release
-      - run: flutter build apk --release
-      - name: Upload Web release
-        uses: actions/upload-artifact@v4
-        with:
-          name: lifemate-web-release
-          path: apps/lifemate/build/web
-          if-no-files-found: error
-      - name: Upload Android APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: lifemate-android-apk
-          path: apps/lifemate/build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-
+          python3 scripts/check-tracked-secrets.py
+      - name: Audit product naming
+        run: python3 scripts/audit-naming.py --check
   backend:
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_PASSWORD: lifemate_ci
+          POSTGRES_PASSWORD: synthetic_ci_only
           POSTGRES_DB: lifemate_ci
         ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U postgres -d lifemate_ci"
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      PGPASSWORD: lifemate_ci
-      DATABASE_URL: postgresql://postgres:lifemate_ci@localhost:5432/lifemate_ci
-      JWT_SECRET: ci-only-secret-ci-only-secret-ci-only-secret
+      PGPASSWORD: synthetic_ci_only
+      DATABASE_URL: postgresql://postgres:synthetic_ci_only@localhost:5432/lifemate_ci
+      JWT_SECRET: synthetic-ci-only-not-a-live-secret-2026
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Apply migrations
-        run: |
-          for migration in backend/migrations/*.sql; do echo "Applying $migration"; psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f "$migration"; done
-      - name: Database authorization tests
-        run: |
-          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/schema_test.sql
-          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/phase3_schema_test.sql
-          if [ -f backend/tests/phase4_schema_test.sql ]; then psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/phase4_schema_test.sql; fi
-          if [ -f backend/tests/phase6_schema_test.sql ]; then psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/tests/phase6_schema_test.sql; fi
-      - name: Install backend
+        with: {node-version: 22, cache: npm, cache-dependency-path: backend/package-lock.json}
+      - name: Verify reachability smoke rejects untrusted TLS
+        run: node --test scripts/test-reachability-smoke.mjs
+      - run: npm ci
         working-directory: backend
-        run: npm install
-      - name: Backend dependency audit
+      - name: Apply migrations and verify repeat run
         working-directory: backend
-        run: npm audit --audit-level=high
-      - name: Backend tests
-        working-directory: backend
-        run: npm test
-      - name: Backend syntax checks
-        working-directory: backend
-        run: npm run check
-      - name: Verify schema objects
+        run: npm run migrate && npm run migrate
+      - name: SQL authorization matrix
         run: |
-          test "$(psql -h localhost -U postgres -d lifemate_ci -Atc "select count(*) from information_schema.tables where table_schema='public' and table_name in ('app_user','profile','family_workspace','family_membership','guardian_relationship','family_invitation','access_audit','auth_credential','auth_token','auth_session','life_context','academic_year','academic_term','subject','class_session','plan_item','sharing_grant','reminder','notification_preference','notification_outbox','sync_mutation','learning_goal','learning_checkin','wellbeing_checkin','ai_guide_session','ai_guide_message','ai_plan_proposal','wellbeing_safety_event','education_profile','curriculum_subject','textbook_catalog','iran_calendar_event','menstrual_cycle_entry');")" = "33"
-      - name: Backup and restore drill
+          for test in backend/tests/*schema_test.sql; do psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$test"; done
+      - run: npm test && npm run check && npm audit --audit-level=high
+        working-directory: backend
+      - name: Verify isolated database roles and runtime family scenario
+        working-directory: backend
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: lifemate_ci
         run: |
-          psql -h localhost -U postgres -d lifemate_ci -v ON_ERROR_STOP=1 -f backend/scripts/restore-smoke.sql
-          chmod +x backend/scripts/backup.sh backend/scripts/restore.sh
-          backend/scripts/backup.sh /tmp/lifemate-ci.dump
-          createdb -h localhost -U postgres lifemate_restore
-          DATABASE_URL=postgresql://postgres:lifemate_ci@localhost:5432/lifemate_restore backend/scripts/restore.sh /tmp/lifemate-ci.dump
-          test "$(psql -h localhost -U postgres -d lifemate_restore -Atc "select count(*) from profile where display_name='Restore Smoke';")" = "1"
+          export API_DB_PASSWORD=$(node -p "require('crypto').randomBytes(32).toString('hex')")
+          export MIGRATOR_DB_PASSWORD=$(node -p "require('crypto').randomBytes(32).toString('hex')")
+          export BACKUP_DB_PASSWORD=$(node -p "require('crypto').randomBytes(32).toString('hex')")
+          export ROLE_TEST_STATE_FILE="$RUNNER_TEMP/lifeguide-role-state.json"
+          trap 'if [ -f "$ROLE_TEST_STATE_FILE" ]; then node scripts/test-db-roles.js --cleanup; fi' EXIT
+          node scripts/test-db-roles.js --synthetic-only
+          source_db=$(node -p "JSON.parse(require('fs').readFileSync(process.env.ROLE_TEST_STATE_FILE)).source_db")
+          target_db=$(node -p "JSON.parse(require('fs').readFileSync(process.env.ROLE_TEST_STATE_FILE)).target_db")
+          PGPASSWORD="$BACKUP_DB_PASSWORD" docker exec -e PGPASSWORD "$PG_CONTAINER" pg_dump -h 127.0.0.1 -U lifeguide_backup -d "$source_db" --format=custom --no-owner --no-privileges --file=/tmp/lifeguide-roles.dump
+          docker exec "$PG_CONTAINER" pg_restore --list /tmp/lifeguide-roles.dump >/dev/null
+          PGPASSWORD="$MIGRATOR_DB_PASSWORD" docker exec -e PGPASSWORD "$PG_CONTAINER" pg_restore -h 127.0.0.1 -U lifeguide_migrator -d "$target_db" --clean --if-exists --no-owner --no-privileges --exit-on-error /tmp/lifeguide-roles.dump
+          node scripts/test-db-roles.js --verify-restored
+      - name: Backup and restore synthetic database
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec "$PG_CONTAINER" pg_dump --version
+          docker exec -i -e DATABASE_URL=postgresql://postgres:synthetic_ci_only@127.0.0.1:5432/lifemate_ci "$PG_CONTAINER" bash -s -- /tmp/lifeguide-ci.dump < backend/scripts/backup.sh
+          docker exec "$PG_CONTAINER" createdb -U postgres lifeguide_restore
+          docker exec -i -e DATABASE_URL=postgresql://postgres:synthetic_ci_only@127.0.0.1:5432/lifeguide_restore "$PG_CONTAINER" bash -s -- /tmp/lifeguide-ci.dump < backend/scripts/restore.sh
+          test "$(docker exec "$PG_CONTAINER" psql -U postgres -d lifeguide_restore -Atc 'select count(*) from schema_migration')" = "$(docker exec "$PG_CONTAINER" psql -U postgres -d lifemate_ci -Atc 'select count(*) from schema_migration')"
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run: {working-directory: apps/lifemate}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - uses: subosito/flutter-action@v2
+        with: {flutter-version: '3.47.6', channel: stable, cache: true}
+      - run: flutter pub get
+      - run: flutter --version --machine
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
+      - run: node tool/test_web_bootstrap.mjs
+      - run: flutter build web --release --no-web-resources-cdn --pwa-strategy=none
+      - run: node tool/test_web_bootstrap.mjs
+      - name: Bundle local resources and reject external runtime services
+        run: node tool/self_host_web.mjs build/web
+      - name: Check compiled browser requests for local fonts and CanvasKit
+        run: |
+          npm install --no-save --no-package-lock playwright@1.62.1
+          npx playwright install --with-deps chromium
+          node tool/test_web_runtime.cjs build/web
+      - name: Check exclusive web instance before session and cache access
+        run: |
+          node tool/test_web_instance.cjs
+          CHROME_EXECUTABLE="$(node -p 'require("playwright").chromium.executablePath()')" flutter test --platform chrome test/web/instance_guard_browser.dart --reporter expanded
+          node tool/test_web_instance.cjs --compiled build/web
+      - name: Preserve unsent changes across forced session expiry
+        run: node tool/test_web_session_expiry.cjs --artifact=build/web
+      - name: Record checked prebuilt web provenance
+        run: node ../../scripts/prebuilt-web-check.mjs . --stamp-after-build
+      - name: Verify Windows checkout preserves the checked web artifact
+        run: node ../../scripts/test-prebuilt-checkout.mjs
+      - uses: actions/upload-artifact@v4
+        with: {name: LifeGuide-web, path: apps/lifemate/build/web, if-no-files-found: error}
+      - name: Build test APK (debug certificate; not a release)
+        run: |
+          flutter build apk --debug
+          cp build/app/outputs/flutter-apk/app-debug.apk build/LifeGuide-debug.apk
+      - name: Inspect the actual APK manifest and debug signature
+        run: |
+          python3 tool/check_apk_manifest.py build/LifeGuide-debug.apk --mode debug
+          sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          test -n "$sdk_root"
+          signer=$(find "$sdk_root/build-tools" -mindepth 2 -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)
+          test -n "$signer"
+          "$signer" verify --verbose --print-certs build/LifeGuide-debug.apk | tee build/debug-signature-check.txt
+          grep -F 'CN=Android Debug' build/debug-signature-check.txt
+      - uses: actions/upload-artifact@v4
+        with: {name: LifeGuide-debug-apk, path: apps/lifemate/build/LifeGuide-debug.apk, if-no-files-found: error}

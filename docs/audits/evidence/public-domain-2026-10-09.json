@@ -1,0 +1,109 @@
+{
+  "at": "2026-10-09T07:32:31.409017+00:00",
+  "mode": "read-only public DNS and static HTTP GET; no credentials or write requests",
+  "checks": {
+    "app_a": {
+      "url": "https://dns.google/resolve?name=app.lifeguide.ir&type=A",
+      "http_status": 200,
+      "content_type": "application/json; charset=UTF-8",
+      "final_url": "https://dns.google/resolve?name=app.lifeguide.ir&type=A",
+      "body": {
+        "Status": 0,
+        "TC": false,
+        "RD": true,
+        "RA": true,
+        "AD": false,
+        "CD": false,
+        "Question": [
+          {
+            "name": "app.lifeguide.ir.",
+            "type": 1
+          }
+        ],
+        "Answer": [
+          {
+            "name": "app.lifeguide.ir.",
+            "type": 1,
+            "TTL": 180,
+            "data": "185.143.234.132"
+          },
+          {
+            "name": "app.lifeguide.ir.",
+            "type": 1,
+            "TTL": 180,
+            "data": "185.143.233.132"
+          }
+        ],
+        "Comment": "Response from 185.143.232.253."
+      }
+    },
+    "nameservers": {
+      "url": "https://dns.google/resolve?name=lifeguide.ir&type=NS",
+      "http_status": 200,
+      "content_type": "application/json; charset=UTF-8",
+      "final_url": "https://dns.google/resolve?name=lifeguide.ir&type=NS",
+      "body": {
+        "Status": 0,
+        "TC": false,
+        "RD": true,
+        "RA": true,
+        "AD": false,
+        "CD": false,
+        "Question": [
+          {
+            "name": "lifeguide.ir.",
+            "type": 2
+          }
+        ],
+        "Answer": [
+          {
+            "name": "lifeguide.ir.",
+            "type": 2,
+            "TTL": 7200,
+            "data": "d.ns.arvancdn.ir."
+          },
+          {
+            "name": "lifeguide.ir.",
+            "type": 2,
+            "TTL": 7200,
+            "data": "s.ns.arvancdn.ir."
+          }
+        ],
+        "Comment": "Response from 185.143.232.253."
+      }
+    },
+    "version": {
+      "url": "https://app.lifeguide.ir/version.json",
+      "http_status": 200,
+      "content_type": "application/json",
+      "final_url": "https://app.lifeguide.ir/version.json",
+      "body": {
+        "app_name": "lifemate",
+        "version": "0.1.0",
+        "build_number": "1",
+        "package_name": "lifemate"
+      }
+    },
+    "index": {
+      "url": "https://app.lifeguide.ir/",
+      "http_status": 200,
+      "content_type": "text/html",
+      "final_url": "https://app.lifeguide.ir/",
+      "title": "LifeMate",
+      "json_response": false
+    },
+    "runtime_config": {
+      "url": "https://app.lifeguide.ir/config.json",
+      "http_status": 200,
+      "content_type": "text/html",
+      "final_url": "https://app.lifeguide.ir/config.json",
+      "title": "LifeMate",
+      "json_response": false
+    }
+  },
+  "limits": [
+    "Origin hostname is not visible through CDN DNS; Railway target is supported by owner-provided panel screenshot, not an inferred exact hostname.",
+    "Iran VPN-free reachability and physical device acceptance UNVERIFIED.",
+    "No live configuration or deployment changes performed."
+  ]
+}

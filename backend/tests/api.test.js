@@ -48,7 +48,7 @@ test('identity + family vertical slice', async () => {
 
   const parentVerify = await request('/v1/auth/verify-email', {
     method: 'POST',
-    body: { token: parentRegister.body.verificationToken },
+    body: { token: parentRegister.body.verificationToken, newPassword: initialPassword },
   });
   assert.equal(parentVerify.status, 204);
 
@@ -103,7 +103,7 @@ test('identity + family vertical slice', async () => {
   assert.equal(
     (await request('/v1/auth/verify-email', {
       method: 'POST',
-      body: { token: teenRegister.body.verificationToken },
+      body: { token: teenRegister.body.verificationToken, newPassword: initialPassword },
     })).status,
     204,
   );
@@ -178,7 +178,7 @@ test('identity + family vertical slice', async () => {
     (
       await request('/v1/auth/verify-email', {
         method: 'POST',
-        body: { token: supporterRegister.body.verificationToken },
+        body: { token: supporterRegister.body.verificationToken, newPassword: initialPassword },
       })
     ).status,
     204,

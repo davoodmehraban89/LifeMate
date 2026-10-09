@@ -1,9 +1,8 @@
 const publicPort = Number(process.env.PORT ?? 8080);
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-process.env.PORT = '0';
 import express from 'express';
-import { createPhase6Router } from './phase6.js';
 import {
+  configureTrustedProxy,
   operationalErrorHandler,
   rateLimit,
   requestContext,
@@ -11,10 +10,10 @@ import {
 } from './operations.js';
 
 const { app, pool } = await import('./server.js');
-process.env.PORT = String(publicPort);
 
 const outer = express();
 outer.disable('x-powered-by');
+configureTrustedProxy(outer);
 outer.use(requestContext);
 outer.use(requestTelemetry);
 outer.use(rateLimit);
@@ -33,7 +32,6 @@ outer.get('/ready', async (_req, res) => {
   }
 });
 
-outer.use('/v1', createPhase6Router({ pool }));
 outer.use(app);
 outer.use(operationalErrorHandler);
 outer.listen(publicPort, () => console.log(JSON.stringify({ type: 'startup', service: 'lifemate-api', port: publicPort })));

@@ -1,3 +1,5 @@
+**Historical snapshot — retained as decision/evidence history. Current product: LifeGuide; current execution status: PROJECT_STATE.md.**
+
 # LifeMate — Final Three-Phase Audit
 
 Date: 2026-10-05

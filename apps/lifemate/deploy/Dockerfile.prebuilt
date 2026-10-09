@@ -1,0 +1,6 @@
+FROM nginx:1.28-alpine
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY deploy/security-headers.inc /etc/nginx/security-headers.inc
+COPY --chown=nginx:nginx build/web /usr/share/nginx/html
+RUN mkdir -p /usr/share/nginx/html/downloads /etc/nginx/tls
+EXPOSE 443

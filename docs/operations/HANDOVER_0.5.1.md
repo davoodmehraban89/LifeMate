@@ -1,0 +1,52 @@
+# LifeGuide0.5.1 — اقدام‌های دستی مالک
+
+منبع آزموده‌شدهٔ فعلی `7d35ee6` و خروجی‌های [run37900944165](https://github.com/davoodmehraban89/LifeMate/actions/runs/37900944165) هستند؛ هر سه job شامل build جدید وب/APK موفق شدند. [بستهٔ آماده‌سازی](../audits/2026-10-09-stage0-readiness.md) policy checkout و بررسی سخت‌گیرانهٔ TLS ابزار اتصال را با آزمون‌های واقعی اضافه می‌کند. نصب Windows/Android/Safari و دسترسی بدون VPN ایران **UNVERIFIED**؛ فقط حساب‌های ساختگی برای پذیرش استفاده شوند. هیچ گام این صفحه توسط تیم روی سرور زنده انجام نشده است.
+
+اگر اکنون به رایانه دسترسی ندارید، **فعلاً اقدامی لازم نیست**؛ گام‌های زیر برای زمان دسترسی به PC/LAN هستند. دامنهٔ `app.lifeguide.ir` در [بررسی خواندنی 2026-10-09](../audits/2026-10-09-public-domain.md) هنوز نسخهٔ عمومی قدیمی `0.1.0`/build `1` را نشان داد؛ لینک آزمون بستهٔ جدید نیست. تنظیمات DNS/آروان را تا آماده‌شدن مقصد جایگزین و تأیید صریح انتقال حفظ کنید.
+
+## 1. Stage0 رایگان؛ نیازی به انتخاب VPS فعلی نیست
+
+checkout شاخه `feat/online-family-stage0` را در پوشهٔ آزمون مستقل و تازه آماده کنید؛ فایل‌های ویرایش‌شدهٔ checkout قدیمی را با reset/force حذف نکنید. [LifeGuide-web](https://github.com/davoodmehraban89/LifeMate/actions/runs/37900944165/artifacts/11602657441) را همراه `build-provenance.json` در `apps/lifemate/build/web` استخراج کنید. Docker Desktop/WSL2، Node22 و mkcert لازم‌اند. IP نمونه را با IP واقعی PC عوض کنید؛ port-forward/tunnel/DNS عمومی نسازید.
+
+`.gitattributes` ورودی‌های متنی را با LF و فایل‌های باینری را بدون تغییر نگه می‌دارد؛ آزمون checkout واقعیِ Git با `core.autocrlf=true` در محیط تیم انجام می‌شود و اجرای واقعی Windows را جایگزین نمی‌کند. پس از checkout جدید، خطای checker به‌معنی ورودی/خروجی نامنطبق است؛ فایل provenance را دوباره stamp نکنید مگر build واقعیِ همان منبع اجرا شده باشد.
+
+description فعلی GitHub هنوز نام قدیمی دارد؛ اگر مالک metadata را اصلاح کرد، فقط description به LifeGuide تغییر کند، نه نام/URL مخزن. این تنظیم خارجی توسط تیم تغییر نکرده است.
+
+```powershell
+New-Item -ItemType Directory -Force deployment/tls | Out-Null
+mkcert -install
+mkcert -cert-file deployment/tls/server.pem -key-file deployment/tls/server-key.pem 192.168.1.10 localhost 127.0.0.1
+mkcert -CAROOT
+node scripts/prebuilt-web-check.mjs apps/lifemate
+./scripts/local-deploy.ps1 -Origin https://192.168.1.10 -PrebuiltWeb
+```
+
+نصب تازه نقش‌ها را آماده می‌کند. روی دیتابیس موجود، script عادی مالکیت را تغییر نمی‌دهد؛ writers را متوقف، backup تازه و restore drill را تأیید و [DATABASE_ROLES](DATABASE_ROLES.md) را با expected owner واقعی انجام دهید. CA فقط به‌صورت **گواهی عمومی** به دستگاه آزمون منتقل شود؛ private key هرگز منتقل نشود. اعتماد iOS/Android و ساخت debug با public CA در [STAGE0](STAGE0.md) آمده؛ APK عمومی CI، اعتماد خودکار به mkcert گوشی را اثبات نمی‌کند.
+
+fixture سه حساب مستقل و smoke را دقیقاً از همان راهنما اجرا کنید؛ داده واقعی وارد نکنید. Android کودک و PWA هر والد به یک origin/API/DB وصل شوند. سناریوی هشت‌مرحله‌ای را با بستن/بازکردن هر سه دستگاه، تغییر آفلاین و reconnect اجرا و تاریخ/دستگاه/نتیجه A–H را بدون password/token ثبت کنید. پیش از ارتقا تمام تب‌های نسخه قبل را ببندید؛ تب دوم نسخه جدید صفحه retry دارد. ورود دوباره همان حساب/API، صف قرنطینه‌شده را بازیابی می‌کند؛ خروج عمدی یا تغییر سرور را قبل از بررسی pending انجام ندهید.
+
+## 2. خروجی APK و کلید رسمی
+
+[LifeGuide-debug.apk](https://github.com/davoodmehraban89/LifeMate/actions/runs/37900944165/artifacts/11602957035) داخل ZIP فقط آزمایشی و با گواهی debug است. پس از استخراج، hash فایل را با [receipt فعلی](../audits/evidence/ci-stage0-readiness-2026-10-09.json) مقایسه کنید:
+
+```powershell
+Get-FileHash ./LifeGuide-debug.apk -Algorithm SHA256
+```
+
+SHA256 APK با ZIP متفاوت است. نصب/upgrade هنوز **UNVERIFIED**؛ گواهی debug این run با APK قبلی run37893432018 متفاوت است و ارتقای مستقیم بین این دو پذیرفته نمی‌شود. برای حل خطای امضا، برنامه یا دادهٔ دارای تغییر ارسال‌نشده را حذف نکنید. برای کلید رسمی، در terminal خودتان و خارج repo، با JDK یک keystore پایدار بسازید؛ password فقط prompt محلی:
+
+```text
+keytool -genkeypair -keystore LifeGuide-release.jks -alias lifeguide -keyalg RSA -keysize 4096 -validity 10000
+```
+
+این فرمان در این بسته اجرا نشده است؛ کلید را با backup امن جدا نگه دارید. شناسهٔ نهایی `ir.lifeguide.app` پس از انتشار تغییر نکند. secretهای `LIFEGUIDE_KEYSTORE_BASE64`, `LIFEGUIDE_KEYSTORE_PASSWORD`, `LIFEGUIDE_KEY_ALIAS`, `LIFEGUIDE_KEY_PASSWORD` فقط در GitHub environment حفاظت‌شده `release-signing`/secret manager تنظیم شوند؛ keystore/password/base64 در repo، issue یا chat نیایند. workflow امضا پیش‌فرض خاموش است؛ فقط پس از تصمیم مالک، `LIFEGUIDE_RELEASE_SIGNING_CONFIGURED=true` و dispatch با `BUILD_SIGNED_TEST_ARTIFACT`. این ساخت test artifact مجوز انتشار عمومی نیست. `LifeGuide.apk` رسمی در این بسته ساخته نشده است.
+
+## 3. پیامک/ایمیل
+
+مالک provider قابل استفاده با شرایط/پرداخت واقعی خود را انتخاب کند؛ هیچ ثبت حساب/خرید انجام نشده و delivery واقعی **UNVERIFIED** است. قرارداد SMS adapter و متغیرهای `SMS_*` در `.env.example`/Backend هستند؛ default خاموش بماند تا endpoint HTTPS، token در secret manager، callback/idempotency و delivery با داده ساختگی آزموده شوند. email اختیاری است؛ بدون provider فعال، ثبت‌نام pending است و fixture verified شاهد تحویل نیست. کلید provider در chat ارسال نشود.
+
+## 4. میزبانی، DNS و انتقال داخلی
+
+پیشنهاد فعلی [ADR0009](../decisions/0009-provider-neutral-hosting.md): Stage0 روی LAN بدون هزینه میزبانی؛ fallback فقط سرورِ تحت کنترل مالک، اگر در اختیار باشد. VPS خارجی، KYC/پرداخت و VPN-free Iran تأیید نشده‌اند؛ خرید سرویس ایرانی توصیه نشده و managed-hostهای ممنوع کنار گذاشته شده‌اند. قبل از انتخاب عمومی، testerهای داخل ایران از حداقل دو اپراتور، VPN خاموش، `scripts/reachability-smoke.mjs` را روی origin انتخاب‌شده اجرا کنند. TLS/PWA/health PASS به‌تنهایی پذیرش چندکاربره نیست؛ API round-trip به credential ساختگی و opt-in نوشتن نیاز دارد.
+
+DNS، deploy یا تغییر زنده فقط پس از تصمیم و مجوز صریح مالک است. همان Compose با PostgreSQL16 داخلی، imageهای ثبت‌شده و credentialهای مستقل منتقل می‌شود. [DOMESTIC_MIGRATION](DOMESTIC_MIGRATION.md) شامل dump با backup فقط‌خواندنی، restore توسط migrator روی مقصد خالی، grants، کنترل شمار/مجوز/نشست، توقف writers، cutover یک مبدأ و rollback بدون دو DB هم‌زمان writable است. drill ساختگی واقعاً PASS شد؛ cutover/rollback زنده **UNVERIFIED**. ابتدا backup رمزگذاری‌شده خارج PC و restore دوره‌ای آماده کنید. داده واقعی حساس کودک/چرخه/یادداشت/AI روی میزبان خارجی قرار نگیرد؛ gate حقوقی/رضایت و نگهداری داخلی هنوز فقط flag است.

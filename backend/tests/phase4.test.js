@@ -1,6 +1,8 @@
 import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
-import { app, pool } from '../src/server.js';
+// Explicit synthetic opt-in; NODE_ENV=test never enables sensitive APIs itself.
+process.env.ENABLE_SENSITIVE_FEATURES = 'true';
+const { app, pool } = await import('../src/server.js');
 
 const server = app.listen(0);
 const address = server.address();
@@ -38,7 +40,7 @@ async function registerVerified(email, displayName) {
     (
       await request('/v1/auth/verify-email', {
         method: 'POST',
-        body: { token: registration.body.verificationToken },
+        body: { token: registration.body.verificationToken, newPassword: password },
       })
     ).status,
     204,

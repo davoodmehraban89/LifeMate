@@ -1,0 +1,13 @@
+.dart_tool
+build
+.env*
+android
+ios
+test
+integration_test
+*.pem
+*.key
+*.jks
+*.keystore
+*.p12
+*.apk

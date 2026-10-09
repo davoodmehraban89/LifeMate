@@ -1,0 +1,43 @@
+name: LifeGuide signed APK (manual; disabled by default)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Owner approval: type BUILD_SIGNED_TEST_ARTIFACT'
+        required: true
+        type: string
+permissions: {contents: read}
+jobs:
+  signed-apk:
+    if: vars.LIFEGUIDE_RELEASE_SIGNING_CONFIGURED == 'true' && inputs.confirm == 'BUILD_SIGNED_TEST_ARTIFACT'
+    environment: release-signing
+    runs-on: ubuntu-latest
+    defaults:
+      run: {working-directory: apps/lifemate}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: {flutter-version: '3.47.6', channel: stable, cache: true}
+      - name: Prepare owner key outside repository
+        env:
+          KEYSTORE_BASE64: ${{ secrets.LIFEGUIDE_KEYSTORE_BASE64 }}
+        run: |
+          umask 077
+          test -n "$KEYSTORE_BASE64"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/lifeguide-release.jks"
+      - name: Build genuinely signed release artifact
+        env:
+          LIFEGUIDE_KEYSTORE_PATH: ${{ runner.temp }}/lifeguide-release.jks
+          LIFEGUIDE_KEYSTORE_PASSWORD: ${{ secrets.LIFEGUIDE_KEYSTORE_PASSWORD }}
+          LIFEGUIDE_KEY_ALIAS: ${{ secrets.LIFEGUIDE_KEY_ALIAS }}
+          LIFEGUIDE_KEY_PASSWORD: ${{ secrets.LIFEGUIDE_KEY_PASSWORD }}
+        run: |
+          flutter pub get
+          flutter test
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk build/LifeGuide.apk
+      - uses: actions/upload-artifact@v4
+        with: {name: LifeGuide-signed-apk, path: apps/lifemate/build/LifeGuide.apk, if-no-files-found: error}
+      - name: Remove private key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/lifeguide-release.jks"

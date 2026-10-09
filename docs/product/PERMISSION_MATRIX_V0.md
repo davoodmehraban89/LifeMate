@@ -1,3 +1,5 @@
+**Historical snapshot — retained as decision/evidence history. Current product: LifeGuide; current execution status: PROJECT_STATE.md.**
+
 # LifeMate — Permission & Visibility Matrix v0
 
 **Status:** Phase 1 working contract
