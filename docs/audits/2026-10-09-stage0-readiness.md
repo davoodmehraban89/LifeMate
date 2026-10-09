@@ -29,7 +29,7 @@ The RED run temporarily removed only the new LF rule and restored its exact byte
 
 Root policy `* text=auto eol=lf` preserves text endings under Windows-style `core.autocrlf=true` and leaves binary bytes intact. Backup/restore/local-deploy shell inputs retain Linux-executable endings. Existing font-license whitespace rules are preserved. The recorded artifact is still47 inputs, source digest `1eeb1d833d63331e1a24a322836f8d9bf1f24205267e33286ff3a2349a6eff53`, artifact digest `c6937cc01490dd289d09adc1e84a32824c720cb22d97a470e99e78fabd1cf1b0`, recorded2026-10-09T06:22:16.747Z. Git emulation on Linux is not an actual Windows execution.
 
-CI is configured to run the regression after the real release web build/postprocessing/provenance step. Execution of that new CI step remains **UNVERIFIED** until a new run produces evidence; the previous successful0.5.1 CI did not include it. The application build/test receipts from [isolation verification](2026-10-09-isolation-verification.md) remain historical evidence for the unchanged application source.
+CI runs the regression after the real release web build/postprocessing/provenance step. [Run37900944165](https://github.com/davoodmehraban89/LifeMate/actions/runs/37900944165) on source `7d35ee64a8d4aee51a92ee5fe551e8b3c33761e9` completed successfully; its actual log passes both Git modes, three shell endings,13 binary inputs and both tamper refusals. [Sanitized receipt](evidence/ci-stage0-readiness-2026-10-09.json). The earlier application receipts from [isolation verification](2026-10-09-isolation-verification.md) remain historical evidence.
 
 ## Actual TLS regression and real local smoke
 
@@ -54,7 +54,17 @@ ROOT_CA_FILE=/path/to/public-local-ca.pem node scripts/reachability-smoke.mjs ht
 
 Root also executed the second command against the existing real synthetic Compose stack at **2026-10-09T07:43:47.247Z**, with its normal public CA and no TLS-disable setting. **5 checks PASS:** TLS chain/hostname, database health, PWA HTML/manifest, same-origin/no-store runtime config and anonymous planner401. API write round-trip was intentionally not opted into in this run and remains **UNVERIFIED for this run**; prior write acceptance is separately recorded. No new task/session or credential was created. The local regression's CA/private keys are generated outside the repository and removed by teardown; no private key is tracked. [Real local read-only receipt](evidence/stage0-readiness-https-2026-10-09.json).
 
-CI is configured to run the5 TLS tests on Node22. Execution of that new CI step is **UNVERIFIED** until a new run reports it. Actual device TLS trust and Iran reachability are separate pending gates.
+The same completed CI ran the5 TLS tests on Node22:5 passed, zero failures/skips. Actual device TLS trust and Iran reachability are separate pending gates.
+
+## Actual CI build and installer delivery
+
+All three jobs completed SUCCESS: backend130/130, runtime-family9/9, TLS5/5, Flutter68 passed, Chrome guards3 passed, analyzer clean, twelve restored migration checksums, compiled-instance8 cases and expiry queue retention. The new Windows-style checkout regression passed against the web artifact built in that run. The release web build took40.9s and runtime asset check recorded13 local requests/zero external/missing/errors. These browser tests use intercepted synthetic responses and do not prove real Safari or TLS.
+
+The actual APK was built and its binary manifest inspected on the runner: **ir.lifeguide.app,0.5.1,versionCode4,لایف‌گاید**, minSDK24/targetSDK36, backup/cleartext=false. `apksigner` reported `Verifies`/v2=true with Android Debug certificate. [LifeGuide-debug-apk](https://github.com/davoodmehraban89/LifeMate/actions/runs/37900944165/artifacts/11602957035) and [LifeGuide-web](https://github.com/davoodmehraban89/LifeMate/actions/runs/37900944165/artifacts/11602657441) are uploaded test artifacts, not a public release.
+
+APK SHA256 is `7697b6e2ce094823c32dd50ede34f34bf4626154e0c50b92b36b72a14dccbaef`. ZIP SHA256 is `0fff8f3361230d2ea98e25d64f57496ccf10d12a983f4f9cb78a852c58d17f8e`. The official GitHub connector downloaded the ZIP into a reusable FileService reference for private delivery. A local GET of its temporary download URL returned403, so independent local ZIP extraction/APK inspection remain **UNVERIFIED**; runner inspection is separately evidenced. No ZIP was mislabeled as an APK.
+
+The debug certificate hash `32b5fb29e0a669ba75628d819a9ca36c84cf4e8ad2b6798bc280032e03d6d1fb` differs from the previous same-package CI artifact. An in-place upgrade between those two debug APKs is not supported. Do not uninstall or clear app data to solve a signature error while unsent work exists. Owner-stable release signing and physical install/upgrade are still **UNVERIFIED**; no owner key was created, public release performed or data cleared.
 
 ## Public-domain read-only checks
 
