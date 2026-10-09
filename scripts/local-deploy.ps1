@@ -43,7 +43,9 @@ if (!(Test-Path '.env')) {
 } else {
     Write-Host '.env exists and is preserved; Origin/certificate changes require a deliberate .env edit.'
 }
-if ((Get-Content '.env' -Raw) -match '(?m)^(POSTGRES_PASSWORD|JWT_SECRET)=CHANGE_ME') {
+& node scripts/prepare-db-role-env.mjs --write
+if ($LASTEXITCODE -ne 0) { throw 'Independent database role environment preparation failed.' }
+if ((Get-Content '.env' -Raw) -match '(?m)^(POSTGRES_PASSWORD|API_DB_PASSWORD|MIGRATOR_DB_PASSWORD|BACKUP_DB_PASSWORD|JWT_SECRET)=CHANGE_ME') {
     throw 'Replace placeholder secrets in .env.'
 }
 $endpoint = $null
@@ -82,7 +84,9 @@ if ($env:BUILD_CA_FILE) {
     Invoke-CheckedDocker -Arguments ($composeBuild + @('build', '--build-arg', 'HTTP_PROXY', '--build-arg', 'HTTPS_PROXY', 'api', 'gateway', 'backup'))
 }
 Invoke-CheckedDocker -Arguments @('compose', 'up', '-d', '--wait', '--wait-timeout', '120', 'postgres')
-Invoke-CheckedDocker -Arguments @('compose', 'run', '--rm', 'migrate')
+Invoke-CheckedDocker -Arguments @('compose', 'run', '--rm', '--no-deps', 'db-provision')
+Invoke-CheckedDocker -Arguments @('compose', 'run', '--rm', '--no-deps', 'migrate')
+Invoke-CheckedDocker -Arguments @('compose', 'run', '--rm', '--no-deps', 'db-grants')
 Invoke-CheckedDocker -Arguments @('compose', 'up', '-d', '--wait', '--wait-timeout', '180', 'api', 'gateway', 'backup')
 Invoke-CheckedDocker -Arguments @('compose', 'ps')
 Write-Host 'Local stack started. Run the HTTPS smoke test with synthetic accounts.'

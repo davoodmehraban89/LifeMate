@@ -6,8 +6,8 @@ x-api-environment: &api-environment
   PGHOST: postgres
   PGPORT: 5432
   PGDATABASE: ${POSTGRES_DB:-lifemate}
-  PGUSER: ${POSTGRES_USER:-lifeguide}
-  PGPASSWORD: ${POSTGRES_PASSWORD:?Generate POSTGRES_PASSWORD in .env}
+  PGUSER: ${API_DB_USER:-lifeguide_api}
+  PGPASSWORD: ${API_DB_PASSWORD:?Generate independent API_DB_PASSWORD in .env}
   JWT_SECRET: ${JWT_SECRET:?Generate JWT_SECRET in .env}
   PUBLIC_APP_URL: ${PUBLIC_APP_URL:?Set the operator-approved HTTPS origin}
   CORS_ORIGINS: ${CORS_ORIGINS:?Set the operator-approved HTTPS origin}
@@ -22,6 +22,23 @@ x-api-environment: &api-environment
   SMS_PROVIDER_URL: ${SMS_PROVIDER_URL:-}
   SMS_PROVIDER_TOKEN: ${SMS_PROVIDER_TOKEN:-}
   TRUSTED_PROXY_CIDRS: ${GATEWAY_PROXY_IP:-172.30.86.10}/32
+
+x-admin-environment: &admin-environment
+  PGHOST: postgres
+  PGPORT: 5432
+  PGDATABASE: ${POSTGRES_DB:-lifemate}
+  PGUSER: ${POSTGRES_USER:-lifeguide}
+  PGPASSWORD: ${POSTGRES_PASSWORD:?Generate POSTGRES_PASSWORD in .env}
+  API_DB_USER: ${API_DB_USER:-lifeguide_api}
+  MIGRATOR_DB_USER: ${MIGRATOR_DB_USER:-lifeguide_migrator}
+  BACKUP_DB_USER: ${BACKUP_DB_USER:-lifeguide_backup}
+
+x-migration-environment: &migration-environment
+  PGHOST: postgres
+  PGPORT: 5432
+  PGDATABASE: ${POSTGRES_DB:-lifemate}
+  PGUSER: ${MIGRATOR_DB_USER:-lifeguide_migrator}
+  PGPASSWORD: ${MIGRATOR_DB_PASSWORD:?Generate independent MIGRATOR_DB_PASSWORD in .env}
 
 services:
   postgres:
@@ -41,15 +58,51 @@ services:
       retries: 20
     networks: [private]
 
+  db-provision:
+    image: ${API_IMAGE:-lifeguide-api:local}
+    build:
+      context: ./backend
+    command: [node, scripts/provision-db-roles.js, --prepare]
+    # Short-lived ops job reads root-owned mode600 backups read-only; the API
+    # remains USER node and never mounts this volume or receives admin secrets.
+    user: '0:0'
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    environment:
+      <<: *admin-environment
+      API_DB_PASSWORD: ${API_DB_PASSWORD:?Generate independent API_DB_PASSWORD in .env}
+      MIGRATOR_DB_PASSWORD: ${MIGRATOR_DB_PASSWORD:?Generate independent MIGRATOR_DB_PASSWORD in .env}
+      BACKUP_DB_PASSWORD: ${BACKUP_DB_PASSWORD:?Generate independent BACKUP_DB_PASSWORD in .env}
+    volumes:
+      - backups:/backups:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+    networks: [private]
+
   migrate:
     image: ${API_IMAGE:-lifeguide-api:local}
     build:
       context: ./backend
     command: [node, scripts/migrate.js]
-    environment: *api-environment
+    environment: *migration-environment
     depends_on:
       postgres:
         condition: service_healthy
+      db-provision:
+        condition: service_completed_successfully
+    restart: 'no'
+    networks: [private]
+
+  db-grants:
+    image: ${API_IMAGE:-lifeguide-api:local}
+    command: [node, scripts/provision-db-roles.js, --grants]
+    environment: *admin-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     restart: 'no'
     networks: [private]
 
@@ -66,6 +119,8 @@ services:
       postgres:
         condition: service_healthy
       migrate:
+        condition: service_completed_successfully
+      db-grants:
         condition: service_completed_successfully
     healthcheck:
       test: [CMD, node, -e, "fetch('http://127.0.0.1:8080/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -112,8 +167,8 @@ services:
       dockerfile: deployment/backup/Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-lifeguide}@postgres:5432/${POSTGRES_DB:-lifemate}
-      PGPASSWORD: ${POSTGRES_PASSWORD:?Generate POSTGRES_PASSWORD in .env}
+      DATABASE_URL: postgresql://${BACKUP_DB_USER:-lifeguide_backup}@postgres:5432/${POSTGRES_DB:-lifemate}
+      PGPASSWORD: ${BACKUP_DB_PASSWORD:?Generate independent BACKUP_DB_PASSWORD in .env}
       BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 2 * * *}
       BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
       BACKUP_MAX_AGE_SECONDS: ${BACKUP_MAX_AGE_SECONDS:-93600}
@@ -122,12 +177,44 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      db-grants:
+        condition: service_completed_successfully
     healthcheck:
       test: [CMD-SHELL, 'kill -0 1 && test -f /backups/last-success && test "$$(( $$(date +%s) - $$(stat -c %Y /backups/last-success) ))" -lt "$${BACKUP_MAX_AGE_SECONDS:-93600}"']
       interval: 60s
       timeout: 5s
       retries: 3
       start_period: 60s
+    networks: [private]
+
+  # Explicit operator tools: never start these as a background application.
+  restore:
+    profiles: [ops]
+    build:
+      context: .
+      dockerfile: deployment/backup/Dockerfile
+    entrypoint: [/opt/lifeguide/restore.sh]
+    environment:
+      DATABASE_URL: postgresql://${MIGRATOR_DB_USER:-lifeguide_migrator}@postgres:5432/${POSTGRES_DB:-lifemate}
+      PGPASSWORD: ${MIGRATOR_DB_PASSWORD:?Generate independent MIGRATOR_DB_PASSWORD in .env}
+    volumes: [backups:/backups]
+    restart: 'no'
+    networks: [private]
+
+  db-role-test:
+    profiles: [ops]
+    image: ${API_IMAGE:-lifeguide-api:local}
+    command: [node, scripts/test-db-roles.js, --synthetic-only]
+    environment:
+      <<: *admin-environment
+      API_DB_PASSWORD: ${API_DB_PASSWORD:?Generate independent API_DB_PASSWORD in .env}
+      MIGRATOR_DB_PASSWORD: ${MIGRATOR_DB_PASSWORD:?Generate independent MIGRATOR_DB_PASSWORD in .env}
+      BACKUP_DB_PASSWORD: ${BACKUP_DB_PASSWORD:?Generate independent BACKUP_DB_PASSWORD in .env}
+      DB_ROLE_RESTORE_FIXTURE: /app/restore-fixture.sql
+    volumes:
+      - ./backend/tests/online_acceptance.test.js:/app/tests/online_acceptance.test.js:ro
+      - ./deployment/restore-fixture.sql:/app/restore-fixture.sql:ro
+    restart: 'no'
     networks: [private]
 
 volumes:

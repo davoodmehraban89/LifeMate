@@ -31,7 +31,9 @@ if [[ "${1:-}" == '--init' ]]; then
   fi
 fi
 [[ -f .env ]] || { echo 'Create .env first, or use --init https://LAN-IP' >&2; exit 1; }
-if grep -Eq '^((POSTGRES_PASSWORD|JWT_SECRET)=CHANGE_ME|JWT_SECRET=.{0,31}$)' .env; then
+command -v node >/dev/null || { echo 'Node >=22 required to prepare/check independent database role settings' >&2; exit 1; }
+node scripts/prepare-db-role-env.mjs --write
+if grep -Eq '^((POSTGRES_PASSWORD|API_DB_PASSWORD|MIGRATOR_DB_PASSWORD|BACKUP_DB_PASSWORD|JWT_SECRET)=CHANGE_ME|JWT_SECRET=.{0,31}$)' .env; then
   echo 'Replace placeholder/short secrets in .env' >&2; exit 1
 fi
 if [[ -n "${DOCKER_CONTEXT:-}" ]]; then
@@ -66,7 +68,9 @@ else
   docker compose "${compose_build[@]}" build --build-arg HTTP_PROXY --build-arg HTTPS_PROXY api gateway backup
 fi
 docker compose up -d --wait --wait-timeout 120 postgres
-docker compose run --rm migrate
+docker compose run --rm --no-deps db-provision
+docker compose run --rm --no-deps migrate
+docker compose run --rm --no-deps db-grants
 docker compose up -d --wait --wait-timeout 180 api gateway backup
 docker compose ps
 echo 'Local stack started. Run the HTTPS smoke test; health alone does not prove family CRUD.'
