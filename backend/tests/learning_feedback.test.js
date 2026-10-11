@@ -93,7 +93,11 @@ describe('learning feedback authenticated real HTTP and synthetic PostgreSQL', {
     const location = new URL(process.env.TEST_FIXTURE_DATABASE_URL ?? process.env.DATABASE_URL);
     assert.ok(['localhost', '127.0.0.1', '[::1]', '::1'].includes(location.hostname),
       'Feedback tests refuse a nonlocal database');
-    assert.ok(location.pathname.includes('test') || /^\/lifeguide_roles_source_[a-f0-9]{16}$/.test(location.pathname), 'Feedback tests require an explicit synthetic test database');
+    // Keep the local-host gate above. The workflow's existing synthetic database
+    // has a protocol/history name; admitting that exact name does not admit arbitrary DBs.
+    assert.ok(location.pathname.includes('test') || location.pathname === '/lifemate_ci' ||
+      /^\/lifeguide_roles_source_[a-f0-9]{16}$/.test(location.pathname),
+    'Feedback tests require an explicit synthetic test database');
     pool = new pg.Pool({ connectionString: process.env.TEST_FIXTURE_DATABASE_URL ?? process.env.DATABASE_URL });
     await start();
   });
