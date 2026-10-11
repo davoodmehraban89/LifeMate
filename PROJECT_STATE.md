@@ -1,8 +1,20 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
-Updated: 2026-10-09. Backend version: **0.5.1**. Branch: **feat/online-family-stage0**, based on main `abdc9d9d032bc6746c8390b902a2e52d82991530`. Repository remains `davoodmehraban89/LifeMate`.
+Updated: 2026-10-11. Backend version: **0.6.0**. Branch: **feat/aparat-learning-library**, stacked on **feat/online-family-stage0**, based on main `abdc9d9d032bc6746c8390b902a2e52d82991530`. Repository remains `davoodmehraban89/LifeMate`.
 
 **Status: shared online Stage 0 stack verified locally with synthetic data; hardware/release gates remain open. Not a complete operational product or public release.** Prior COMPLETE/READY claims are retained only in [historical checkpoint](docs/history/2026-10-05-project-state.md); they do not prove this candidate's acceptance. [Draft PR #10](https://github.com/davoodmehraban89/LifeMate/pull/10) is open; main is not merged.
+
+## Current education packet —0.6.0
+
+This feature branch preserves the online0.5.1 base and Feature1. It adds migrations0013–0015, grade/three academic-track library, real owner-private progress, lesson-linked planner/timer, reviewed/versioned formative assessment and explicitly consented feedback. Android first-run connection is explained without a guessed public URL. Runtime DB credentials cannot write catalogue/review/question definitions; only the separate migrator/importer can.
+
+Research inventory is217 books/1373 units/1348 video candidates. **Real published fully reviewed videos:0; real published question banks:0.** Primary62 official1405–1406 editions were inspected; secondary155 edition years remain unknown/unverified. Book index/page/video fragments do not establish a complete school year. Technical iframe probe used a paused provider tutorial, not approved teaching. [Quality/operation guide](docs/operations/LEARNING_CONTENT.md), [evidence/acceptance limits](docs/audits/2026-10-11-learning-verification.md). Full item-by-item media/assessment review, specialist pedagogy and real device acceptance remain open; no claim of guaranteed understanding or complete school is made.
+
+Feedback is voluntarily written chosen text; no private chat/health extraction, admin/notification/export pipeline or autonomous AI/deploy is implemented. Adult/family education and age-appropriate support are documented future domains; AI/voice and sensitive health remain disabled. Minor safeguarding, consent/legal gates and in-country sensitive storage require separate review before implementation.
+
+The fresh APK asks for a full HTTPS API address because Android has no configured active shared endpoint. On2026-10-11 public read-only checks observed app.lifeguide.ir still serving the old product HTML; /config.json,/api/health,/api/ready also returned HTML, not usable current JSON. This does not prove every possible endpoint absent; it does not establish compatibility. [Connection audit](docs/audits/2026-10-11-apk-connection.md). No live deploy or DNS changes were made.
+
+The following0.5.1 execution evidence is historical and does not certify this new source. Current0.6.0 test/build receipts are recorded separately in the learning verification packet.
 
 ## Baseline and reuse
 

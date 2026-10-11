@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-09",
+  "purpose": "Read-only public official-frame feasibility; example is an embed tutorial, not a school catalog seed",
+  "publicVideoHash": "rod03i6",
+  "frameUrl": "https://www.aparat.com/video/video/embed/videohash/rod03i6/vt/frame",
+  "mode": "Only reserved synthetic wrapper intercepted; provider resources fetched over actual verified HTTPS through normal proxy",
+  "ignoreHTTPSErrors": false,
+  "mediaPlayed": false,
+  "mediaDownloaded": false,
+  "playDisabledByProbe": true,
+  "mediaRequestsBlockedByProbe": true,
+  "sandbox": "allow-scripts allow-same-origin",
+  "referrerPolicy": "no-referrer",
+  "requestCounts": {"syntheticWrapper": 1, "actualProviderAndCdn": 7, "media": 0},
+  "actualHosts": ["www.aparat.com", "static.cdn.asset.aparat.cloud"],
+  "actualRequests": [
+    {"host": "www.aparat.com", "path": "/video/video/embed/videohash/rod03i6/vt/frame", "type": "document", "observedStatus": 200, "hasReferer": false},
+    {"host": "www.aparat.com", "path": "/video/video/embed/v2/assets/index-hqFA5bJR.js", "type": "script", "observedStatus": 200, "hasReferer": true},
+    {"host": "www.aparat.com", "path": "/video/video/embed/v2/assets/index-SHoUvyJU.css", "type": "stylesheet", "observedStatus": 200, "hasReferer": true},
+    {"host": "www.aparat.com", "path": "/api/fa/v1/video/video/show/videohash/rod03i6/watchtype/embed", "type": "fetch", "observedStatus": 200, "hasReferer": true},
+    {"host": "static.cdn.asset.aparat.cloud", "path": "/avt/61360239-5426-l__9163.jpg", "type": "image", "observedStatus": null, "hasReferer": true},
+    {"host": "static.cdn.asset.aparat.cloud", "path": "/profile-photo/11588205-590860-m.jpg", "type": "image", "observedStatus": null, "hasReferer": true},
+    {"host": "www.aparat.com", "path": "/video/video/embed/v2/assets/fonts/IRANSansXV.woff2", "type": "font", "observedStatus": 200, "hasReferer": true}
+  ],
+  "requestOrPageErrors": [],
+  "mediaRequestsAttempted": [],
+  "initialCookieNames": [],
+  "visibleFrame": {"documentTitle": "aparat-embed", "durationText": "00:54", "playControl": "visible, not clicked", "videoElements": 0},
+  "limitations": ["Wrapper HTTPS intercepted; provider HTTPS real", "Image request statuses not captured before probe ended", "Frame UI is not media streaming proof", "After-play cookies/ads/fullscreen unverified", "Android WebView and Safari device acceptance unverified"]
+}
