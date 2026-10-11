@@ -5,7 +5,7 @@
 ## آماده‌سازی Windows
 
 1. Docker Desktop با WSL2، Git، Node >=22 و mkcert را نصب کنید. گوشی‌ها و PC به LAN مورد اعتماد متصل باشند. IP محلی PC را با `ipconfig` پیدا و DHCP آن را ثابت کنید. دریافت اولیه وابستگی‌ها ممکن است به VPN توسعه‌دهنده نیاز داشته باشد؛ اجرای کلاینت CDN خارجی ندارد.
-2. ابتدا خروجی بررسی‌شده وب را طبق بخش «بسته‌بندی PWA» آماده کنید: artifact کامل [LifeGuide-web همین منبع](https://github.com/davoodmehraban89/LifeMate/actions/runs/37893432018/artifacts/11600220473) را همراه provenance در `apps/lifemate/build/web` استخراج کنید، یا build واقعی محلی را انجام دهید. سپس از ریشه مخزن، در PowerShell، IP نمونه را عوض کنید:
+2. ابتدا خروجی بررسی‌شده وب را طبق بخش «بسته‌بندی PWA» آماده کنید: برای شاخه آموزش0.6.0، artifact کامل [LifeGuide-web](https://github.com/davoodmehraban89/LifeMate/actions/runs/38148788571/artifacts/11706251327) را همراه provenance در `apps/lifemate/build/web` استخراج کنید، یا build واقعی محلی را انجام دهید. خروجی تاریخی0.5.1 با ورودی‌های آموزش جدید سازگار نیست. سپس از ریشه مخزن، در PowerShell، IP نمونه را عوض کنید:
 
    ```powershell
    New-Item -ItemType Directory -Force deployment/tls | Out-Null

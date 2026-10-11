@@ -4,9 +4,17 @@
 
 این شاخه یک **نامزد آزمون آنلاین با داده ساختگی** است. نسخه کامل عملیاتی یا منتشرشده نیست. پذیرش Android/iPhone/Safari واقعی و دسترسی بدون VPN داخل ایران **UNVERIFIED** است. Backend موجود و Feature 1 ایران حفظ شده‌اند؛ حالت بدون ورودِ محلی جای سیستم چندکاربره نیست.
 
+## آموزش در نسخه 0.6.0 آزمایشی
+
+کتابخانه پایه ۱ تا ۱۲ و سه رشته نظری، انتخاب پایه/رشته/سال، پیشرفت شخصی پایدار، پیوند درس به برنامه و تایمر، سنجش پاسخ در سرور با توضیح و مرور، و بازخورد با رضایت صریح اضافه شده‌اند. زیرساخت سنجش با سؤال ساختگی آزموده می‌شود؛ بانک سؤال واقعی هنوز منتشر نشده است.
+
+۲۱۷ کتاب، ۱۳۷۳ بخش و ۱۳۴۸ منبع ویدیویی برای بررسی فهرست شده‌اند؛ **تعداد ویدیوهای واقعی با بازبینی کامل و منتشرشده صفر است**. این اعداد پوشش کامل آموزش نیستند. چاپ جاری ۶۲ کتاب ابتدایی از صفحات رسمی بررسی شده؛ سال چاپ ۱۵۵ کتاب متوسطه هنوز تأیید نشده است. کاردانش/فنی‌وحرفه‌ای و بانک کامل امتحان پیاده‌سازی نشده‌اند. [روند بررسی و انتشار محتوا](docs/operations/LEARNING_CONTENT.md)، [شواهد این بسته](docs/audits/2026-10-11-learning-verification.md) و [تحویل0.6.0](docs/operations/HANDOVER_0.6.0.md). تغییرات در [PR پیش‌نویس۱۱](https://github.com/davoodmehraban89/LifeMate/pull/11) هستند؛ main ادغام نشده است.
+
+APK نصب تازه آدرس HTTPS **API فعال مشترک** را از مدیر سرویس می‌خواهد؛ ذخیره آدرس، تست اتصال نیست. [بررسی صفحه اتصال](docs/audits/2026-10-11-apk-connection.md). دامنه عمومی بررسی‌شده هنوز API سازگار این بسته را ارائه نمی‌کند؛ URL حدسی یا رمز/توکن در این صفحه وارد نکنید.
+
 ## شروع محلی
 
-Windows/LAN: [راهنمای Stage 0](docs/operations/STAGE0.md). Docker Desktop/Compose و گواهی HTTPS مورد اعتماد دستگاه‌های آزمون لازم‌اند؛ حساب یا پرداخت میزبان لازم نیست. مسیر بررسی‌شده، بسته‌بندی وب از خروجی واقعی build است: [LifeGuide-web از CI همین منبع](https://github.com/davoodmehraban89/LifeMate/actions/runs/37900944165/artifacts/11602657441) را همراه فایل provenance در `apps/lifemate/build/web` استخراج کنید، یا مطابق راهنما با Flutter3.47.6 بسازید. checkout باید شامل همان کد برنامه باشد؛ checker خروجی قدیمی یا نامنطبق را رد می‌کند.
+Windows/LAN: [راهنمای Stage 0](docs/operations/STAGE0.md). Docker Desktop/Compose و گواهی HTTPS مورد اعتماد دستگاه‌های آزمون لازم‌اند؛ حساب یا پرداخت میزبان لازم نیست. مسیر بررسی‌شده، بسته‌بندی وب از خروجی واقعی build است: خروجی وب مربوط به همین commit (artifact تاریخی0.5.1 با این منبع سازگار نیست) را همراه فایل provenance در `apps/lifemate/build/web` استخراج کنید، یا مطابق راهنما با Flutter3.47.6 بسازید. checkout باید شامل همان کد برنامه باشد؛ checker خروجی قدیمی یا نامنطبق را رد می‌کند.
 
 اگر به رایانه دسترسی ندارید، فعلاً اقدامی لازم نیست. [دامنهٔ عمومی](docs/audits/2026-10-09-public-domain.md) هنوز نسخهٔ قدیمی است؛ آزمون بستهٔ جدید پس از دسترسی به PC/LAN انجام می‌شود. policy پایان خط در `.gitattributes`، ورودی‌های متنی را حتی با تنظیم رایج Git ویندوز به‌صورت LF نگه می‌دارد؛ فونت‌ها و آیکون‌های باینری تغییر نمی‌کنند. hash نامنطبق را با stamp دوباره دور نزنید.
 
@@ -29,6 +37,7 @@ bash scripts/local-deploy.sh --prebuilt-web --init https://192.168.1.10
 cd backend
 npm ci
 npm run migrate
+node scripts/import-learning-catalog.js
 npm test
 npm run check
 ```
@@ -56,7 +65,7 @@ PostgreSQL مرجع رکوردها و مجوزهاست؛ کش/صف آفلاین 
 
 API، مهاجرت و backup از سه credential مستقل PostgreSQL استفاده می‌کنند؛ API مدیر یا مالک دیتابیس نیست. برای نصب تازه و انتقال صریح مالکیت دیتابیس موجود، [راهنمای نقش‌های دیتابیس](docs/operations/DATABASE_ROLES.md) را دنبال کنید. تغییر مجوز روی میزبان زنده به تأیید جداگانه نیاز دارد.
 
-- [اقدام‌های دقیق مالک برای0.5.1](docs/operations/HANDOVER_0.5.1.md)
+- [اقدام‌های دقیق مالک برای0.6.0](docs/operations/HANDOVER_0.6.0.md)؛ [تحویل تاریخی0.5.1](docs/operations/HANDOVER_0.5.1.md)
 - [وضعیت و شواهد](PROJECT_STATE.md)، [تغییرات](CHANGELOG.md)، [تحلیل شکاف main](docs/audits/2026-10-08-online-gap-analysis.md)
 - [ماتریس پذیرش A–H، خروجی‌ها و artifactها](docs/audits/2026-10-08-online-acceptance.md)، [HTTPS و مرورگر واقعی محلی](docs/audits/2026-10-08-stage0-verification.md)
 - [تصمیم میزبانی و تحقیق](docs/decisions/0009-provider-neutral-hosting.md)، [نام و هویت انتشار](docs/decisions/0010-lifeguide-naming.md)

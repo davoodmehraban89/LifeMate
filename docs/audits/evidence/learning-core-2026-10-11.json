@@ -1,0 +1,107 @@
+{
+  "date": "2026-10-11",
+  "version": "0.6.0",
+  "branch": "feat/aparat-learning-library",
+  "realPublishedVideos": 0,
+  "realPublishedQuestionBanks": 0,
+  "researchInventory": {
+    "primaryBooks": 62,
+    "secondaryBooks": 155,
+    "units": 1373,
+    "videoCandidates": 1348,
+    "secondaryEditionYearsVerified": 0
+  },
+  "backend": {
+    "node": "22.23.3",
+    "tests": 151,
+    "pass": 151,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "syntaxFiles": 51,
+    "npmAuditVulnerabilities": 0,
+    "fullLog": "/workspace/scratch/learning-root-full-backend-final.log",
+    "ciNameGuardReproduction": {
+      "database": "local exact CI fixture name",
+      "redCancelled": 8,
+      "targetedGreenPass": 10,
+      "fullGreenPass": 151,
+      "fullGreenCancelled": 0,
+      "log": "/workspace/scratch/learning-ci-guard-full-green.log"
+    }
+  },
+  "flutter": {
+    "version": "3.47.6",
+    "tests": 112,
+    "pass": 112,
+    "fail": 0,
+    "analyze": "No issues found!",
+    "fullLog": "/workspace/scratch/learning-flutter-full-final-green.log"
+  },
+  "webBuild": {
+    "status": "PASS",
+    "seconds": 46.8,
+    "selfHostedAssets": true,
+    "compiledAssetProbe": {
+      "interceptedSyntheticOrigin": true,
+      "requests": 14,
+      "external": 0,
+      "missingAssets": 0,
+      "errors": 0
+    }
+  },
+  "databaseRoles": {
+    "freshMigrations": 15,
+    "checksumEntries": 15,
+    "familyTests": 9,
+    "learningTests": 15,
+    "sourceAndRestoredPolicy": "PASS",
+    "restoreSyntheticPausedDurationSeconds": 600,
+    "catalogRuntime": "SELECT only",
+    "futureTablesRuntime": "SELECT only by default"
+  },
+  "tlsRegression": {
+    "tests": 5,
+    "pass": 5,
+    "skipped": 0
+  },
+  "unverified": [
+    "Real device Android install/playback/fullscreen",
+    "iPhone/iPad Safari install/PWA/lifecycle/playback",
+    "Complete content/video/question review",
+    "Current secondary editions",
+    "Complete vocational curriculum",
+    "Public shared endpoint and Iran VPN-free reachability",
+    "Owner release signing",
+    "Real AI/counselling/admin-feedback workflow"
+  ],
+  "browserAcceptance": {
+    "receipt": "learning-browser-2026-10-11.json",
+    "checks": 10,
+    "pass": 10,
+    "requests": 55,
+    "externalRequests": 0,
+    "mode": "Real local trusted HTTPS/API/PostgreSQL; no interception/TLS bypass",
+    "visualProgressAndRestart": "Root inspected both PNGs; in_progress and same server timestamp retained",
+    "limitations": [
+      "Physical touch/pointer UNVERIFIED",
+      "Dynamic progress ARIA omission observed, not fixed",
+      "Safari/Add to Home Screen UNVERIFIED"
+    ]
+  },
+  "compose": {
+    "project": "lifeguide-learning-audit",
+    "status": "actual healthy Postgres/API/nginxTLS/backup",
+    "syntheticOnly": true,
+    "independentMigrations": 15,
+    "units": 1373,
+    "videos": 1348,
+    "publishedVideos": 0,
+    "publishedAssessments": 0,
+    "trustedHttpsWriteSmoke": {
+      "checks": 7,
+      "pass": 7,
+      "log": "/workspace/scratch/learning-https-write-smoke.log"
+    }
+  }
+}

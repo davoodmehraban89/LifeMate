@@ -1,5 +1,17 @@
 # LifeGuide Changelog
 
+## 0.6.0 — 2026-10-11 — reviewed learning infrastructure (test candidate)
+
+- Preserve existing online family/planner/study and Feature 1; add grade/academic-track catalogue, deterministic unit IDs and repeatable metadata importer.
+- Keep all 1348 researched videos DRAFT; require full edition, accuracy, suitability, rights and question-coverage review before learner exposure; reject stale review context.
+- Add optional in-page Aparat player behind explicit loading, with isolated web/native navigation and lifecycle controls; no media rehosting or automatic completion.
+- Add owner-private, versioned/idempotent progress and lesson-linked plans using real PostgreSQL; durable account-scoped queues and acknowledgement checks.
+- Add reviewed/versioned quiz infrastructure, server grading and explanatory feedback, private attempts and pilot1/3-day review schedule. No real reviewed question bank or guaranteed mastery claim.
+- Add consented educational feedback, persistent rate limits, withdrawal redaction and late-response guard; no private-chat extraction or external AI.
+- Separate runtime read-only teaching catalogue from migrator/importer writes; future tables default read-only until explicit grants.
+- Explain fresh-install Android server setup; preserve runtime URL/fallback configuration without inventing an approved public endpoint.
+- Full video review, complete curriculum/exams, vocational tracks, Safari/Android device playback/install, public backend and owner-signed release remain UNVERIFIED or unimplemented; see PROJECT_STATE.
+
 ## 0.5.1 — 2026-10-09 — online isolation hardening
 
 - Separate PostgreSQL bootstrap, migration, API and read-only backup credentials; reject excessive existing ownership/privileges before provisioning.

@@ -79,20 +79,46 @@ class _EndpointSettingsState extends State<EndpointSettingsPage> {
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            Text(
+                                widget.initialConfig.isConfigured
+                                    ? 'تنظیم اتصال'
+                                    : 'راه‌اندازی نسخه آزمایشی',
+                                style:
+                                    Theme.of(context).textTheme.headlineSmall),
+                            const SizedBox(height: 12),
                             const Text(
-                                'نشانی سرویس خانواده را وارد کنید. تغییر سرویس شما را از حساب قبلی خارج می‌کند.'),
+                                'این نسخه به سرور مشترک خانواده متصل می‌شود. نشانی کامل API را فقط مطابق راهنمای مدیر سرویس وارد کنید؛ آدرس وب‌سایت به‌تنهایی ممکن است نشانی اتصال نباشد.'),
+                            const SizedBox(height: 12),
+                            if (!widget.initialConfig.isConfigured) ...[
+                              const Text(
+                                  'بدون نشانی یک سرویس فعال و سازگار، ورود و همگام‌سازی در دسترس نیست. اگر هنوز نشانی تأییدشده‌ای دریافت نکرده‌اید، لازم نیست چیزی وارد کنید.'),
+                              const SizedBox(height: 12),
+                            ],
+                            const Text(
+                                'این کادر فقط نشانی اتصال می‌خواهد؛ رمز عبور، کلید یا توکن وارد نکنید.'),
+                            const SizedBox(height: 12),
+                            const Text(
+                                'نشانی در همین دستگاه ذخیره می‌شود و در بازکردن بعدی لازم نیست دوباره آن را وارد کنید. ذخیره نشانی به معنی برقرارشدن اتصال نیست؛ اتصال هنگام ورود بررسی می‌شود.'),
+                            if (widget.initialConfig.isConfigured) ...[
+                              const SizedBox(height: 12),
+                              const Text(
+                                  'تغییر سرویس شما را از حساب قبلی خارج می‌کند. پیش از تغییر، داده‌های ارسال‌نشده را با سرویس قبلی همگام کنید؛ با تأیید تغییر، داده‌های محلی آن حساب کنار گذاشته می‌شوند.'),
+                            ],
                             const SizedBox(height: 16),
                             TextField(
                                 controller: primary,
+                                enabled: !busy,
+                                onChanged: (_) => setState(() => error = null),
                                 textDirection: TextDirection.ltr,
                                 keyboardType: TextInputType.url,
                                 autocorrect: false,
                                 decoration: const InputDecoration(
-                                    labelText: 'نشانی اصلی',
-                                    hintText: 'https://…')),
+                                    labelText: 'نشانی اتصال API',
+                                    hintText: 'https://…/api')),
                             const SizedBox(height: 16),
                             TextField(
                                 controller: fallback,
+                                enabled: !busy,
                                 textDirection: TextDirection.ltr,
                                 maxLines: 4,
                                 autocorrect: false,
@@ -121,7 +147,9 @@ class _EndpointSettingsState extends State<EndpointSettingsPage> {
                                               .error))),
                             const SizedBox(height: 20),
                             FilledButton(
-                                onPressed: busy ? null : save,
+                                onPressed: busy || primary.text.trim().isEmpty
+                                    ? null
+                                    : save,
                                 child: Text(
                                     busy ? 'در حال ذخیره…' : 'ذخیره و ادامه')),
                           ])),

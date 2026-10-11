@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'api.dart';
 import 'iran_hub.dart';
+import 'education_ui.dart';
 import 'phase3_ui.dart';
 import 'runtime_controller.dart';
 import 'endpoint_settings.dart';
@@ -1034,6 +1035,7 @@ class _HomeShellState extends State<HomeShell> {
     'امتحان‌ها و نمرات',
     'تمرکز',
     'همراه هوشمند',
+    'مدرسه من',
   ];
 
   static const adultPages = [
@@ -1042,6 +1044,7 @@ class _HomeShellState extends State<HomeShell> {
     'خانواده',
     'راهنما',
     'من',
+    'مدرسه من',
   ];
 
   @override
@@ -1137,6 +1140,14 @@ class _HomeShellState extends State<HomeShell> {
             title: Text(pages[index]),
             actions: [
               IconButton(
+                tooltip: 'مدرسه من',
+                icon: const Icon(Icons.menu_book_outlined),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => Scaffold(
+                        appBar: AppBar(title: const Text('مدرسه من')),
+                        body: EducationLibraryPage(api: widget.api)))),
+              ),
+              IconButton(
                 onPressed: () async {
                   await Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => ProfileFamilyPage(api: widget.api)));
@@ -1153,19 +1164,21 @@ class _HomeShellState extends State<HomeShell> {
                     onPressed: loadContext, child: const Text('تلاش دوباره'))
               ]),
             Expanded(
-                child: pages[index] == 'من'
-                    ? ProfileFamilyPage(api: widget.api)
-                    : (pages[index] == 'همراه هوشمند' ||
-                            pages[index] == 'راهنما')
-                        ? const CoreNotice(
-                            title: 'همراه هوشمند',
-                            subtitle:
-                                'در این مرحله فعال نیست؛ داده سلامت و گفت‌وگو به سرویس هوشمند ارسال نمی‌شود.')
-                        : Phase3HomeContent(
-                            api: widget.api,
-                            page: pages[index],
-                            adultShell: adultShell,
-                          ))
+                child: pages[index] == 'مدرسه من'
+                    ? EducationLibraryPage(api: widget.api)
+                    : pages[index] == 'من'
+                        ? ProfileFamilyPage(api: widget.api)
+                        : (pages[index] == 'همراه هوشمند' ||
+                                pages[index] == 'راهنما')
+                            ? const CoreNotice(
+                                title: 'همراه هوشمند',
+                                subtitle:
+                                    'در این مرحله فعال نیست؛ داده سلامت و گفت‌وگو به سرویس هوشمند ارسال نمی‌شود.')
+                            : Phase3HomeContent(
+                                api: widget.api,
+                                page: pages[index],
+                                adultShell: adultShell,
+                              ))
           ]),
           bottomNavigationBar: NavigationBar(
             selectedIndex: index > 4 ? 0 : index,

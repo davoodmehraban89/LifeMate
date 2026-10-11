@@ -10,6 +10,7 @@ RUN --mount=type=secret,id=build_ca \
 COPY --chown=node:node src ./src
 COPY --chown=node:node scripts ./scripts
 COPY --chown=node:node migrations ./migrations
+COPY --chown=node:node content ./content
 USER node
 EXPOSE 8080
 CMD ["node", "src/entrypoint.js"]

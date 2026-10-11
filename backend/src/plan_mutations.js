@@ -46,7 +46,7 @@ function normalize(payload, existing = null) {
   for (const key of ['ownerUserId', 'owner_user_id', 'version', 'activity_version', 'created_at', 'updated_at', 'completed_at']) if (key in payload) fail(400, 'server_owned_field');
   const fields = {};
   const isCreate = !existing;
-  const defaults = { kind: 'task', title: '', priority: 'normal', visibility: 'private', familyId: null, subjectId: null,
+  const defaults = { kind: 'task', title: '', priority: 'normal', visibility: 'private', familyId: null, subjectId: null, learningUnitId: null,
     notes: null, startsAt: null, dueAt: null, durationMinutes: null, plannedDurationSeconds: null,
     recurrenceRule: null, parentItemId: null };
   const values = isCreate ? { ...defaults, ...payload } : payload;
@@ -59,6 +59,7 @@ function normalize(payload, existing = null) {
   pick('status', 'status', (x) => { if (!statuses.has(x) || (isCreate && x !== 'planned')) fail(400, 'invalid_status'); return x; });
   pick('familyId', 'family_id', (x) => id(x, 'family_id'));
   pick('subjectId', 'subject_id', (x) => id(x, 'subject_id'));
+  pick('learningUnitId', 'learning_unit_id', (x) => id(x, 'learning_unit_id'));
   pick('parentItemId', 'parent_item_id', (x) => id(x, 'parent_item_id'));
   pick('startsAt', 'starts_at', (x) => date(x, 'starts_at'));
   pick('dueAt', 'due_at', (x) => date(x, 'due_at'));
@@ -92,6 +93,7 @@ async function authorize(client, userId, item) {
 }
 async function relations(client, userId, item, payload, existing = null) {
   await authorize(client, userId, item);
+  if (item.learning_unit_id && !(await client.query('select 1 from learning_unit where id=$1 and active', [item.learning_unit_id])).rowCount) fail(400, 'invalid_learning_unit_id');
   if (item.subject_id && !(await client.query('select 1 from subject where id=$1 and student_user_id=$2', [item.subject_id, userId])).rowCount) fail(403, 'subject_forbidden');
   if (item.parent_item_id && !(await client.query('select 1 from plan_item where id=$1 and owner_user_id=$2', [item.parent_item_id, userId])).rowCount) fail(403, 'parent_item_forbidden');
   if (payload.selectedMemberIds !== undefined && (!Array.isArray(payload.selectedMemberIds) || payload.selectedMemberIds.length > 100)) fail(400, 'invalid_selected_members');

@@ -10,6 +10,9 @@ export const applicationTables = [
   'auth_token', 'class_session', 'curriculum_subject', 'education_profile',
   'family_invitation', 'family_membership', 'family_workspace', 'guardian_relationship',
   'iran_calendar_event', 'learning_checkin', 'learning_goal', 'life_context',
+  'learning_unit', 'learning_video_resource', 'learning_progress', 'learning_progress_mutation',
+  'learning_content_feedback',
+  'learning_assessment', 'learning_assessment_attempt', 'learning_review_schedule',
   'menstrual_cycle_entry', 'notification_outbox', 'notification_preference',
   'plan_item', 'profile', 'reminder', 'schema_migration', 'sharing_grant',
   'study_interval', 'study_mutation', 'study_session', 'subject', 'sync_mutation',
@@ -25,9 +28,14 @@ export const applicationFunctions = [
   'is_active_guardian(uuid, uuid, uuid)', 'can_view_student_academic(uuid, uuid)',
   'can_view_plan_item(uuid, uuid)', 'recompute_reminder_schedule(uuid)',
   'plan_item_revision()', 'revoke_changed_plan_item_grants()',
+  'validate_learning_publication()',
+  'validate_learning_assessment_publication()',
   'revoke_ended_membership_grants()', 'plan_item_legacy_activity()',
 ];
 export const roleNames = Object.freeze({ api: 'lifeguide_api', migrator: 'lifeguide_migrator', backup: 'lifeguide_backup' });
+// Only the separate migrator/importer can change reviewed teaching material.
+export const readOnlyCatalogTables = new Set(['curriculum_subject', 'textbook_catalog',
+  'learning_unit', 'learning_video_resource', 'learning_assessment']);
 const ident = (value) => `"${String(value).replaceAll('"', '""')}"`;
 export function validateRoles(env) {
   const configured = { api: env.API_DB_USER ?? roleNames.api, migrator: env.MIGRATOR_DB_USER ?? roleNames.migrator, backup: env.BACKUP_DB_USER ?? roleNames.backup };
@@ -166,7 +174,8 @@ export async function prepareRoles(client, { env = process.env, adoptOwner, back
     // Global per-creator revocation removes PostgreSQL's default PUBLIC EXECUTE;
     // a per-schema REVOKE alone cannot override that global default.
     await client.query(`ALTER DEFAULT PRIVILEGES FOR ROLE ${ident(roles.migrator)} REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC`);
-    await client.query(`ALTER DEFAULT PRIVILEGES FOR ROLE ${ident(roles.migrator)} IN SCHEMA public GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO ${ident(roles.api)}`);
+    await client.query(`ALTER DEFAULT PRIVILEGES FOR ROLE ${ident(roles.migrator)} IN SCHEMA public REVOKE INSERT,UPDATE,DELETE ON TABLES FROM ${ident(roles.api)}`);
+    await client.query(`ALTER DEFAULT PRIVILEGES FOR ROLE ${ident(roles.migrator)} IN SCHEMA public GRANT SELECT ON TABLES TO ${ident(roles.api)}`);
     await client.query(`ALTER DEFAULT PRIVILEGES FOR ROLE ${ident(roles.migrator)} IN SCHEMA public GRANT SELECT ON TABLES TO ${ident(roles.backup)}`);
     await client.query(`ALTER DEFAULT PRIVILEGES FOR ROLE ${ident(roles.migrator)} IN SCHEMA public GRANT USAGE,SELECT ON SEQUENCES TO ${ident(roles.api)}`);
     await client.query(`ALTER DEFAULT PRIVILEGES FOR ROLE ${ident(roles.migrator)} IN SCHEMA public GRANT SELECT ON SEQUENCES TO ${ident(roles.backup)}`);
@@ -199,7 +208,10 @@ export async function reconcileGrants(client, env = process.env) {
         await client.query(`GRANT USAGE,SELECT ON SEQUENCE ${relation} TO ${ident(roles.api)}`);
         await client.query(`GRANT SELECT ON SEQUENCE ${relation} TO ${ident(roles.backup)}`);
       } else {
-        if (object.name !== 'schema_migration') await client.query(`GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE ${relation} TO ${ident(roles.api)}`);
+        if (object.name !== 'schema_migration') {
+          const privileges = readOnlyCatalogTables.has(object.name) || !applicationTables.includes(object.name) ? 'SELECT' : 'SELECT,INSERT,UPDATE,DELETE';
+          await client.query(`GRANT ${privileges} ON TABLE ${relation} TO ${ident(roles.api)}`);
+        }
         await client.query(`GRANT SELECT ON TABLE ${relation} TO ${ident(roles.backup)}`);
       }
     }

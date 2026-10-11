@@ -5,6 +5,9 @@ import 'offline_store.dart';
 import 'phase3_ui.dart' show uiErrorText;
 import 'plan_sync.dart';
 import 'study_coordinator.dart';
+import 'learning_sync.dart';
+import 'learning_feedback_ui.dart';
+import 'learning_quiz_ui.dart';
 
 class SyncChangesPage extends StatefulWidget {
   const SyncChangesPage({super.key, required this.api});
@@ -74,6 +77,21 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
         } catch (caught) {
           failure ??= caught;
         }
+        try {
+          await LearningSync(api, store: store).flush();
+        } catch (caught) {
+          failure ??= caught;
+        }
+        try {
+          await LearningFeedbackSync(api, store: store).flush();
+        } catch (caught) {
+          failure ??= caught;
+        }
+        try {
+          await LearningQuizSync(api, store: store).flush();
+        } catch (caught) {
+          failure ??= caught;
+        }
       }
       if (failure != null) throw failure;
     } catch (failure) {
@@ -98,6 +116,33 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
       error = null;
     });
     try {
+      if (['learning_feedback', 'learning_attempt']
+          .contains(mutation['entityType'])) {
+        throw const ApiException(409, 'feedback_retry_or_edit_draft');
+      }
+      if (mutation['entityType'] == 'learning_progress') {
+        if (!mounted) return;
+        setState(() => dialogOpen = true);
+        final accepted = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+                    title: const Text('تعارض پیشرفت درس'),
+                    content: Text(
+                        'تغییر محلی: ${_details(mutation['payload'] as Map)}\n'
+                        'با استفاده از سرور، تغییر محلی در سابقه بازیابی نگه داشته می‌شود و پیشرفت تازه سرور نمایش داده خواهد شد.'),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.pop(dialogContext, false),
+                          child: const Text('نگه‌داشتن تغییر محلی')),
+                      FilledButton(
+                          onPressed: () => Navigator.pop(dialogContext, true),
+                          child: const Text('استفاده از نسخه سرور')),
+                    ]));
+        if (accepted == true && mounted) {
+          await LearningSync(api, store: store).resolveUsingServer(id);
+        }
+        return;
+      }
       Map<String, dynamic>? serverItem;
       try {
         serverItem = await api.requestJson(

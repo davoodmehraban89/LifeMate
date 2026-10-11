@@ -15,6 +15,7 @@ assert.equal(process.argv.length,3,'No database identifiers may be passed on the
 assert.ok(['postgres','localhost','127.0.0.1','::1'].includes(process.env.PGHOST ?? 'localhost'),'Only the local test PostgreSQL host is allowed');
 assert.ok(process.env.ROLE_TEST_STATE_FILE,'Set a private local ROLE_TEST_STATE_FILE');
 const backend=path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const expectedMigrations=(await fs.readdir(path.join(backend,'migrations'))).filter(name=>name.endsWith('.sql')).sort();
 const adminConfig={host:process.env.PGHOST ?? 'localhost',port:Number(process.env.PGPORT ?? 5432),user:process.env.PGUSER,password:process.env.PGPASSWORD,database:process.env.PGDATABASE};
 const admin=new pg.Client(adminConfig);
 const statePath=process.env.ROLE_TEST_STATE_FILE;
@@ -57,7 +58,7 @@ async function checkPolicy(database) {
       EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relowner=(SELECT oid FROM pg_roles WHERE rolname=current_user)) owns_objects`)).rows[0];
     assert.ok(Object.values(capabilities).every(value=>value===false));
     assert.equal((await migrator.query("SELECT pg_get_userbyid(nspowner) owner FROM pg_namespace WHERE nspname='public'")).rows[0].owner,roleNames.migrator);
-    assert.equal((await migrator.query("SELECT count(*)::int n FROM schema_migration WHERE sha256 IS NOT NULL")).rows[0].n,12);
+    assert.equal((await migrator.query("SELECT count(*)::int n FROM schema_migration WHERE sha256 IS NOT NULL")).rows[0].n,expectedMigrations.length);
     await denied(runtime,'CREATE TABLE public.forbidden_runtime_table(id integer)','runtime CREATE TABLE');
     await denied(runtime,'CREATE TEMP TABLE forbidden_runtime_temp(id integer)','runtime TEMP');
     await denied(runtime,'ALTER TABLE public.plan_item ADD COLUMN forbidden_runtime_column integer','runtime ALTER TABLE');
@@ -69,22 +70,30 @@ async function checkPolicy(database) {
     await denied(runtime,'DELETE FROM public.schema_migration','runtime ledger DELETE');
     await denied(runtime,'SELECT * FROM public.schema_migration','runtime ledger SELECT unnecessary');
     await denied(runtime,'TRUNCATE public.plan_item','runtime TRUNCATE');
+    for(const table of ['curriculum_subject','textbook_catalog','learning_unit','learning_video_resource','learning_assessment']) {
+      assert.equal((await runtime.query(`SELECT count(*)::int n FROM public.${ident(table)}`)).rows.length,1);
+      await denied(runtime,`INSERT INTO public.${ident(table)} DEFAULT VALUES`,`${table}: runtime catalog INSERT`);
+      await denied(runtime,`UPDATE public.${ident(table)} SET id=id`,`${table}: runtime catalog UPDATE/publication`);
+      await denied(runtime,`DELETE FROM public.${ident(table)}`,`${table}: runtime catalog DELETE`);
+    }
     await denied(backup,'UPDATE public.app_user SET id=id','backup UPDATE');
     await denied(backup,'CREATE TABLE public.forbidden_backup_table(id integer)','backup CREATE TABLE');
     await denied(backup,'CREATE TEMP TABLE forbidden_backup_temp(id integer)','backup TEMP');
     await denied(backup,'SELECT public.recompute_reminder_schedule(NULL)','backup side-effect application function');
     await denied(backup,"SELECT setval('public.access_audit_id_seq',999)",'backup sequence setval');
-    assert.equal((await backup.query('SELECT count(*)::int n FROM public.schema_migration')).rows[0].n,12);
+    assert.equal((await backup.query('SELECT count(*)::int n FROM public.schema_migration')).rows[0].n,expectedMigrations.length);
     console.log('PASS runtime/migrator/backup flags, ownership, memberships and backup ledger read');
     await migrator.query('CREATE TABLE public.future_role_probe(id integer PRIMARY KEY,value text)');
     try {
-      await runtime.query("INSERT INTO public.future_role_probe VALUES(1,'synthetic-only')");
+      await migrator.query("INSERT INTO public.future_role_probe VALUES(1,'synthetic-only')");
       assert.equal((await runtime.query('SELECT value FROM public.future_role_probe WHERE id=1')).rows[0].value,'synthetic-only');
-      await runtime.query("UPDATE public.future_role_probe SET value='updated-synthetic' WHERE id=1");
+      await migrator.query("UPDATE public.future_role_probe SET value='updated-synthetic' WHERE id=1");
       assert.equal((await backup.query('SELECT value FROM public.future_role_probe WHERE id=1')).rows[0].value,'updated-synthetic');
-      await runtime.query('DELETE FROM public.future_role_probe WHERE id=1');
+      await denied(runtime,"INSERT INTO public.future_role_probe VALUES(2,'forbidden')",'future-table runtime INSERT failclosed');
+      await denied(runtime,'UPDATE public.future_role_probe SET id=id','future-table runtime UPDATE failclosed');
+      await denied(runtime,'DELETE FROM public.future_role_probe','future-table runtime DELETE failclosed');
       await denied(runtime,'ALTER TABLE public.future_role_probe ADD COLUMN forbidden integer','future-table ownership retained by migrator');
-      console.log('PASS future migrator-created table: default runtime CRUD/backup SELECT, DDL denied');
+      console.log('PASS future migrator-created table: default runtime/backup SELECT, write/DDL denied');
     } finally { await migrator.query('DROP TABLE public.future_role_probe'); }
   } finally { await Promise.all([runtime.end(),backup.end(),migrator.end()]); }
 }
@@ -93,6 +102,8 @@ async function migrate(database) {
   delete env.DATABASE_URL;
   const result=spawnSync(process.execPath,['scripts/migrate.js'],{cwd:backend,env,stdio:'inherit'});
   assert.equal(result.status,0,'Non-superuser migration failed');
+  const imported=spawnSync(process.execPath,['scripts/import-learning-catalog.js'],{cwd:backend,env,stdio:'inherit'});
+  assert.equal(imported.status,0,'Non-superuser catalogue import failed');
 }
 try {
   await admin.connect();
@@ -158,11 +169,16 @@ try {
     await checkPolicy(state.source_db);
     const url=new URL('postgresql://localhost'); url.hostname=adminConfig.host; url.port=String(adminConfig.port);
     url.pathname=`/${state.source_db}`; url.username=roleNames.api; url.password=process.env.API_DB_PASSWORD;
-    const env={...process.env,DATABASE_URL:url.toString(),PGUSER:roleNames.api,PGPASSWORD:process.env.API_DB_PASSWORD,PGDATABASE:state.source_db};
+    const fixtureUrl=new URL(url); fixtureUrl.username=roleNames.migrator; fixtureUrl.password=process.env.MIGRATOR_DB_PASSWORD;
+    const env={...process.env,TEST_FIXTURE_DATABASE_URL:fixtureUrl.toString(),DATABASE_URL:url.toString(),PGUSER:roleNames.api,PGPASSWORD:process.env.API_DB_PASSWORD,PGDATABASE:state.source_db};
     for(const key of ['API_DB_PASSWORD','MIGRATOR_DB_PASSWORD','BACKUP_DB_PASSWORD','POSTGRES_PASSWORD']) delete env[key];
-    const acceptance=spawnSync(process.execPath,['--test','tests/online_acceptance.test.js'],{cwd:backend,env,stdio:'inherit'});
-    assert.equal(acceptance.status,0,'Real family HTTP/DB acceptance with runtime role failed');
-    console.log('PASS role acceptance source: fresh12 migrations + repeat, restrictive SQL capabilities and runtime family HTTP scenario');
+    const familyEnv={...env};delete familyEnv.TEST_FIXTURE_DATABASE_URL;
+    const family=spawnSync(process.execPath,['--test','tests/online_acceptance.test.js'],{cwd:backend,env:familyEnv,stdio:'inherit'});
+    assert.equal(family.status,0,'Runtime-role family HTTP/DB acceptance failed');
+    const acceptance=spawnSync(process.execPath,['--test',
+      'tests/learning_library.test.js','tests/learning_feedback.test.js','tests/learning_assessment.test.js'],{cwd:backend,env,stdio:'inherit'});
+    assert.equal(acceptance.status,0,'Real family/learning HTTP/DB acceptance with runtime role failed');
+    console.log('PASS role acceptance source: fresh checksum migrations + repeat, restrictive SQL capabilities and runtime family HTTP scenario');
     console.log(`Synthetic restore state saved; source=${state.source_db}; target=${state.target_db}`);
   } else {
     state=await readState();
@@ -171,7 +187,7 @@ try {
       const target=new pg.Client({...adminConfig,database:state.target_db}); await target.connect();
       try {
         await reconcileGrants(target);
-        assert.equal((await target.query("SELECT count(*)::int n FROM schema_migration WHERE sha256 IS NOT NULL")).rows[0].n,12);
+        assert.equal((await target.query("SELECT count(*)::int n FROM schema_migration WHERE sha256 IS NOT NULL")).rows[0].n,expectedMigrations.length);
         assert.equal((await target.query("SELECT recorded_duration_seconds FROM study_session WHERE id='00000000-0000-4000-8000-000000000005'")).rows[0].recorded_duration_seconds,600);
         assert.equal((await target.query("SELECT pg_get_userbyid(extowner) owner FROM pg_extension WHERE extname='pgcrypto'")).rows[0].owner,roleNames.migrator);
       } finally { await target.end(); }
@@ -184,7 +200,7 @@ try {
         assert.equal((await runtime.query("SELECT can_view_plan_item('00000000-0000-4000-8000-000000000005','00000000-0000-4000-8000-000000000006') allowed")).rows[0].allowed,false);
         assert.equal((await runtime.query("SELECT can_view_plan_item('00000000-0000-4000-8000-000000000007','00000000-0000-4000-8000-000000000005') allowed")).rows[0].allowed,false);
       } finally { await runtime.end(); }
-      console.log('PASS restored12 checksum ledger entries, migrator ownership/repeat, runtime denial matrix, guardian/private policy and paused-study600seconds');
+      console.log('PASS restored checksum ledger entries, migrator ownership/repeat, runtime denial matrix, guardian/private policy and paused-study600seconds');
     } else {
       for(const database of state.created ?? []) {
         assert.ok([state.source_db,state.target_db].includes(database),'Refusing unrelated cleanup');

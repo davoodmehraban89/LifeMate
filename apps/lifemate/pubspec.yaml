@@ -1,5 +1,5 @@
 name: lifemate
-version: 0.5.1+4
+version: 0.6.0+5
 publish_to: none
 description: LifeGuide personal, family and learning companion.
 environment:
@@ -14,6 +14,9 @@ dependencies:
   http: ^1.5.0
   shared_preferences: ^2.5.3
   flutter_secure_storage: ^10.0.0
+  web: ^1.1.1
+  webview_flutter: ^4.14.1
+  webview_flutter_android: ^4.14.1
 dev_dependencies:
   shared_preferences_platform_interface: ^2.4.2
   flutter_test:

@@ -70,6 +70,7 @@ fi
 docker compose up -d --wait --wait-timeout 120 postgres
 docker compose run --rm --no-deps db-provision
 docker compose run --rm --no-deps migrate
+docker compose run --rm --no-deps catalog-import
 docker compose run --rm --no-deps db-grants
 docker compose up -d --wait --wait-timeout 180 api gateway backup
 docker compose ps
