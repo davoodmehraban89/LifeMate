@@ -96,12 +96,24 @@ services:
     restart: 'no'
     networks: [private]
 
+  catalog-import:
+    image: ${API_IMAGE:-lifeguide-api:local}
+    command: [node, scripts/import-learning-catalog.js]
+    environment: *migration-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: 'no'
+    networks: [private]
+
   db-grants:
     image: ${API_IMAGE:-lifeguide-api:local}
     command: [node, scripts/provision-db-roles.js, --grants]
     environment: *admin-environment
     depends_on:
       migrate:
+        condition: service_completed_successfully
+      catalog-import:
         condition: service_completed_successfully
     restart: 'no'
     networks: [private]

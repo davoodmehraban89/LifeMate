@@ -47,6 +47,9 @@ jobs:
       - name: Apply migrations and verify repeat run
         working-directory: backend
         run: npm run migrate && npm run migrate
+      - name: Import checked educational metadata and verify repeat run
+        working-directory: backend
+        run: node scripts/import-learning-catalog.js && node scripts/import-learning-catalog.js
       - name: SQL authorization matrix
         run: |
           for test in backend/tests/*schema_test.sql; do psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$test"; done

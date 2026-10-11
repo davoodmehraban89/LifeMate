@@ -167,6 +167,12 @@ void main() {
     await tester.pumpAndSettle();
     tester.firstState<ScaffoldState>(find.byType(Scaffold)).openDrawer();
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('تغییرهای معلق و تعارض‌ها'), 100,
+        scrollable: find
+            .descendant(
+                of: find.byType(Drawer), matching: find.byType(Scrollable))
+            .first);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('تغییرهای معلق و تعارض‌ها'));
     await tester.pumpAndSettle();
     expect(find.byType(SyncChangesPage), findsOneWidget);
@@ -474,6 +480,12 @@ void main() {
     await tester.pumpAndSettle();
     tester.firstState<ScaffoldState>(find.byType(Scaffold)).openDrawer();
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('خروج از حساب'), 100,
+        scrollable: find
+            .descendant(
+                of: find.byType(Drawer), matching: find.byType(Scrollable))
+            .first);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('خروج از حساب'));
     await tester.pumpAndSettle();
     expect(find.textContaining('تغییر معلق'), findsOneWidget);
@@ -523,8 +535,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('تنظیم اتصال'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextField, 'نشانی اصلی'),
+    await tester.enterText(find.widgetWithText(TextField, 'نشانی اتصال API'),
         'https://other.synthetic.example.test');
+    await tester.ensureVisible(find.text('ذخیره و ادامه'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('ذخیره و ادامه'));
     await tester.pumpAndSettle();
     expect(find.textContaining('تغییر معلق'), findsOneWidget);

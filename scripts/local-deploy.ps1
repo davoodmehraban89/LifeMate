@@ -86,6 +86,7 @@ if ($env:BUILD_CA_FILE) {
 Invoke-CheckedDocker -Arguments @('compose', 'up', '-d', '--wait', '--wait-timeout', '120', 'postgres')
 Invoke-CheckedDocker -Arguments @('compose', 'run', '--rm', '--no-deps', 'db-provision')
 Invoke-CheckedDocker -Arguments @('compose', 'run', '--rm', '--no-deps', 'migrate')
+Invoke-CheckedDocker -Arguments @('compose', 'run', '--rm', '--no-deps', 'catalog-import')
 Invoke-CheckedDocker -Arguments @('compose', 'run', '--rm', '--no-deps', 'db-grants')
 Invoke-CheckedDocker -Arguments @('compose', 'up', '-d', '--wait', '--wait-timeout', '180', 'api', 'gateway', 'backup')
 Invoke-CheckedDocker -Arguments @('compose', 'ps')

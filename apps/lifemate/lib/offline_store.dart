@@ -339,7 +339,9 @@ class OfflineStore {
       });
 
   Future<void> discardEntityChanges(String entityId,
-          {Map<String, dynamic>? serverItem, String? cacheKey}) =>
+          {Map<String, dynamic>? serverItem,
+          String? cacheKey,
+          String? entityType}) =>
       _mutate((doc) {
         if (serverItem != null &&
             (serverItem['id'] != entityId ||
@@ -351,8 +353,10 @@ class OfflineStore {
           throw const ApiException(500, 'local_data_corrupt');
         }
         final queue = doc['queue'] as List;
-        final removed =
-            queue.where((m) => (m as Map)['entityId'] == entityId).toList();
+        bool matches(dynamic raw) =>
+            (raw as Map)['entityId'] == entityId &&
+            (entityType == null || raw['entityType'] == entityType);
+        final removed = queue.where(matches).toList();
         if (removed.isEmpty) return;
         final title = removed.reversed
             .map((m) => (m as Map)['payload'] as Map)
@@ -369,8 +373,7 @@ class OfflineStore {
               'recoveryTitle': title
             }
         ];
-        doc['queue'] =
-            queue.where((m) => (m as Map)['entityId'] != entityId).toList();
+        doc['queue'] = queue.where((m) => !matches(m)).toList();
         for (final key
             in cacheKey == null ? ['planner', 'today'] : [cacheKey]) {
           final list = (doc['caches'] as Map)[key] as List? ?? [];

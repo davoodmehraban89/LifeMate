@@ -38,4 +38,4 @@ docker compose run --rm --no-deps --entrypoint /opt/lifeguide/backup.sh \
 docker compose run --rm --no-deps --entrypoint pg_restore backup --list "$dump_file" >/dev/null
 docker compose run --rm --no-deps -e "DATABASE_URL=postgresql://lifeguide_migrator@postgres:5432/$target_db" restore "$dump_file"
 docker "${tool_args[@]}" node scripts/test-db-roles.js --verify-restored
-echo 'PASS local least-privilege SQL + runtime HTTP scenario + read-only dump/migrator restore with12 migrations'
+echo 'PASS local least-privilege SQL + runtime family/learning HTTP scenarios + read-only dump/migrator restore; checksum ledger matches migration files'
