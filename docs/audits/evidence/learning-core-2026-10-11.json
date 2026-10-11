@@ -20,7 +20,15 @@
     "skipped": 0,
     "syntaxFiles": 51,
     "npmAuditVulnerabilities": 0,
-    "fullLog": "/workspace/scratch/learning-root-full-backend-final.log"
+    "fullLog": "/workspace/scratch/learning-root-full-backend-final.log",
+    "ciNameGuardReproduction": {
+      "database": "local exact CI fixture name",
+      "redCancelled": 8,
+      "targetedGreenPass": 10,
+      "fullGreenPass": 151,
+      "fullGreenCancelled": 0,
+      "log": "/workspace/scratch/learning-ci-guard-full-green.log"
+    }
   },
   "flutter": {
     "version": "3.47.6",
@@ -66,5 +74,34 @@
     "Public shared endpoint and Iran VPN-free reachability",
     "Owner release signing",
     "Real AI/counselling/admin-feedback workflow"
-  ]
+  ],
+  "browserAcceptance": {
+    "receipt": "learning-browser-2026-10-11.json",
+    "checks": 10,
+    "pass": 10,
+    "requests": 55,
+    "externalRequests": 0,
+    "mode": "Real local trusted HTTPS/API/PostgreSQL; no interception/TLS bypass",
+    "visualProgressAndRestart": "Root inspected both PNGs; in_progress and same server timestamp retained",
+    "limitations": [
+      "Physical touch/pointer UNVERIFIED",
+      "Dynamic progress ARIA omission observed, not fixed",
+      "Safari/Add to Home Screen UNVERIFIED"
+    ]
+  },
+  "compose": {
+    "project": "lifeguide-learning-audit",
+    "status": "actual healthy Postgres/API/nginxTLS/backup",
+    "syntheticOnly": true,
+    "independentMigrations": 15,
+    "units": 1373,
+    "videos": 1348,
+    "publishedVideos": 0,
+    "publishedAssessments": 0,
+    "trustedHttpsWriteSmoke": {
+      "checks": 7,
+      "pass": 7,
+      "log": "/workspace/scratch/learning-https-write-smoke.log"
+    }
+  }
 }

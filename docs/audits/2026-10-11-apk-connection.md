@@ -46,7 +46,7 @@ flutter analyze lib/endpoint_settings.dart test/endpoint_settings_test.dart
 - `/workspace/scratch/endpoint-onboarding-red.log`
 - `/workspace/scratch/endpoint-onboarding-green.log`
 
-ساخت APK جدید برای این تغییر، نصب Android، حفظ تنظیم پس از restart واقعی دستگاه، اتصال عمومی و پذیرش iPhone/Safari در این بسته **UNVERIFIED** هستند. اجرای کامل مجموعه Flutter و ساخت/CI بر عهده بسته ادغام هماهنگ‌کننده است و این گزارش موفقیت آن‌ها را ادعا نمی‌کند.
+پس از این آزمون‌های هدفمند، بسته ادغام واقعاً۱۱۲ آزمون Flutter و ساخت APK0.6.0/code5 را در [CI اولیه](https://github.com/davoodmehraban89/LifeMate/actions/runs/38113435509) اجرا کرد؛ job Flutter موفق ولی کل CI به علت هشت آزمون backend لغوشده ناموفق بود. [رسید تفکیک‌شده](evidence/ci-learning-initial-2026-10-11.json) و [گزارش ادغام](2026-10-11-learning-verification.md) نتیجه اصلاح بعدی را ثبت می‌کنند. نصب Android، حفظ تنظیم پس از restart واقعی دستگاه، اتصال عمومی و پذیرش iPhone/Safari همچنان **UNVERIFIED** هستند؛ ساخت فایل جای پذیرش دستگاه نیست.
 
 ## اقدام مالک
 

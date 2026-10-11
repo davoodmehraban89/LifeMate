@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-11T14:58:24.671Z",
+  "mode": "Actual isolated local Compose HTTPS; normal Node and Chromium CA trust; no network interception or TLS bypass",
+  "origin": "https://127.0.0.1:8445",
+  "browser": "Chromium",
+  "checks": [
+    {
+      "name": "independent verified HTTPS health",
+      "status": "PASS"
+    },
+    {
+      "name": "compiled PWA actual synthetic account login",
+      "status": "PASS"
+    },
+    {
+      "name": "grade1 common1405-1406 saved through UI and read by independent API",
+      "status": "PASS"
+    },
+    {
+      "name": "actual imported lesson renders with draft videos unavailable, no iframe",
+      "status": "PASS"
+    },
+    {
+      "name": "UI progress acknowledgement independently verified through API and PostgreSQL",
+      "status": "PASS"
+    },
+    {
+      "name": "real draft assessment gate shows no invented question bank",
+      "status": "PASS"
+    },
+    {
+      "name": "feedback blocked without explicit consent then acknowledged by real server",
+      "status": "PASS"
+    },
+    {
+      "name": "withdrawal redacts chosen text and consent in independent API and PostgreSQL",
+      "status": "PASS"
+    },
+    {
+      "name": "closed and reopened Chromium refreshes persisted session; independent API retains one acknowledged progress record",
+      "status": "PASS"
+    },
+    {
+      "name": "real compiled runtime uses only local API, fonts and CanvasKit without errors",
+      "status": "PASS"
+    }
+  ],
+  "fixture": "Dedicated synthetic account; no real family/private/media data",
+  "counts": {
+    "requests": 55,
+    "externalRequests": 0,
+    "iframes": 0,
+    "browserErrors": 0,
+    "failedRequests": 0
+  },
+  "realApprovedVideoCount": 0,
+  "realApprovedQuestionBankCount": 0,
+  "visualEvidence": {
+    "progressScreenshot": "learning-browser-2026-10-11-progress.png",
+    "reopenedLessonScreenshot": "learning-browser-2026-10-11.png",
+    "automatedDynamicProgressSemantics": "UNVERIFIED: dynamic progress/timestamp text was absent from Chromium ARIA after updates; inspect rendered screenshots separately"
+  },
+  "interactionMode": "Rendered Flutter semantic controls activated with DOM element.click because RTL hit rectangles are transformed; text entered through rendered fields and keyboard. No API or state injection. Physical touch/pointer/accessibility acceptance is UNVERIFIED.",
+  "authResponses": [
+    {
+      "path": "/api/v1/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/refresh",
+      "status": 200
+    }
+  ],
+  "fonts": [
+    "/assets/fonts/MaterialIcons-Regular.otf",
+    "/assets/assets/fonts/LifeGuidePersian.ttf",
+    "/assets/assets/fonts/LifeGuideLatin.ttf",
+    "/assets/assets/fonts/LifeGuideEmoji.ttf",
+    "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+  ],
+  "limitations": [
+    "Real Android devices UNVERIFIED",
+    "Safari/Add to Home Screen UNVERIFIED",
+    "Video playback and teaching quality UNVERIFIED",
+    "Iran VPN-free reachability UNVERIFIED",
+    "Offline cold startup UNVERIFIED",
+    "Dynamic progress accessibility semantics after updates remain unverified; screenshots require separate visual review"
+  ]
+}

@@ -1,0 +1,636 @@
+{
+  "repository": "davoodmehraban89/LifeMate",
+  "observedAt": "2026-10-11T15:00:18Z",
+  "evidenceMethod": "Official GitHub connector read of workflow run, jobs, decoded Flutter/backend logs and artifact metadata; selected sanitized output only. The connector returned a temporary File Service ZIP reference. Normal verified-TLS local download, ZIP/APK SHA-256 comparison and independent binary manifest inspection then ran; no device install or public release occurred.",
+  "run": {
+    "id": 38148788571,
+    "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38148788571",
+    "featureHead": "b3a62b76bf93697d050b896bc5f99ad6e8fb2f2f",
+    "checkedOutPullRequestMerge": "df2bb6e685e1868d3fe05d28cdcec24c38990e7b",
+    "base": "ee04dd2fac84df731c489e072e924e670257736b",
+    "branch": "feat/aparat-learning-library",
+    "pullRequest": 11,
+    "event": "pull_request",
+    "runNumber": 229,
+    "status": "completed",
+    "conclusion": "success",
+    "overallGreen": true
+  },
+  "jobs": [
+    {
+      "id": 114497654492,
+      "name": "flutter",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38148788571/job/114497654492",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run flutter pub get",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run flutter --version --machine",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run dart format --output=none --set-exit-if-changed lib test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Run flutter analyze",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Run flutter test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Run node tool/test_web_bootstrap.mjs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Run flutter build web --release --no-web-resources-cdn --pwa-strategy=none",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Run node tool/test_web_bootstrap.mjs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Bundle local resources and reject external runtime services",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        },
+        {
+          "name": "Check compiled browser requests for local fonts and CanvasKit",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Check exclusive web instance before session and cache access",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Preserve unsent changes across forced session expiry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Record checked prebuilt web provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        },
+        {
+          "name": "Verify Windows checkout preserves the checked web artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19
+        },
+        {
+          "name": "Build test APK (debug certificate; not a release)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20
+        },
+        {
+          "name": "Inspect the actual APK manifest and debug signature",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22
+        },
+        {
+          "name": "Post Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 42
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 43
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 44
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 45
+        }
+      ]
+    },
+    {
+      "id": 114497654705,
+      "name": "backend",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38148788571/job/114497654705",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Verify reachability smoke rejects untrusted TLS",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run npm ci",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Apply migrations and verify repeat run",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Import checked educational metadata and verify repeat run",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "SQL authorization matrix",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Run npm test && npm run check && npm audit --audit-level=high",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Verify isolated database roles and runtime family scenario",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Backup and restore synthetic database",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        }
+      ]
+    },
+    {
+      "id": 114497654712,
+      "name": "security",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38148788571/job/114497654712",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Reject tracked credentials and private artifacts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Audit product naming",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        }
+      ]
+    }
+  ],
+  "observedOutput": {
+    "backend": {
+      "tests": 151,
+      "pass": 151,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 16637.462945,
+      "result": "PASS",
+      "nodeVersion": "22.23.3",
+      "fixtureGuard": "Corrected source recognizes the established loopback-only CI fixture name; adversarial fixture guard tests ran."
+    },
+    "tlsSmoke": {
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "scope": "Real loopback TLS fixtures, not public server or Iran reachability"
+    },
+    "migrations": {
+      "result": "PASS",
+      "count": 15,
+      "applyAndRepeat": true
+    },
+    "educationalMetadataImport": {
+      "result": "PASS",
+      "importAndRepeat": true,
+      "books": 217,
+      "units": 1373,
+      "videos": 1348,
+      "publicationStatus": "draft",
+      "fullyReviewedTeaching": "Not certified by metadata import"
+    },
+    "sqlAuthorizationMatrix": {
+      "result": "PASS",
+      "schemaFiles": 4
+    },
+    "runtimeRolesAndBackupRestore": {
+      "result": "PASS",
+      "sourceDeniedChecks": 35,
+      "restoredDeniedChecks": 35,
+      "checksumMigrations": 15,
+      "postgresqlDumpVersion": "16.15",
+      "runtimeCatalogWritesDenied": true,
+      "newMigratorTablesDefaultReadOnly": true,
+      "failClosedPreflight": "Current/other API-owned DB, migrator-owned DB, non-public API-owned schema, backup-owned relation, PUBLIC/direct schema CREATE and auxiliary SECURITY DEFINER all rejected before automatic repair.",
+      "sourceReceipt": "PASS role acceptance source: fresh checksum migrations + repeat, restrictive SQL capabilities and runtime family HTTP scenario",
+      "restoreReceipt": "PASS restored checksum ledger entries, migrator ownership/repeat, runtime denial matrix, guardian/private policy and paused-study600seconds",
+      "dumpRole": "lifeguide_backup",
+      "restoreRole": "lifeguide_migrator",
+      "pausedStudySeconds": 600,
+      "cleanupReceipt": "PASS cleanup: only tagged newly-created role-test databases dropped; application DB preserved",
+      "existingScripts": "backup.sh and restore.sh also completed; restored migration-ledger count matched source."
+    },
+    "flutter": {
+      "passed": 112,
+      "receipt": "🎉 112 tests passed."
+    },
+    "analyzer": {
+      "result": "PASS",
+      "receipt": "No issues found! (ran in 10.2s)"
+    },
+    "format": {
+      "result": "PASS",
+      "command": "dart format --output=none --set-exit-if-changed lib test"
+    },
+    "flutterToolchain": {
+      "version": "3.47.6",
+      "revision": "5fc346839b5d0eef006ed8404392afb4dfae428d",
+      "dartSdkVersion": "3.13.5"
+    },
+    "releaseWebBuild": {
+      "result": "PASS",
+      "seconds": 39.7,
+      "command": "flutter build web --release --no-web-resources-cdn --pwa-strategy=none",
+      "receipt": "✓ Built build/web"
+    },
+    "assets": {
+      "requests": 13,
+      "externalRequests": 0,
+      "missingAssets": 0,
+      "errors": 0,
+      "fontsLocal": true,
+      "canvasKitLocal": true,
+      "scope": "Synthetic HTTPS origin; intercepted compiled artifact responses; real TLS and service-worker acceptance UNVERIFIED"
+    },
+    "chromeDartGuards": {
+      "passed": 3,
+      "receipt": "00:00 +3: All tests passed!"
+    },
+    "bootstrapInstance": {
+      "caseCount": 8,
+      "cases": [
+        "same-origin contention + background ownership + retry denied",
+        "owner close then blocked-tab retry acquires without erasure",
+        "independent origin unaffected",
+        "simultaneous race has one owner; separate browser profile unaffected",
+        "unsupported Web Locks fails closed",
+        "actual renderer crash releases lock for a fresh tab",
+        "history navigation cannot restore an owner while another tab owns",
+        "synthetic persisted pagehide invalidates; pageshow replaces old engine before re-entry"
+      ],
+      "scope": "Real Chromium, instrumented loader, synthetic intercepted HTTPS"
+    },
+    "compiledInstance": {
+      "caseCount": 8,
+      "cases": [
+        "same-origin contention + background ownership + retry denied",
+        "owner close then blocked-tab retry acquires without erasure",
+        "independent origin unaffected",
+        "simultaneous race has one owner; separate browser profile unaffected",
+        "unsupported Web Locks fails closed",
+        "actual renderer crash releases lock for a fresh tab",
+        "history navigation cannot restore an owner while another tab owns",
+        "synthetic persisted pagehide invalidates; pageshow replaces old engine before re-entry"
+      ],
+      "scope": "Real Chromium; synthetic intercepted HTTPS; TLS/PWA/Safari/device UNVERIFIED",
+      "actualBFCacheRestoration": "UNVERIFIED",
+      "persistedPageshowObserved": false
+    },
+    "forcedExpiry": {
+      "result": "PASS",
+      "before": {
+        "sessionPresent": true,
+        "pending": 1
+      },
+      "afterLateResponse": {
+        "sessionPresent": true,
+        "pending": 1
+      },
+      "afterReopen": {
+        "sessionPresent": false,
+        "pending": 1
+      },
+      "refreshes": 2,
+      "exactDurableBytesPreserved": true,
+      "exactBytesBasis": "Completed test_web_session_expiry.cjs step includes strict originalCache equality; synthetic intercepted refresh and explicit pagehide."
+    },
+    "prebuiltProvenance": {
+      "result": "PASS",
+      "inputFiles": 57
+    },
+    "windowsStyleCheckout": {
+      "result": "PASS",
+      "coreAutocrlfModes": [
+        "false",
+        "true"
+      ],
+      "shellScriptsChecked": 3,
+      "binaryInputsMatched": 13,
+      "sourceTamperRejected": true,
+      "artifactTamperRejected": true,
+      "buildOrRestampInCheckoutTest": false,
+      "actualWindows": "UNVERIFIED"
+    },
+    "securityJob": {
+      "result": "PASS",
+      "retainedNamingOccurrences": 274,
+      "receipts": [
+        "Tracked-file credential/artifact scan passed; this is not a complete secret audit.",
+        "Naming audit passed: 274 retained text occurrences classified; binary fonts/icons excluded."
+      ],
+      "scope": "Tracked scanner and naming classification only; not a complete security audit."
+    },
+    "syntax": {
+      "result": "PASS",
+      "checkedFiles": 51
+    },
+    "dependencyAudit": {
+      "result": "PASS",
+      "vulnerabilities": 0
+    },
+    "runtimeFamily": {
+      "tests": 9,
+      "pass": 9,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "runtimeLearning": {
+      "tests": 15,
+      "pass": 15,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  },
+  "apk": {
+    "result": "PASS",
+    "mode": "debug",
+    "file": "LifeGuide-debug.apk",
+    "package": "ir.lifeguide.app",
+    "versionName": "0.6.0",
+    "versionCode": 5,
+    "label": "لایف‌گاید",
+    "debuggable": true,
+    "allowBackup": false,
+    "usesCleartextTraffic": false,
+    "internetPermission": true,
+    "minSdkVersion": 24,
+    "targetSdkVersion": 36,
+    "sha256": "b96a8e168c1fe804dad12899df8a882a6a23de72e209aa585c3e6f2f1071c5d5",
+    "hashScope": "APK payload built and binary-manifest-inspected on CI runner; distinct from uploaded ZIP digest",
+    "buildReceipt": "✓ Built build/app/outputs/flutter-apk/app-debug.apk",
+    "signature": {
+      "result": "Verifies",
+      "v2": true,
+      "signers": 1,
+      "certificateDN": "C=US, O=Android, CN=Android Debug",
+      "certificateSha256": "0ab668352f8d23f249a2064a5e394def730639f270383d20796fc62108317294",
+      "algorithm": "RSA",
+      "keyBits": 2048
+    },
+    "release": false,
+    "upgradeCompatibility": {
+      "previousRun": 37900944165,
+      "previousCertificateSha256": "32b5fb29e0a669ba75628d819a9ca36c84cf4e8ad2b6798bc280032e03d6d1fb",
+      "sameCertificate": false,
+      "limitation": "Different same-package debug certificate prevents an in-place Android upgrade from that earlier artifact. No uninstall, data deletion, migration or device upgrade was performed or recommended by this reviewer.",
+      "userInstalledCertificate": "UNVERIFIED; the owner installed a previous APK but that device certificate was not inspected.",
+      "initialRun": {
+        "run": 38113435509,
+        "certificateSha256": "f991799407013444ac67c7a2b55228e7ede05a952bebaf08ee2cdd223efd553f",
+        "sameCertificate": false
+      }
+    },
+    "temporaryConnectorDownload": {
+      "result": "PASS",
+      "fileName": "LifeGuide-debug-apk-0.6.0.zip",
+      "localDownload": "PASS using urllib.request with ssl.create_default_context()",
+      "verifiedTLS": true,
+      "zipBytes": 87665500,
+      "zipSha256": "693ca96d4087583de4cb5ebdb9a7bb9eb042b6cc1af5a318e815d7d6ba63d47f",
+      "localExtraction": "PASS; only LifeGuide-debug.apk extracted",
+      "apkBytes": 168752390,
+      "localBinaryInspection": "PASS",
+      "localManifestCommand": "python3 apps/lifemate/tool/check_apk_manifest.py /workspace/scratch/LifeGuide-debug.apk --mode debug",
+      "localSignatureInspection": "UNVERIFIED; signature verification ran on the CI runner and downloaded APK digest matched runner receipt.",
+      "deliveryDirectory": "Scratch fallback; /mnt/data creation was denied by OS permissions.",
+      "expiryGuarantee": false
+    },
+    "localManifest": {
+      "result": "PASS",
+      "package": "ir.lifeguide.app",
+      "versionName": "0.6.0",
+      "versionCode": 5,
+      "label": "لایف‌گاید",
+      "debuggable": true,
+      "allowBackup": false,
+      "usesCleartextTraffic": false,
+      "internetPermission": true,
+      "minSdkVersion": 24,
+      "targetSdkVersion": 36,
+      "sha256": "b96a8e168c1fe804dad12899df8a882a6a23de72e209aa585c3e6f2f1071c5d5"
+    }
+  },
+  "artifacts": [
+    {
+      "id": 11706251327,
+      "name": "LifeGuide-web",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38148788571/artifacts/11706251327",
+      "zipBytes": 18977223,
+      "zipSha256": "b30a3fba461cd40d2077f5b027964be569bf4f05947c482aa88e7cb1e69bba1a",
+      "expired": false,
+      "createdAt": "2026-10-11T14:53:28Z",
+      "expiresAt": "2027-01-09T14:50:10Z",
+      "headSha": "b3a62b76bf93697d050b896bc5f99ad6e8fb2f2f"
+    },
+    {
+      "id": 11706166986,
+      "name": "LifeGuide-debug-apk",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38148788571/artifacts/11706166986",
+      "zipBytes": 87665500,
+      "zipSha256": "693ca96d4087583de4cb5ebdb9a7bb9eb042b6cc1af5a318e815d7d6ba63d47f",
+      "expired": false,
+      "createdAt": "2026-10-11T14:57:38Z",
+      "expiresAt": "2027-01-09T14:50:10Z",
+      "headSha": "b3a62b76bf93697d050b896bc5f99ad6e8fb2f2f"
+    }
+  ],
+  "limitations": [
+    "A successful CI, debug APK build, binary manifest inspection and signature verification do not certify an operational public deployment, owner-signed release or real devices.",
+    "Real Android installation/lifecycle/upgrade, Safari Add to Home Screen, real device video playback and full item-by-item teaching-content review remain UNVERIFIED.",
+    "Compiled CI browser tests intercept synthetic HTTPS; they do not prove real TLS, installed PWA, actual BFCache restore, a live server or VPN-free reachability inside Iran. Separate local real-HTTPS evidence is recorded elsewhere.",
+    "Real Windows/PowerShell/WSL2 execution, owner release signing and live email/SMS delivery remain UNVERIFIED.",
+    "The debug certificate differs from the prior documented APK and initial run. No uninstall, data deletion, device upgrade or migration was performed or recommended.",
+    "No live deploy, DNS change, real-data migration, merge, paid action or public release was performed."
+  ],
+  "previousFailure": {
+    "run": 38113435509,
+    "featureHead": "89bed4cf9c0b24dc7265d88f2321fc601b5182bb",
+    "receipt": "ci-learning-initial-2026-10-11.json",
+    "conclusion": "failure",
+    "backendPass": 143,
+    "backendCancelled": 8,
+    "cause": "Feedback fixture database-name guard rejected the existing loopback lifemate_ci fixture; corrected and regression-tested in b3a62b76.",
+    "preservedAsHistorical": true
+  }
+}
