@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-12",
+  "source": "d0b3446d736b67fdb4e0218282ad15f0e74fdb55",
+  "backendVersion": "0.7.1",
+  "clientVersion": "0.7.1+7",
+  "run": {
+    "id": 38223988983,
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38223988983"
+  },
+  "jobs": [
+    {
+      "id": 114726862421,
+      "name": "flutter",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 114726862693,
+      "name": "backend",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 114726862734,
+      "name": "security",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "observedLogLines": {
+    "backend": [
+      "2026-10-12T08:30:58.0520665Z # tests 5",
+      "2026-10-12T08:30:58.0521905Z # pass 5",
+      "2026-10-12T08:30:58.0529594Z # fail 0",
+      "2026-10-12T08:31:03.4914343Z found 0 vulnerabilities",
+      "2026-10-12T08:31:47.7764658Z # tests 245",
+      "2026-10-12T08:31:47.7765013Z # pass 245",
+      "2026-10-12T08:31:47.7765193Z # fail 0",
+      "2026-10-12T08:31:49.5738735Z Syntax checked 68 source/script/test files.",
+      "2026-10-12T08:31:50.5682334Z found 0 vulnerabilities",
+      "2026-10-12T08:31:57.8255006Z # tests 9",
+      "2026-10-12T08:31:57.8256107Z # pass 9",
+      "2026-10-12T08:31:57.8256655Z # fail 0",
+      "2026-10-12T08:32:21.7712471Z # tests 96",
+      "2026-10-12T08:32:21.7713118Z # pass 96",
+      "2026-10-12T08:32:21.7713418Z # fail 0",
+      "2026-10-12T08:32:24.8749404Z PASS restored checksum ledger entries, migrator ownership/repeat, runtime denial matrix, guardian/private policy and paused-study600seconds"
+    ],
+    "flutter": [
+      "2026-10-12T08:31:12.6923538Z No issues found! (ran in 10.5s)",
+      "2026-10-12T08:31:51.5125085Z 🎉 212 tests passed.",
+      "2026-10-12T08:32:32.2264985Z ✓ Built build/web",
+      "2026-10-12T08:38:05.1110295Z ✓ Built build/app/outputs/flutter-apk/app-debug.apk",
+      "2026-10-12T08:38:05.4044935Z   \"versionName\": \"0.7.1\",",
+      "2026-10-12T08:38:05.4045247Z   \"versionCode\": 7,",
+      "2026-10-12T08:38:05.4048464Z   \"sha256\": \"3a66f37971af6776fc2b22f0f79ed74cc35c68722bbcf5ee8b6c15fd6b41cd37\",",
+      "2026-10-12T08:38:06.1975081Z Verified using v2 scheme (APK Signature Scheme v2): true",
+      "2026-10-12T08:38:06.2014450Z V2 Signer: certificate SHA-256 digest: 5d2f033c8044dc0e45fb390b8cde08295cc23b57f4f3a26cf27980b86446c171"
+    ]
+  },
+  "artifacts": [
+    {
+      "id": 11735469546,
+      "name": "LifeGuide-debug-apk",
+      "zipBytes": 87874170,
+      "zipDigest": "sha256:7e8361da78b4ad742bfc44804655af37f1eb50f99dad5590d102e1e8a32189e2",
+      "source": "d0b3446d736b67fdb4e0218282ad15f0e74fdb55",
+      "expiresAt": "2027-01-10T08:30:33Z",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38223988983/artifacts/11735469546"
+    },
+    {
+      "id": 11734794646,
+      "name": "LifeGuide-web",
+      "zipBytes": 19039057,
+      "zipDigest": "sha256:183632737c1d7e205f1f51204da91044d565973ad44445aaea442c1df034d7ac",
+      "source": "d0b3446d736b67fdb4e0218282ad15f0e74fdb55",
+      "expiresAt": "2027-01-10T08:30:33Z",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38223988983/artifacts/11734794646"
+    }
+  ],
+  "rootActualInspection": {
+    "zipIntegrity": "PASS actual download; matching ZIP digest, one-entry and testzip",
+    "apkBytes": 168960986,
+    "apkSha256": "3a66f37971af6776fc2b22f0f79ed74cc35c68722bbcf5ee8b6c15fd6b41cd37",
+    "manifest": "PASS actual binary manifest: ir.lifeguide.app version0.7.1/code7 Persianlabel, debuggabletrue/backupfalse/cleartextfalse/min24target36",
+    "signature": "Actual runner apksigner v2true; local apksigner UNVERIFIED/unavailable",
+    "debugCertificateSha256": "5d2f033c8044dc0e45fb390b8cde08295cc23b57f4f3a26cf27980b86446c171",
+    "previousDebugCertificateSha256": "c1bf6ec0237985d9fadf7d12d614b2461e78dda64903dcff1009867b43a972e1",
+    "upgrade": "UNVERIFIED; differs from prior debug signature. Do not uninstall/erase unsent data."
+  },
+  "limitations": [
+    "Android install/upgrade UNVERIFIED",
+    "Safari/A2HS UNVERIFIED",
+    "Windows owner/Iran VPN-free reachability UNVERIFIED",
+    "Owner release signing UNVERIFIED",
+    "No live changes/public deployment",
+    "No new real reviewed teaching videos/questions published"
+  ]
+}

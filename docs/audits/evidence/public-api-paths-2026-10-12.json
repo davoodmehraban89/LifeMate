@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-12",
+  "origin": "https://app.lifeguide.ir",
+  "mode": "Read-only unauthenticated HTTPS from development environment; default certificate/hostname verification; no TLS bypass, writes or DNS change",
+  "results": [
+    {"path": "/config.json", "http": 200, "contentType": "text/html", "validJson": false, "html": true},
+    {"path": "/api/health", "http": 200, "contentType": "text/html", "validJson": false, "html": true}
+  ],
+  "conclusion": "These paths do not provide the required runtime-config and shared API JSON. No approved active public endpoint can be inferred from this check.",
+  "limitations": ["No DNS record audit", "No guarantee about other paths/hosts", "Iran VPN-free reachability UNVERIFIED", "No family credentials or data sent"]
+}

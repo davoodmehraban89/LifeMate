@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-12",
+  "source": "d0b3446d736b67fdb4e0218282ad15f0e74fdb55",
+  "clientVersion": "0.7.1+7",
+  "backendVersion": "0.7.1",
+  "origin": "https://127.0.0.1:8445",
+  "mode": "Actual local Compose gateway prebuilt new image; normally trusted Chromium HTTPS, no interception/TLS bypass; synthetic prior family only",
+  "browserResult": {
+    "mode": "actual local HTTPS gateway, normal browser trust, real API",
+    "browser": "151.0.7922.173",
+    "http": 200,
+    "requestCount": 23,
+    "externalRequests": [],
+    "failedRequests": [],
+    "browserErrors": [],
+    "httpErrors": [],
+    "syntheticParentLogin": false,
+    "syntheticParentAuthenticated": true,
+    "permittedChildReportRendered": true,
+    "serverReportBodyVerified": false,
+    "reportBodyLimit": "Restored-tab JSON body UNVERIFIED; fresh-login runs independently validate JSON",
+    "resumedPersistedParentSession": true,
+    "authResponses": [
+      {
+        "path": "/api/v1/auth/refresh",
+        "status": 200
+      }
+    ],
+    "reportedTask": null,
+    "fonts": [
+      "/assets/fonts/MaterialIcons-Regular.otf",
+      "/assets/assets/fonts/LifeGuidePersian.ttf",
+      "/assets/assets/fonts/LifeGuideLatin.ttf",
+      "/assets/assets/fonts/LifeGuideLatin.ttf",
+      "/assets/assets/fonts/LifeGuideEmoji.ttf",
+      "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+    ],
+    "inputLabels": [],
+    "serviceWorkers": 1,
+    "limitations": "Safari install, Android, three physical devices and Iran reachability UNVERIFIED"
+  },
+  "precisionEvidence": "Existing saved mother profile refresh200; helper requires exact recorded4seconds, planned1800seconds and completed status; root viewed320px RTL screenshot showing4seconds in aggregate, daily and subject, and completed task below.",
+  "independentPostgreSql": {
+    "status": "PASS",
+    "task": {
+      "status": "completed",
+      "version": 6,
+      "visibility": "parent_guardian",
+      "plannedDurationSeconds": 1800
+    },
+    "session": {
+      "status": "completed",
+      "source": "timer",
+      "recordedDurationSeconds": 4,
+      "intervalCount": 2
+    }
+  },
+  "dockerGatewayImage": "sha256:34d871d20d1e0ad3737cb3ce0c5df28c7264577687724dba94fc0973f4ca818d",
+  "screenshot": "study-duration-mother-320.png",
+  "screenshotSha256": "78832368f51be8541f693e877a69fa1196b33e9edf4ad62265803023740bc1bd",
+  "limitations": [
+    "Restored-tab JSON body UNVERIFIED by browser helper; SQL checked independently",
+    "No child UI or new study mutation in this run",
+    "Physical Android/Safari/Windows/Iran acceptance UNVERIFIED",
+    "Timer data is not proof of study",
+    "Prior ERR_ABORTED cause remains UNVERIFIED; this one run had no failures"
+  ]
+}
