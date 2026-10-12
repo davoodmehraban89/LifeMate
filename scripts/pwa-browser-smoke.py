@@ -26,6 +26,20 @@ parser.add_argument("--expected-planned-seconds", type=int)
 parser.add_argument("--expected-status")
 parser.add_argument("--resume-parent-session", action="store_true")
 args = parser.parse_args()
+
+def duration_label(total_seconds):
+    minutes, seconds = divmod(total_seconds, 60)
+    if not seconds:
+        return f"{minutes} دقیقه"
+    if not minutes:
+        return f"{seconds} ثانیه"
+    return f"{minutes} دقیقه و {seconds} ثانیه"
+
+def duration_is_shown(rendered, prefix, total_seconds):
+    # A whole-minute expectation must not accept an extra second component.
+    expected = re.escape(f"{prefix} {duration_label(total_seconds)}")
+    return re.search(expected + r"(?!\s+و\b)", rendered) is not None
+
 origin = args.origin.rstrip("/")
 parsed = urlparse(origin)
 if parsed.scheme != "https" or parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment:
@@ -121,11 +135,11 @@ with sync_playwright() as playwright:
                 assert time.monotonic() < deadline, "Expected allowed report was not rendered in PWA"
                 page.wait_for_timeout(100)
             if args.expected_recorded_seconds is not None:
-                assert f"ثبت {round(args.expected_recorded_seconds / 60)} دقیقه" in rendered, "Recorded task duration not shown in PWA"
+                assert duration_is_shown(rendered, "ثبت", args.expected_recorded_seconds), "Exact recorded task duration not shown in PWA"
             if args.expected_status == "completed":
                 assert "انجام‌شده به گزارش فرزند" in rendered, "Recorded completion status not shown in PWA"
             if args.expected_planned_seconds is not None:
-                assert f"زمان برنامه‌ریزی‌شده: {round(args.expected_planned_seconds / 60)} دقیقه" in rendered, "Planned duration for report range not shown in PWA"
+                assert duration_is_shown(rendered, "زمان برنامه‌ریزی‌شده:", args.expected_planned_seconds), "Exact planned duration for report range not shown in PWA"
             assert "SYNTHETIC-OWNER-PRIVATE-NOTE" not in rendered, "Private owner note rendered for parent"
             login_verified, report_verified = True, True
         external = [request for request in requests if request["origin"] != origin]

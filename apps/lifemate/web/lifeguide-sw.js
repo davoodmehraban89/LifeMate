@@ -1,6 +1,6 @@
 // Current code/settings use the network. A cold disconnected navigation may
 // show only a public notice, never cached login, permissions or personal data.
-const CACHE = 'lifeguide-static-v0.7.0-6';
+const CACHE = 'lifeguide-static-v0.7.1-7';
 const BASE_PATH = new URL('.', self.location.href).pathname;
 const OFFLINE_URL = new URL('offline.html', self.location.href).href;
 const RETRY_URL = new URL('offline-retry.js', self.location.href).href;
