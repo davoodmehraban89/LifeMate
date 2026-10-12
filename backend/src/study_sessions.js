@@ -106,6 +106,40 @@ async function readSnapshot(pool, read) {
   } catch (error) { await client.query('rollback').catch(() => {}); throw error; }
   finally { client.release(); }
 }
+function taskMetrics(items, asOf) {
+  const completedTasks = items.filter((item) => item.status === 'completed').length;
+  return {
+    totalTasks: items.length, completedTasks,
+    completionPercent: items.length ? Math.round(completedTasks * 100 / items.length) : 0,
+    overdueTasks: items.filter((item) => item.status !== 'completed' && item.dueAt && new Date(item.dueAt) < asOf).length,
+    plannedDurationSeconds: items.reduce((sum, item) => sum + item.plannedDurationSeconds, 0),
+  };
+}
+function examMetrics(items) {
+  const exams = items.filter((item) => item.kind === 'exam');
+  const graded = exams.filter((item) => item.gradePoints !== null && item.gradeOutOf !== null && item.gradeOutOf > 0);
+  const denominator = graded.reduce((sum, item) => sum + Number(item.gradeOutOf), 0);
+  const numerator = graded.reduce((sum, item) => sum + Number(item.gradePoints), 0);
+  return { examCount: exams.length, gradedExamCount: graded.length,
+    gradePercent: denominator ? Math.round(numerator * 10000 / denominator) / 100 : null };
+}
+function subjectMetrics(items, periodOnly = false) {
+  const groups = new Map();
+  for (const item of items) {
+    // Names can repeat across terms. A task belongs to exactly one subject;
+    // neither labels nor sharing grants multiply its counts or recorded time.
+    const key = item.subjectId;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+  return [...groups.entries()].map(([subjectId, subjectItems]) => {
+    const cohort = periodOnly ? subjectItems.filter((item) => item.taskInRange) : subjectItems;
+    return { subjectId, subjectName: subjectItems[0].subjectName ?? 'بدون درس',
+      totalTasks: cohort.length, completedTasks: cohort.filter((item) => item.status === 'completed').length,
+      recordedDurationSeconds: subjectItems.reduce((sum, item) => sum + item.recordedDurationSeconds, 0),
+      ...(periodOnly ? examMetrics(cohort) : {}) };
+  });
+}
 async function mutation(pool, req, res, resource, execute, authorize = null) {
   if (!uuid(req.body?.mutationId)) return res.status(400).json({ error: 'mutation_id_required' });
   const hash = crypto.createHash('sha256').update(JSON.stringify(canonical({ resource, payload: req.body }))).digest('hex');
@@ -311,7 +345,7 @@ export function createStudySessionsRouter({ pool, auth }) {
       const asOf = (await client.query('select clock_timestamp() as ts')).rows[0].ts;
       const items = (await client.query(
         `select p.id,p.title,p.kind,p.status,p.priority,p.starts_at,p.due_at,p.duration_minutes,p.planned_duration_seconds,p.completed_at,p.updated_at,p.version,
-          p.activity_version,sub.name as subject_name,p.grade_points,p.grade_out_of,
+          p.activity_version,p.subject_id,sub.name as subject_name,p.grade_points,p.grade_out_of,
           e.state as activity_state,e.source as activity_source,e.occurred_at as activity_at
          from plan_item p left join subject sub on sub.id=p.subject_id
          left join lateral(select state,source,occurred_at from activity_state_event where plan_item_id=p.id order by version desc limit 1) e on true
@@ -326,7 +360,8 @@ export function createStudySessionsRouter({ pool, auth }) {
            least(coalesce(i.ends_at,$4::timestamptz),$3::timestamptz,$4::timestamptz) as ends_at
          from study_session s join study_interval i on i.session_id=s.id
          where s.plan_item_id=any($1::uuid[]) and s.archived_at is null and i.starts_at<$3
-           and coalesce(i.ends_at,$4)>$2`, [ids, from, to, asOf],
+           and coalesce(i.ends_at,$4)>$2
+         order by s.id,i.starts_at,i.id`, [ids, from, to, asOf],
       )).rows.filter((x) => x.ends_at > x.starts_at);
       const timeByItem = new Map();
       const daily = new Map();
@@ -349,32 +384,31 @@ export function createStudySessionsRouter({ pool, auth }) {
       }
       const projected = items.map((x) => ({ id: x.id, title: x.title, kind: x.kind, status: x.status, priority: x.priority, version: Number(x.version),
         startsAt: x.starts_at, dueAt: x.due_at, plannedDurationSeconds: x.planned_duration_seconds ?? (x.duration_minutes ?? 0) * 60,
+        scheduledAt: x.due_at ?? x.starts_at,
+        taskInRange: Boolean((x.due_at ?? x.starts_at) && (x.due_at ?? x.starts_at) >= from && (x.due_at ?? x.starts_at) < to),
         recordedDurationSeconds: Math.floor((timeByItem.get(x.id) ?? 0) / 1000), completedAt: x.completed_at,
         activityState: x.activity_state ?? (x.status === 'completed' ? 'completed' : x.status === 'in_progress' ? 'started' : 'planned'),
         activitySource: x.activity_source ?? 'self_reported', activityAt: x.activity_at ?? x.updated_at,
-        subjectName: x.subject_name, gradePoints: x.grade_points, gradeOutOf: x.grade_out_of }));
-      const planned = projected.filter((x) => { const at = x.startsAt ?? x.dueAt; return at && new Date(at) >= from && new Date(at) < to; });
-      const complete = projected.filter((x) => x.status === 'completed').length;
+        subjectId: x.subject_id, subjectName: x.subject_name, gradePoints: x.grade_points, gradeOutOf: x.grade_out_of }));
+      const planned = projected.filter((item) => item.taskInRange);
+      const allTimeTaskMetrics = taskMetrics(projected, asOf);
+      const periodMetrics = { ...taskMetrics(planned, asOf), recordedDurationSeconds: Math.floor(totalMilliseconds / 1000), ...examMetrics(planned) };
       const latest = [...items.map((x) => x.updated_at), ...intervals.map((x) => x.last_sync_at)].sort((a, b) => b - a)[0] ?? null;
-      const subjects = new Map();
-      for (const item of projected) {
-        const key = item.subjectName ?? 'بدون درس';
-        const existing = subjects.get(key) ?? { subjectName: key, totalTasks: 0, completedTasks: 0, recordedDurationSeconds: 0 };
-        existing.totalTasks++;
-        if (item.status === 'completed') existing.completedTasks++;
-        existing.recordedDurationSeconds += item.recordedDurationSeconds;
-        subjects.set(key, existing);
-      }
       const response = { childId: req.params.childId, familyId: req.params.familyId, from, to, asOf, lastSyncAt: latest,
-        sourceVersion: crypto.createHash('sha256').update(JSON.stringify({ items: items.map((x) => [x.id, x.updated_at, x.activity_version]), intervals: intervals.map((x) => [x.id, x.version, x.last_sync_at]) })).digest('hex'),
+        sourceVersion: crypto.createHash('sha256').update(JSON.stringify({ from, to, items: projected,
+          intervals: intervals.map((x) => [x.id, x.version, x.last_sync_at, x.starts_at, x.ends_at]) })).digest('hex'),
         timezone: 'Asia/Tehran', recordingDisclaimerKey: 'recorded_time_is_not_proof_of_study', items: projected,
-        metrics: { totalTasks: projected.length, completedTasks: complete, completionPercent: projected.length ? Math.round(complete * 100 / projected.length) : 0,
-          overdueTasks: projected.filter((x) => x.status !== 'completed' && x.dueAt && new Date(x.dueAt) < asOf).length,
-          plannedDurationSeconds: projected.reduce((sum, x) => sum + x.plannedDurationSeconds, 0),
-          plannedInRangeDurationSeconds: planned.reduce((sum, x) => sum + x.plannedDurationSeconds, 0),
+        taskDatePolicy: 'due_at_then_starts_at', rangeConvention: 'inclusive_from_exclusive_to', completionBasis: 'current_status_of_period_tasks',
+        periodMetrics, allTimeTaskMetrics,
+        // Legacy task counters stay historical for existing consumers. New
+        // clients use periodMetrics, so a range selector cannot relabel history.
+        metrics: { ...allTimeTaskMetrics, plannedInRangeDurationSeconds: periodMetrics.plannedDurationSeconds,
           recordedDurationSeconds: Math.floor(totalMilliseconds / 1000) },
         daily: [...daily.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, ms]) => ({ date, recordedDurationSeconds: Math.floor(ms / 1000) })),
-        subjects: [...subjects.values()], sources: [...new Set(intervals.map((x) => x.source))], isEvidenceOfStudy: false };
+        subjects: subjectMetrics(projected),
+        periodSubjects: subjectMetrics(projected.filter((item) => item.taskInRange || item.recordedDurationSeconds > 0), true),
+        periodExams: planned.filter((item) => item.kind === 'exam'),
+        sources: [...new Set(intervals.map((x) => x.source))].sort(), isEvidenceOfStudy: false };
       await client.query('commit');
       res.json(response);
     } catch (error) { await client.query('rollback').catch(() => {}); throw error; }

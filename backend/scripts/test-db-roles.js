@@ -70,11 +70,22 @@ async function checkPolicy(database) {
     await denied(runtime,'DELETE FROM public.schema_migration','runtime ledger DELETE');
     await denied(runtime,'SELECT * FROM public.schema_migration','runtime ledger SELECT unnecessary');
     await denied(runtime,'TRUNCATE public.plan_item','runtime TRUNCATE');
-    for(const table of ['curriculum_subject','textbook_catalog','learning_unit','learning_video_resource','learning_assessment']) {
+    for(const table of ['curriculum_subject','textbook_catalog','learning_unit','learning_video_resource','learning_assessment',
+      'content_capability_grant','content_capability_audit','content_publication_audit']) {
       assert.equal((await runtime.query(`SELECT count(*)::int n FROM public.${ident(table)}`)).rows.length,1);
       await denied(runtime,`INSERT INTO public.${ident(table)} DEFAULT VALUES`,`${table}: runtime catalog INSERT`);
-      await denied(runtime,`UPDATE public.${ident(table)} SET id=id`,`${table}: runtime catalog UPDATE/publication`);
+      const field=table==='content_capability_grant'?'user_id':table==='content_publication_audit'?'mutation_id':'id';
+      await denied(runtime,`UPDATE public.${ident(table)} SET ${field}=${field}`,`${table}: runtime catalog UPDATE/publication`);
       await denied(runtime,`DELETE FROM public.${ident(table)}`,`${table}: runtime catalog DELETE`);
+    }
+    for(const table of ['content_review_audit','content_review_mutation','content_review_brief','content_review_brief_source',
+      'learning_goal_mutation','family_lifecycle_mutation','school_lifecycle_mutation']) {
+      const field=['learning_goal_mutation','school_lifecycle_mutation'].includes(table)?'owner_user_id':
+        ['content_review_mutation','family_lifecycle_mutation'].includes(table)?'actor_user_id':
+        table==='content_review_brief_source'?'brief_id':'id';
+      assert.equal((await runtime.query(`SELECT count(*)::int n FROM public.${ident(table)}`)).rows.length,1);
+      await denied(runtime,`UPDATE public.${ident(table)} SET ${field}=${field}`,`${table}: runtime immutable receipt UPDATE`);
+      await denied(runtime,`DELETE FROM public.${ident(table)}`,`${table}: runtime immutable receipt DELETE`);
     }
     await denied(backup,'UPDATE public.app_user SET id=id','backup UPDATE');
     await denied(backup,'CREATE TABLE public.forbidden_backup_table(id integer)','backup CREATE TABLE');
@@ -170,15 +181,22 @@ try {
     const url=new URL('postgresql://localhost'); url.hostname=adminConfig.host; url.port=String(adminConfig.port);
     url.pathname=`/${state.source_db}`; url.username=roleNames.api; url.password=process.env.API_DB_PASSWORD;
     const fixtureUrl=new URL(url); fixtureUrl.username=roleNames.migrator; fixtureUrl.password=process.env.MIGRATOR_DB_PASSWORD;
-    const env={...process.env,TEST_FIXTURE_DATABASE_URL:fixtureUrl.toString(),DATABASE_URL:url.toString(),PGUSER:roleNames.api,PGPASSWORD:process.env.API_DB_PASSWORD,PGDATABASE:state.source_db};
+    const env={...process.env,TEST_FIXTURE_DATABASE_URL:fixtureUrl.toString(),DATABASE_URL:url.toString(),PGUSER:roleNames.api,PGPASSWORD:process.env.API_DB_PASSWORD,PGDATABASE:state.source_db,
+      JWT_SECRET:'synthetic-runtime-route-secret-at-least-32-characters',
+      SMS_PROVIDER:'disabled',EMAIL_PROVIDER:'disabled',ENABLE_SENSITIVE_FEATURES:'false'};
+    for(const key of ['SMS_PROVIDER_URL','SMS_PROVIDER_TOKEN','EMAIL_FROM','RESEND_API_KEY','SMTP_HOST','SMTP_USER','SMTP_PASSWORD',
+      'AI_API_KEY','AI_BASE_URL','AI_MODEL','OPENAI_API_KEY']) env[key]='';
     for(const key of ['API_DB_PASSWORD','MIGRATOR_DB_PASSWORD','BACKUP_DB_PASSWORD','POSTGRES_PASSWORD']) delete env[key];
     const familyEnv={...env};delete familyEnv.TEST_FIXTURE_DATABASE_URL;
     const family=spawnSync(process.execPath,['--test','tests/online_acceptance.test.js'],{cwd:backend,env:familyEnv,stdio:'inherit'});
     assert.equal(family.status,0,'Runtime-role family HTTP/DB acceptance failed');
     const acceptance=spawnSync(process.execPath,['--test',
-      'tests/learning_library.test.js','tests/learning_feedback.test.js','tests/learning_assessment.test.js'],{cwd:backend,env,stdio:'inherit'});
+      'tests/learning_library.test.js','tests/learning_feedback.test.js','tests/learning_assessment.test.js',
+      'tests/content_review.test.js','tests/content_review_validation.test.js',
+      'tests/learning_goal_mutations.test.js','tests/family_lifecycle.test.js','tests/family_lifecycle_validation.test.js',
+      'tests/school_lifecycle.test.js','tests/report_periods.test.js','tests/learning_unit_locator.test.js'],{cwd:backend,env,stdio:'inherit'});
     assert.equal(acceptance.status,0,'Real family/learning HTTP/DB acceptance with runtime role failed');
-    console.log('PASS role acceptance source: fresh checksum migrations + repeat, restrictive SQL capabilities and runtime family HTTP scenario');
+    console.log('PASS role acceptance source: fresh checksum migrations + repeat, restrictive SQL capabilities and runtime family/learning/goals/school/report/locator HTTP scenarios');
     console.log(`Synthetic restore state saved; source=${state.source_db}; target=${state.target_db}`);
   } else {
     state=await readState();

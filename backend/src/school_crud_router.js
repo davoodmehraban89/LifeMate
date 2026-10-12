@@ -1,4 +1,5 @@
 import express from 'express';
+import { schoolLifecycleError, assertSchoolSession } from './school_lifecycle.js';
 
 const uuid = (value) => typeof value === 'string' && /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
 const has = (body, key) => Object.hasOwn(body, key);
@@ -31,16 +32,21 @@ function occurred(value) {
 const checkinRow = (row) => ({ ...row, isEvidenceOfStudy: false });
 const route = (handler) => async (req, res, next) => {
   try { await handler(req, res); }
-  catch (error) {
-    if (error instanceof SchoolInputError) return res.status(error.status).json({ error: error.code });
+  catch (raw) {
+    const error = schoolLifecycleError(raw);
+    if (error instanceof SchoolInputError || (error.status && (error.code?.startsWith('school_') || error.code === 'session_invalid'))) return res.status(error.status).json({ error: error.code });
     next(error);
   }
 };
-async function transaction(pool, operation) {
+async function transaction(pool, operation, identity, write = true) {
   const client = await pool.connect();
   try {
     await client.query('begin');
+    const account = await client.query(`select 1 from app_user where id=$1 and disabled_at is null for ${write ? 'update' : 'share'}`, [identity.sub]);
+    if (!account.rowCount) fail(401, 'session_invalid');
+    await assertSchoolSession(client, identity);
     const result = await operation(client);
+    await assertSchoolSession(client, identity);
     await client.query('commit');
     return result;
   } catch (error) {
@@ -52,7 +58,7 @@ async function ownedTerm(client, termId, userId, status = 403) {
   const result = await client.query(`select t.*,t.starts_on::text as first_day,t.ends_on::text as last_day
     from academic_term t join academic_year y on y.id=t.academic_year_id
     join life_context l on l.id=y.life_context_id
-    where t.id=$1 and y.student_user_id=$2 and l.user_id=$2 and y.active and l.active
+    where t.id=$1 and y.student_user_id=$2 and l.user_id=$2 and t.active and y.active and l.active
     for share of t,y,l`, [termId, userId]);
   if (!result.rowCount) fail(status, status === 403 ? 'academic_term_forbidden' : 'school_parent_inactive');
   return result.rows[0];
@@ -108,11 +114,11 @@ export function createSchoolCrudRouter({ pool, auth }) {
       if (next.recurrence_until && (next.recurrence_until < term.first_day || next.recurrence_until > term.last_day)) fail(400, 'class_recurrence_outside_term');
       return (await client.query(`insert into class_session(subject_id,weekday,starts_at,ends_at,location,recurrence_until)
         values($1,$2,$3,$4,$5,$6) returning *`, [subjectId, next.weekday, next.starts_at, next.ends_at, next.location, next.recurrence_until])).rows[0];
-    });
+    }, req.identity);
     res.status(201).json(result);
   }));
   router.get('/school/subjects/:id', auth, route(async (req, res) => {
-    const result = await pool.query('select * from subject where id=$1 and student_user_id=$2', [id(req.params.id), req.identity.sub]);
+    const result = await transaction(pool, (client) => client.query('select * from subject where id=$1 and student_user_id=$2', [id(req.params.id), req.identity.sub]), req.identity, false);
     if (!result.rowCount) fail(404, 'subject_not_found');
     res.json(result.rows[0]);
   }));
@@ -127,6 +133,7 @@ export function createSchoolCrudRouter({ pool, auth }) {
       const current = await client.query('select * from subject where id=$1 and student_user_id=$2 for update', [subjectId, req.identity.sub]);
       if (!current.rowCount) fail(404, 'subject_not_found');
       if (current.rows[0].archived_at) fail(409, 'subject_archived');
+      await ownedTerm(client, current.rows[0].academic_term_id, req.identity.sub, 409);
       const termId = body.academicTermId ?? current.rows[0].academic_term_id;
       const term = await ownedTerm(client, termId, req.identity.sub, has(body, 'academicTermId') ? 403 : 409);
       const invalidClass = await client.query(`select 1 from class_session where subject_id=$1 and archived_at is null
@@ -136,19 +143,19 @@ export function createSchoolCrudRouter({ pool, auth }) {
         teacher_name=case when $4 then $5 else teacher_name end,
         color_key=case when $6 then $7 else color_key end,academic_term_id=$8,updated_at=now()
         where id=$1 and student_user_id=$2 returning *`, [subjectId, req.identity.sub, name, has(body, 'teacherName'), teacher, has(body, 'colorKey'), color, termId])).rows[0];
-    });
+    }, req.identity);
     res.json(result);
   }));
   router.delete('/school/subjects/:id', auth, route(async (req, res) => {
-    const result = await pool.query(`update subject set updated_at=case when archived_at is null then now() else updated_at end,
-      archived_at=coalesce(archived_at,now()) where id=$1 and student_user_id=$2 returning id`, [id(req.params.id), req.identity.sub]);
+    const result = await transaction(pool, (client) => client.query(`update subject set updated_at=case when archived_at is null then now() else updated_at end,
+      archived_at=coalesce(archived_at,now()) where id=$1 and student_user_id=$2 returning id`, [id(req.params.id), req.identity.sub]), req.identity);
     if (!result.rowCount) fail(404, 'subject_not_found');
     res.status(204).end();
   }));
 
   router.get('/school/classes/:id', auth, route(async (req, res) => {
-    const result = await pool.query(`select c.*,s.name as subject_name,s.archived_at as subject_archived_at
-      from class_session c join subject s on s.id=c.subject_id where c.id=$1 and s.student_user_id=$2`, [id(req.params.id), req.identity.sub]);
+    const result = await transaction(pool, (client) => client.query(`select c.*,s.name as subject_name,s.archived_at as subject_archived_at
+      from class_session c join subject s on s.id=c.subject_id where c.id=$1 and s.student_user_id=$2`, [id(req.params.id), req.identity.sub]), req.identity, false);
     if (!result.rowCount) fail(404, 'class_not_found');
     res.json(result.rows[0]);
   }));
@@ -169,13 +176,13 @@ export function createSchoolCrudRouter({ pool, auth }) {
       if (next.recurrence_until && (next.recurrence_until < term.first_day || next.recurrence_until > term.last_day)) fail(400, 'class_recurrence_outside_term');
       return (await client.query(`update class_session set subject_id=$2,weekday=$3,starts_at=$4,ends_at=$5,
         location=$6,recurrence_until=$7,updated_at=now() where id=$1 returning *`, [classId, subjectId, next.weekday, next.starts_at, next.ends_at, next.location, next.recurrence_until])).rows[0];
-    });
+    }, req.identity);
     res.json(result);
   }));
   router.delete('/school/classes/:id', auth, route(async (req, res) => {
-    const result = await pool.query(`update class_session c set updated_at=case when c.archived_at is null then now() else c.updated_at end,
+    const result = await transaction(pool, (client) => client.query(`update class_session c set updated_at=case when c.archived_at is null then now() else c.updated_at end,
       archived_at=coalesce(c.archived_at,now()) from subject s
-      where c.id=$1 and c.subject_id=s.id and s.student_user_id=$2 returning c.id`, [id(req.params.id), req.identity.sub]);
+      where c.id=$1 and c.subject_id=s.id and s.student_user_id=$2 returning c.id`, [id(req.params.id), req.identity.sub]), req.identity);
     if (!result.rowCount) fail(404, 'class_not_found');
     res.status(204).end();
   }));
@@ -188,15 +195,15 @@ export function createSchoolCrudRouter({ pool, auth }) {
       await ownedGoal(client, next.learning_goal_id, req.identity.sub);
       return (await client.query(`insert into learning_checkin(owner_user_id,learning_goal_id,confidence,difficulty,note,occurred_at)
         values($1,$2,$3,$4,$5,$6) returning *`, [req.identity.sub, next.learning_goal_id, next.confidence, next.difficulty, next.note, next.occurred_at])).rows[0];
-    });
+    }, req.identity);
     res.status(201).json(checkinRow(result));
   }));
   router.get('/learning/checkins', auth, route(async (req, res) => {
-    const result = await pool.query('select * from learning_checkin where owner_user_id=$1 and archived_at is null order by occurred_at desc,id', [req.identity.sub]);
+    const result = await transaction(pool, (client) => client.query('select * from learning_checkin where owner_user_id=$1 and archived_at is null order by occurred_at desc,id', [req.identity.sub]), req.identity, false);
     res.json({ items: result.rows.map(checkinRow) });
   }));
   router.get('/learning/checkins/:id', auth, route(async (req, res) => {
-    const result = await pool.query('select * from learning_checkin where id=$1 and owner_user_id=$2', [id(req.params.id), req.identity.sub]);
+    const result = await transaction(pool, (client) => client.query('select * from learning_checkin where id=$1 and owner_user_id=$2', [id(req.params.id), req.identity.sub]), req.identity, false);
     if (!result.rowCount) fail(404, 'checkin_not_found');
     res.json(checkinRow(result.rows[0]));
   }));
@@ -211,12 +218,12 @@ export function createSchoolCrudRouter({ pool, auth }) {
       if (has(body, 'learningGoalId')) await ownedGoal(client, next.learning_goal_id, req.identity.sub);
       return (await client.query(`update learning_checkin set learning_goal_id=$3,confidence=$4,difficulty=$5,note=$6,
         occurred_at=$7,updated_at=now() where id=$1 and owner_user_id=$2 returning *`, [checkinId, req.identity.sub, next.learning_goal_id, next.confidence, next.difficulty, next.note, next.occurred_at])).rows[0];
-    });
+    }, req.identity);
     res.json(checkinRow(result));
   }));
   router.delete('/learning/checkins/:id', auth, route(async (req, res) => {
-    const result = await pool.query(`update learning_checkin set updated_at=case when archived_at is null then now() else updated_at end,
-      archived_at=coalesce(archived_at,now()) where id=$1 and owner_user_id=$2 returning id`, [id(req.params.id), req.identity.sub]);
+    const result = await transaction(pool, (client) => client.query(`update learning_checkin set updated_at=case when archived_at is null then now() else updated_at end,
+      archived_at=coalesce(archived_at,now()) where id=$1 and owner_user_id=$2 returning id`, [id(req.params.id), req.identity.sub]), req.identity);
     if (!result.rowCount) fail(404, 'checkin_not_found');
     res.status(204).end();
   }));

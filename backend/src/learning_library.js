@@ -56,6 +56,17 @@ export function createLearningLibraryRouter({pool,auth}){
   const mapped=units.map(u=>{const resources=videos.filter(v=>v.unit_id===u.id).map(v=>({aparatId:v.canonical_aparat_id??v.aparat_id,titleFa:v.title_fa,creatorName:v.creator_name,creatorUrl:v.creator_url,sourceEvidenceUrl:v.source_evidence_url,verificationStatus:v.verification_status,pedagogicalReview:v.pedagogical_review,freeAccess:v.free_access,durationSeconds:v.duration_seconds,checkedAt:v.checked_at,qualityNotesFa:v.quality_notes_fa}));return {id:u.id,titleFa:u.title_fa,orderIndex:u.order_index,indexKind:u.index_kind,unitKey:u.unit_key,sourceEvidenceUrl:officialUnitCitation(u.source_evidence_url),videos:resources,reviewCandidateCount:u.review_candidate_count,availability:resources.length?'available':'unavailable',progress:u.version==null?null:progress({...u,unit_id:u.id})};});
   res.json({...course(r.rows[0]),units:mapped,fetchedAt:new Date().toISOString()});
  });
+ // Catalogue navigation only. This locator deliberately excludes learner
+ // progress, attempt history, resource candidates and other account fields.
+ router.get('/education/units/:unitId',requireAuth,async(req,res)=>{
+  if(!validUuid(req.params.unitId))return res.status(400).json({error:'invalid_unit_id'});
+  const result=await pool.query(`select u.id,u.title_fa,u.textbook_id from learning_unit u
+   join textbook_catalog t on t.id=u.textbook_id join curriculum_subject s on s.id=t.curriculum_subject_id
+   where u.id=$1 and u.active and t.stable_book_key is not null`,[req.params.unitId]);
+  if(!result.rowCount)return res.status(404).json({error:'unit_not_found'});
+  const unit=result.rows[0];
+  res.json({unit:{id:unit.id,titleFa:unit.title_fa,courseId:unit.textbook_id},fetchedAt:new Date().toISOString()});
+ });
  router.get('/me/learning-progress',requireAuth,async(req,res)=>{const r=await pool.query('select * from learning_progress where owner_user_id=$1 order by updated_at,unit_id',[req.identity.sub]);res.json({progress:r.rows.map(progress),fetchedAt:new Date().toISOString()});});
  router.put('/me/learning-progress/:unitId',requireAuth,async(req,res)=>{
   const body=req.body,allowed=['status','source','mutationId','expectedVersion'];

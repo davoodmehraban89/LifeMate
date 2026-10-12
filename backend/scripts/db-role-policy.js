@@ -10,8 +10,11 @@ export const applicationTables = [
   'auth_token', 'class_session', 'curriculum_subject', 'education_profile',
   'family_invitation', 'family_membership', 'family_workspace', 'guardian_relationship',
   'iran_calendar_event', 'learning_checkin', 'learning_goal', 'life_context',
+  'learning_goal_mutation', 'family_lifecycle_mutation', 'school_lifecycle_mutation',
   'learning_unit', 'learning_video_resource', 'learning_progress', 'learning_progress_mutation',
   'learning_content_feedback',
+  'content_capability_grant', 'content_capability_audit', 'content_publication_audit', 'content_review_audit',
+  'content_review_mutation', 'content_review_brief', 'content_review_brief_source',
   'learning_assessment', 'learning_assessment_attempt', 'learning_review_schedule',
   'menstrual_cycle_entry', 'notification_outbox', 'notification_preference',
   'plan_item', 'profile', 'reminder', 'schema_migration', 'sharing_grant',
@@ -30,12 +33,20 @@ export const applicationFunctions = [
   'plan_item_revision()', 'revoke_changed_plan_item_grants()',
   'validate_learning_publication()',
   'validate_learning_assessment_publication()',
+  'membership_lifecycle_revision()', 'invitation_lifecycle_revision()',
+  'school_lifecycle_context_guard()', 'school_lifecycle_year_guard()',
+  'school_lifecycle_term_guard()', 'school_lifecycle_subject_guard()',
+  'school_lifecycle_class_guard()',
   'revoke_ended_membership_grants()', 'plan_item_legacy_activity()',
 ];
 export const roleNames = Object.freeze({ api: 'lifeguide_api', migrator: 'lifeguide_migrator', backup: 'lifeguide_backup' });
 // Only the separate migrator/importer can change reviewed teaching material.
 export const readOnlyCatalogTables = new Set(['curriculum_subject', 'textbook_catalog',
-  'learning_unit', 'learning_video_resource', 'learning_assessment']);
+  'learning_unit', 'learning_video_resource', 'learning_assessment',
+  'content_capability_grant', 'content_capability_audit', 'content_publication_audit']);
+export const appendOnlyContentTables = new Set(['content_review_audit', 'content_review_mutation',
+  'content_review_brief', 'content_review_brief_source',
+  'learning_goal_mutation', 'family_lifecycle_mutation', 'school_lifecycle_mutation']);
 const ident = (value) => `"${String(value).replaceAll('"', '""')}"`;
 export function validateRoles(env) {
   const configured = { api: env.API_DB_USER ?? roleNames.api, migrator: env.MIGRATOR_DB_USER ?? roleNames.migrator, backup: env.BACKUP_DB_USER ?? roleNames.backup };
@@ -209,7 +220,8 @@ export async function reconcileGrants(client, env = process.env) {
         await client.query(`GRANT SELECT ON SEQUENCE ${relation} TO ${ident(roles.backup)}`);
       } else {
         if (object.name !== 'schema_migration') {
-          const privileges = readOnlyCatalogTables.has(object.name) || !applicationTables.includes(object.name) ? 'SELECT' : 'SELECT,INSERT,UPDATE,DELETE';
+          const privileges = readOnlyCatalogTables.has(object.name) || !applicationTables.includes(object.name) ? 'SELECT' :
+            appendOnlyContentTables.has(object.name) ? 'SELECT,INSERT' : 'SELECT,INSERT,UPDATE,DELETE';
           await client.query(`GRANT ${privileges} ON TABLE ${relation} TO ${ident(roles.api)}`);
         }
         await client.query(`GRANT SELECT ON TABLE ${relation} TO ${ident(roles.backup)}`);

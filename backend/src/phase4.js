@@ -1,8 +1,138 @@
 import express from 'express';
+import crypto from 'node:crypto';
 
 const clampText = (value, max = 4000) =>
   String(value ?? '').trim().slice(0, max);
 const isUuid = (value) => typeof value === 'string' && /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
+
+const modernGoalRequest = body => body && ['mutationId','expectedVersion','id'].some(key=>Object.hasOwn(body,key));
+function normalizeGoalMutation(operation, id, body, legacy = false) {
+  const fields = new Set([...(legacy?[]:['mutationId','expectedVersion',...(operation==='create'?['id']:[])]),
+    ...(operation==='archive'?[]:['title','target','subjectId','status'])]);
+  if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>!fields.has(key)) ||
+      (!legacy && (!isUuid(body.mutationId) || !Number.isSafeInteger(body.expectedVersion) || body.expectedVersion<0 ||
+        body.expectedVersion>=2147483647 || (operation==='create' ? (!isUuid(body.id) || body.expectedVersion!==0) : body.expectedVersion===0))) ||
+      !isUuid(id)) return null;
+  const normalized = {operation,id:id.toLowerCase(),...(legacy?{}:{mutationId:body.mutationId.toLowerCase(),expectedVersion:body.expectedVersion})};
+  for (const field of ['title','target']) {
+    if (!Object.hasOwn(body,field)) continue;
+    if (field==='target' && body[field]===null) { normalized[field]=null; continue; }
+    if (typeof body[field]!=='string' || body[field].includes('\u0000') ||
+        body[field].trim().length>(field==='title'?240:1000) || (field==='title' && !body[field].trim())) return null;
+    normalized[field]=body[field].trim() || null;
+  }
+  if (operation==='create' && !normalized.title) return null;
+  if (Object.hasOwn(body,'subjectId')) {
+    if (body.subjectId!==null && !isUuid(body.subjectId)) return null;
+    normalized.subjectId=body.subjectId?.toLowerCase()??null;
+  }
+  if (Object.hasOwn(body,'status')) {
+    if (!['active','completed','archived'].includes(body.status) || (operation==='create' && body.status==='archived')) return null;
+    normalized.status=body.status;
+  }
+  if(operation==='update' && !['title','target','subjectId','status'].some(key=>Object.hasOwn(normalized,key))) return null;
+  return normalized;
+}
+
+function legacyGoalInputError(body) {
+  if(body && typeof body==='object' && !Array.isArray(body)) {
+    if(body.subjectId!=null && !isUuid(body.subjectId)) return 'invalid_subject_id';
+    if(Object.hasOwn(body,'status') && !['active','completed','archived'].includes(body.status)) return 'invalid_status';
+  }
+  return 'invalid_input';
+}
+
+async function goalSessionCurrent(client, identity) {
+  // Lock the session through commit so logout/revocation cannot race the final
+  // authorization decision. JWT expiry must also be checked after lock waits.
+  const session=await client.query(`select 1 from auth_session s join app_user u on u.id=s.user_id
+    where s.id=$1 and s.user_id=$2 and s.revoked_at is null
+      and s.expires_at>statement_timestamp() and u.disabled_at is null for share of s`,[identity.sid,identity.sub]);
+  return session.rowCount>0 && (identity.exp==null || identity.exp*1000>Date.now());
+}
+
+async function activeGoalSubject(client, id, owner) {
+  const subject=await client.query(`select s.id from subject s
+    join academic_term t on t.id=s.academic_term_id
+    join academic_year y on y.id=t.academic_year_id
+    join life_context l on l.id=y.life_context_id
+    where s.id=$1 and s.student_user_id=$2 and y.student_user_id=$2 and l.user_id=$2
+      and s.archived_at is null and t.active and y.active and l.active and l.kind='student'
+    for share of s,t,y,l`,[id,owner]);
+  return subject.rowCount>0;
+}
+
+async function legacyGoalWrite(pool, identity, operation) {
+  const client=await pool.connect();
+  try {
+    await client.query('begin');
+    const account=await client.query('select id from app_user where id=$1 and disabled_at is null for update',[identity.sub]);
+    if(!account.rowCount || !await goalSessionCurrent(client,identity)) {
+      await client.query('rollback'); return {status:401,body:{error:'session_invalid'}};
+    }
+    const result=await operation(client);
+    if(!await goalSessionCurrent(client,identity)) {
+      await client.query('rollback'); return {status:401,body:{error:'session_invalid'}};
+    }
+    await client.query('commit'); return result;
+  } catch(error) { await client.query('rollback').catch(()=>{}); throw error; }
+  finally { client.release(); }
+}
+
+async function mutateLearningGoal(pool, identity, operation, id, raw) {
+  const owner=identity.sub;
+  const body=normalizeGoalMutation(operation,id,raw);
+  if(!body) return {status:400,body:{error:'invalid_goal_mutation'}};
+  const hash=crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex');
+  const client=await pool.connect();
+  const failure=(status,error)=>({status,body:{error}});
+  try {
+    await client.query('begin');
+    const active=await client.query('select id from app_user where id=$1 and disabled_at is null for update',[owner]);
+    if(!active.rowCount || !await goalSessionCurrent(client,identity)) { await client.query('rollback'); return failure(401,'session_invalid'); }
+    // Owner locks alone do not serialize two independent accounts that supply
+    // the same stable UUID. Lock that entity before checking/inserting it, then
+    // return the ordinary forbidden response instead of leaking a PK/500 race.
+    await client.query("select pg_advisory_xact_lock(hashtextextended('lifeguide:learning-goal:'||$1,0))",[body.id]);
+    const previous=(await client.query('select * from learning_goal_mutation where owner_user_id=$1 and mutation_id=$2',[owner,body.mutationId])).rows[0];
+    if(previous && previous.request_hash!==hash) { await client.query('rollback'); return failure(409,'mutation_id_reused'); }
+    let goal=(await client.query('select * from learning_goal where id=$1 and owner_user_id=$2 for update',[body.id,owner])).rows[0];
+    const acknowledgement = (row,ledger,status) => ({goal:row,acknowledgement:{mutationId:body.mutationId,
+      goalId:body.id,operation,appliedVersion:ledger.applied_version,acceptedAt:ledger.accepted_at,status}});
+    if(previous) {
+      // Return the current tombstone/current version, never resurrect an older response.
+      if(!goal) throw new Error('learning_goal_ledger_invariant');
+      if(!await goalSessionCurrent(client,identity)) { await client.query('rollback'); return failure(401,'session_invalid'); }
+      await client.query('commit');
+      return {status:200,body:acknowledgement(goal,previous,'already_applied')};
+    }
+    if(!goal) {
+      const foreign=await client.query('select 1 from learning_goal where id=$1',[body.id]);
+      if(foreign.rowCount || operation!=='create') { await client.query('rollback'); return failure(foreign.rowCount?403:404,foreign.rowCount?'goal_forbidden':'goal_not_found'); }
+    } else if(operation==='create') { await client.query('rollback'); return failure(409,'goal_id_exists'); }
+    if(goal && goal.status==='archived') { await client.query('rollback'); return failure(409,'goal_archived'); }
+    if(goal && goal.version!==body.expectedVersion) { await client.query('rollback'); return failure(409,'version_conflict'); }
+    if(body.subjectId!=null) {
+      if(!await activeGoalSubject(client,body.subjectId,owner)) { await client.query('rollback'); return failure(403,'subject_forbidden'); }
+    }
+    if(operation==='create') {
+      goal=(await client.query('insert into learning_goal(id,owner_user_id,subject_id,title,target,status) values($1,$2,$3,$4,$5,$6) returning *',
+        [body.id,owner,body.subjectId??null,body.title,body.target??null,body.status??'active'])).rows[0];
+    } else {
+      const status=operation==='archive'?'archived':body.status??goal.status;
+      goal=(await client.query(`update learning_goal set title=$3,target=$4,subject_id=$5,status=$6,
+        version=version+1,updated_at=now(),archived_at=case when $6='archived' then now() else null end
+        where id=$1 and owner_user_id=$2 returning *`,[body.id,owner,body.title??goal.title,
+        Object.hasOwn(body,'target')?body.target:goal.target,Object.hasOwn(body,'subjectId')?body.subjectId:goal.subject_id,status])).rows[0];
+    }
+    const ledger=(await client.query('insert into learning_goal_mutation(owner_user_id,mutation_id,goal_id,operation,request_hash,applied_version) values($1,$2,$3,$4,$5,$6) returning *',
+      [owner,body.mutationId,body.id,operation,hash,goal.version])).rows[0];
+    if(!await goalSessionCurrent(client,identity)) { await client.query('rollback'); return failure(401,'session_invalid'); }
+    await client.query('commit');
+    return {status:operation==='create'?201:200,body:acknowledgement(goal,ledger,'accepted')};
+  } catch(error) { await client.query('rollback').catch(()=>{}); throw error; }
+  finally { client.release(); }
+}
 
 function safetyClass(text) {
   const value = text.toLowerCase();
@@ -51,26 +181,22 @@ export function createPhase4Router({ pool, auth, sensitiveFeaturesEnabled = proc
   router.use(auth);
 
   router.post('/learning/goals', async (req, res) => {
-    const title = clampText(req.body.title, 240);
-    if (!title) return res.status(400).json({ error: 'invalid_input' });
-    if (req.body.subjectId != null && !isUuid(req.body.subjectId)) return res.status(400).json({ error: 'invalid_subject_id' });
-    if (req.body.subjectId) {
-      const subject = await pool.query(
-        'select 1 from subject where id=$1 and student_user_id=$2',
-        [req.body.subjectId, req.identity.sub],
-      );
-      if (!subject.rowCount) return res.status(403).json({ error: 'subject_forbidden' });
+    if(Object.keys(req.query).length) return res.status(400).json({error:'invalid_goal_mutation'});
+    if(modernGoalRequest(req.body)) {
+      const result=await mutateLearningGoal(pool,req.identity,'create',req.body.id,req.body);
+      return res.status(result.status).json(result.body);
     }
-    const result = await pool.query(
-      'insert into learning_goal(owner_user_id,subject_id,title,target) values($1,$2,$3,$4) returning *',
-      [
-        req.identity.sub,
-        req.body.subjectId || null,
-        title,
-        clampText(req.body.target, 1000) || null,
-      ],
-    );
-    res.status(201).json(result.rows[0]);
+    const body=normalizeGoalMutation('create',crypto.randomUUID(),req.body,true);
+    if(!body) return res.status(400).json({error:legacyGoalInputError(req.body)});
+    const result=await legacyGoalWrite(pool,req.identity,async client=>{
+      if(body.subjectId!=null && !await activeGoalSubject(client,body.subjectId,req.identity.sub)) {
+        return {status:403,body:{error:'subject_forbidden'}};
+      }
+      const created=await client.query('insert into learning_goal(owner_user_id,subject_id,title,target,status) values($1,$2,$3,$4,$5) returning *',
+        [req.identity.sub,body.subjectId??null,body.title,body.target??null,body.status??'active']);
+      return {status:201,body:created.rows[0]};
+    });
+    res.status(result.status).json(result.body);
   });
 
   router.get('/learning/goals', async (req, res) => {
@@ -78,7 +204,7 @@ export function createPhase4Router({ pool, auth, sensitiveFeaturesEnabled = proc
       "select * from learning_goal where owner_user_id=$1 and status<>'archived' order by created_at desc",
       [req.identity.sub],
     );
-    res.json({ items: result.rows });
+    res.json({ items: result.rows, fetchedAt: new Date().toISOString() });
   });
 
   router.get('/learning/goals/:id', async (req, res) => {
@@ -90,54 +216,58 @@ export function createPhase4Router({ pool, auth, sensitiveFeaturesEnabled = proc
 
   router.patch('/learning/goals/:id', async (req, res) => {
     if (!isUuid(req.params.id)) return res.status(400).json({ error: 'invalid_goal_id' });
-    const body = req.body ?? {};
+    if(Object.keys(req.query).length) return res.status(400).json({error:'invalid_goal_mutation'});
+    if(modernGoalRequest(req.body)) {
+      const result=await mutateLearningGoal(pool,req.identity,'update',req.params.id,req.body);
+      return res.status(result.status).json(result.body);
+    }
+    const body=normalizeGoalMutation('update',req.params.id,req.body,true);
+    if(!body) return res.status(400).json({error:legacyGoalInputError(req.body)});
     const has = (field) => Object.hasOwn(body, field);
-    if (has('title') && (typeof body.title !== 'string' || !body.title.trim() || body.title.trim().length > 240)) return res.status(400).json({ error: 'invalid_input' });
-    if (has('target') && body.target != null && (typeof body.target !== 'string' || body.target.trim().length > 1000)) return res.status(400).json({ error: 'invalid_input' });
-    if (has('subjectId') && body.subjectId != null && !isUuid(body.subjectId)) return res.status(400).json({ error: 'invalid_subject_id' });
-    if (has('status') && !['active', 'completed', 'archived'].includes(body.status)) return res.status(400).json({ error: 'invalid_status' });
-    const client = await pool.connect();
-    try {
-      await client.query('begin');
+    const result=await legacyGoalWrite(pool,req.identity,async client=>{
       const goal = await client.query('select status from learning_goal where id=$1 and owner_user_id=$2 for update', [req.params.id, req.identity.sub]);
       if (!goal.rowCount || goal.rows[0].status === 'archived') {
-        await client.query('rollback');
-        return res.status(goal.rowCount ? 409 : 404).json({ error: goal.rowCount ? 'goal_archived' : 'goal_not_found' });
+        return {status:goal.rowCount?409:404,body:{error:goal.rowCount?'goal_archived':'goal_not_found'}};
       }
       if (body.subjectId != null) {
-        const subject = await client.query('select 1 from subject where id=$1 and student_user_id=$2', [body.subjectId, req.identity.sub]);
-        if (!subject.rowCount) {
-          await client.query('rollback');
-          return res.status(403).json({ error: 'subject_forbidden' });
-        }
+        if(!await activeGoalSubject(client,body.subjectId,req.identity.sub)) return {status:403,body:{error:'subject_forbidden'}};
       }
-      const result = await client.query(
+      const updated = await client.query(
         `update learning_goal set title=case when $3 then $4 else title end,
                 target=case when $5 then $6 else target end,
                 subject_id=case when $7 then $8::uuid else subject_id end,
-                status=coalesce($9,status),updated_at=now()
+                status=coalesce($9,status),updated_at=now(),version=version+1,
+                archived_at=case when $9='archived' then now() else null end
          where id=$1 and owner_user_id=$2 returning *`,
         [req.params.id, req.identity.sub, has('title'), has('title') ? body.title.trim() : null,
           has('target'), body.target?.trim() || null, has('subjectId'), body.subjectId ?? null, body.status ?? null],
       );
-      await client.query('commit');
-      res.json(result.rows[0]);
-    } catch (error) {
-      await client.query('rollback').catch(() => {});
-      throw error;
-    } finally { client.release(); }
+      return {status:200,body:updated.rows[0]};
+    });
+    res.status(result.status).json(result.body);
   });
 
   router.delete('/learning/goals/:id', async (req, res) => {
     if (!isUuid(req.params.id)) return res.status(400).json({ error: 'invalid_goal_id' });
-    const result = await pool.query(
+    if(Object.keys(req.query).length) return res.status(400).json({error:'invalid_goal_mutation'});
+    if(modernGoalRequest(req.body)) {
+      const result=await mutateLearningGoal(pool,req.identity,'archive',req.params.id,req.body);
+      return res.status(result.status).json(result.body);
+    }
+    if(!normalizeGoalMutation('archive',req.params.id,req.body??{},true)) return res.status(400).json({error:'invalid_input'});
+    const result=await legacyGoalWrite(pool,req.identity,async client=>{
+      const archived = await client.query(
       `update learning_goal set status='archived',
+              archived_at=coalesce(archived_at,now()),
+              version=case when status='archived' then version else version+1 end,
               updated_at=case when status='archived' then updated_at else now() end
        where id=$1 and owner_user_id=$2 returning id`,
       [req.params.id, req.identity.sub],
-    );
-    if (!result.rowCount) return res.status(404).json({ error: 'goal_not_found' });
-    res.status(204).end();
+      );
+      return archived.rowCount?{status:204}:{status:404,body:{error:'goal_not_found'}};
+    });
+    if(result.body===undefined) return res.status(result.status).end();
+    res.status(result.status).json(result.body);
   });
 
   router.post('/wellbeing/checkins', requireSensitive, async (req, res) => {
