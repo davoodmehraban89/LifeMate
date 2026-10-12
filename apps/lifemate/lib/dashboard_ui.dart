@@ -348,8 +348,15 @@ class _LearningReportPageState extends State<LearningReportPage>
     }
   }
 
-  String minutes(dynamic seconds) =>
-      '${((seconds as num? ?? 0) / 60).round()} دقیقه';
+  String formatDurationSeconds(dynamic seconds) {
+    final total = (seconds as num? ?? 0).toInt();
+    final minutes = total ~/ 60;
+    final remainder = total % 60;
+    if (remainder == 0) return '$minutes دقیقه';
+    if (minutes == 0) return '$remainder ثانیه';
+    return '$minutes دقیقه و $remainder ثانیه';
+  }
+
   @override
   Widget build(BuildContext context) {
     final r = reportNamespace == widget.api.cacheNamespace ? report : null;
@@ -446,11 +453,12 @@ class _LearningReportPageState extends State<LearningReportPage>
               Text(
                   'کل سابقه مجاز: ${allTime['totalTasks'] ?? 0} تکلیف · ${allTime['completedTasks'] ?? 0} انجام‌شده'),
             Text(
-                'زمان برنامه‌ریزی‌شده: ${minutes(m['plannedInRangeDurationSeconds'] ?? m['plannedDurationSeconds'])}'),
+                'زمان برنامه‌ریزی‌شده: ${formatDurationSeconds(m['plannedInRangeDurationSeconds'] ?? m['plannedDurationSeconds'])}'),
             if (!hasPeriod && m['plannedInRangeDurationSeconds'] == null)
               const Text(
                   'زمان برنامه‌ریزی‌شده مربوط به کل سابقه مجاز است؛ زمان بازه جداگانه از سرور دریافت نشده است.'),
-            Text('زمان ثبت‌شده: ${minutes(m['recordedDurationSeconds'])}'),
+            Text(
+                'زمان ثبت‌شده: ${formatDurationSeconds(m['recordedDurationSeconds'])}'),
             const Text(
                 'زمان ثبت‌شده فقط بخش جلسه‌های مجاز داخل بازه است؛ ممکن است به تکلیفی با موعد خارج از بازه مربوط باشد.'),
             Text('روند زمان ثبت‌شده',
@@ -467,7 +475,9 @@ class _LearningReportPageState extends State<LearningReportPage>
                                 (row['recordedDurationSeconds'] as num? ?? 0) /
                                     max)),
                     const SizedBox(width: 8),
-                    Text(minutes(row['recordedDurationSeconds']))
+                    Flexible(
+                        child: Text(formatDurationSeconds(
+                            row['recordedDurationSeconds'])))
                   ]));
             }),
             Text(hasPeriod ? 'درس‌ها در بازه' : 'درس‌ها در کل سابقه مجاز',
@@ -477,7 +487,7 @@ class _LearningReportPageState extends State<LearningReportPage>
               return ListTile(
                   title: Text(row['subjectName']?.toString() ?? 'بدون درس'),
                   subtitle: Text(
-                      '${row['completedTasks']}/${row['totalTasks']} تکمیل ${hasPeriod ? 'تکلیف‌های بازه' : 'کل سابقه'} · ${minutes(row['recordedDurationSeconds'])}${hasPeriod && row['gradePercent'] != null ? '\nنمره وزنی امتحان‌های مجاز: ${row['gradePercent']}٪ (${row['gradedExamCount']} امتحان)' : ''}'));
+                      '${row['completedTasks']}/${row['totalTasks']} تکمیل ${hasPeriod ? 'تکلیف‌های بازه' : 'کل سابقه'} · ${formatDurationSeconds(row['recordedDurationSeconds'])}${hasPeriod && row['gradePercent'] != null ? '\nنمره وزنی امتحان‌های مجاز: ${row['gradePercent']}٪ (${row['gradedExamCount']} امتحان)' : ''}'));
             }),
             if (hasPeriod) ...[
               Text('امتحان‌های مجاز در بازه',
@@ -522,7 +532,7 @@ class _LearningReportPageState extends State<LearningReportPage>
                   child: ListTile(
                       title: Text(i['title']?.toString() ?? ''),
                       subtitle: Text(
-                          '${faKind(i['kind']?.toString() ?? 'task')} · $state\nآخرین ثبت وضعیت: ${shortDate(i['activityAt'])}\nموعد: ${shortDate(i['dueAt'] ?? i['startsAt'])}\nبرنامه ${minutes(i['plannedDurationSeconds'])} · ثبت ${minutes(i['recordedDurationSeconds'])}${hasPeriod && i['taskInRange'] != true ? '\nموعد این تکلیف خارج از بازه است؛ فقط زمان ثبت‌شده در بازه نمایش داده می‌شود.' : ''}${i['gradePoints'] == null ? '' : '\nنمره ${i['gradePoints']}/${i['gradeOutOf']}'}')));
+                          '${faKind(i['kind']?.toString() ?? 'task')} · $state\nآخرین ثبت وضعیت: ${shortDate(i['activityAt'])}\nموعد: ${shortDate(i['dueAt'] ?? i['startsAt'])}\nبرنامه ${formatDurationSeconds(i['plannedDurationSeconds'])} · ثبت ${formatDurationSeconds(i['recordedDurationSeconds'])}${hasPeriod && i['taskInRange'] != true ? '\nموعد این تکلیف خارج از بازه است؛ فقط زمان ثبت‌شده در بازه نمایش داده می‌شود.' : ''}${i['gradePoints'] == null ? '' : '\nنمره ${i['gradePoints']}/${i['gradeOutOf']}'}')));
             }),
           ],
           TextButton(

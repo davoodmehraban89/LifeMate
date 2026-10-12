@@ -1,16 +1,16 @@
 # LifeGuide / لایف‌گاید — تحویل بسته 0.7.1
 
-واقعاً اجرا شد: Backend **245/245**، Flutter **200/200**، build وب و APK debug و هر سه job در [CI38201011644](https://github.com/davoodmehraban89/LifeMate/actions/runs/38201011644). منبع آن `0831ee6ba81a4811f819e8d8dbfe3f7b24a566ef`، نسخه Backend **0.7.1** و برنامه **0.7.0+6** است. [رسید CI و فایل‌ها](../audits/evidence/ci-content-operations-final-2026-10-12.json) و [گزارش آزمون و حدود پذیرش](../audits/2026-10-12-content-operations-verification.md) مرجع‌اند. [PR پیش‌نویس۱۲](https://github.com/davoodmehraban89/LifeMate/pull/12) ادغام نشده است؛ این خروجی نامزد آزمون با داده ساختگی است.
+واقعاً اجرا شد: Backend **245/245**، Flutter **212/212**، build وب و APK debug و هر سه job در [CI38223988983](https://github.com/davoodmehraban89/LifeMate/actions/runs/38223988983). منبع آن `d0b3446d736b67fdb4e0218282ad15f0e74fdb55`، نسخه Backend **0.7.1** و برنامه **0.7.1+7** است. [رسید CI و فایل‌ها](../audits/evidence/ci-study-duration-2026-10-12.json) و [گزارش آزمون و حدود پذیرش](../audits/2026-10-12-study-duration-verification.md) مرجع‌اند. [PR پیش‌نویس۱۳](https://github.com/davoodmehraban89/LifeMate/pull/13) روی۱۲ است و ادغام نشده است؛ این خروجی نامزد آزمون با داده ساختگی است.
 
 ## اکنون و کادر URL در APK
 
-تا وقتی به رایانه دسترسی ندارید، **اقدام فوری لازم نیست**. کادر اتصال، نشانی HTTPS **API مشترک خانواده** را می‌خواهد؛ نصب APK یا وارد کردن نشانی، سرور ایجاد نمی‌کند. API عمومی سازگار و فعال تأیید نشده است. [بررسی11اکتبر دامنه](../audits/2026-10-11-apk-connection.md) پاسخ قدیمی HTML را ثبت کرد؛ این بررسی تازه DNS نیست. `app.lifeguide.ir` یا مسیر آن را حدس نزنید و DNS را فعلاً تغییر ندهید.
+تا وقتی به رایانه دسترسی ندارید، **اقدام فوری لازم نیست**. کادر اتصال، نشانی HTTPS **API مشترک خانواده** را می‌خواهد؛ نصب APK یا وارد کردن نشانی، سرور ایجاد نمی‌کند. API عمومی سازگار و فعال تأیید نشده است. [بررسی11اکتبر دامنه](../audits/2026-10-11-apk-connection.md) پاسخ قدیمی HTML را ثبت کرد؛ بررسی خواندنی تازه12اکتبر هم `/config.json` و `/api/health` راHTMLغیرJSON نشان داد؛ [receipt](../audits/evidence/public-api-paths-2026-10-12.json). این بررسی DNS/تمام مسیرها یا دسترسی داخل ایران نیست. `app.lifeguide.ir` یا مسیر آن را حدس نزنید و DNS را فعلاً تغییر ندهید.
 
 بعد از اجرای سالم Stage0 و اعتماد گواهی، PWA روی `https://OWNER-LAN-IP/` و نشانی مورد نیاز APK روی `https://OWNER-LAN-IP/api` است؛ `OWNER-LAN-IP` را با IP واقعی رایانه عوض کنید. `localhost` روی گوشی به خود گوشی اشاره می‌کند. این نشانی فقط در LAN و هنگام روشن بودن PC/Docker قابل استفاده است؛ لینک اینترنتی عمومی نیست.
 
 ## فایل Android و امضا
 
-[دانلود APK همین run](https://github.com/davoodmehraban89/LifeMate/actions/runs/38201011644/artifacts/11725931941) یک ZIP با فایل **LifeGuide-debug.apk** است. لینک artifact مخزن خصوصی به ورود حساب GitHub دارای دسترسی نیاز دارد؛ از صفحه run هم قابل دریافت است. لینک موقت فایل چت ممکن است منقضی شود. فایل APK روی iPhone نصب نمی‌شود؛ مسیر iPhone، PWA در Safari است.
+[دانلود APK همین run](https://github.com/davoodmehraban89/LifeMate/actions/runs/38223988983/artifacts/11735469546) یک ZIP با فایل **LifeGuide-debug.apk** است. لینک artifact مخزن خصوصی به ورود حساب GitHub دارای دسترسی نیاز دارد؛ از صفحه run هم قابل دریافت است. لینک موقت فایل چت ممکن است منقضی شود. فایل APK روی iPhone نصب نمی‌شود؛ مسیر iPhone، PWA در Safari است.
 
 پس از استخراج، در PowerShell بررسی کنید:
 
@@ -18,20 +18,20 @@
 Get-FileHash ./LifeGuide-debug.apk -Algorithm SHA256
 ```
 
-اندازه APK **168960414 بایت** و SHA256 آن **b9b8599de796986cf2800ce24782ee85bc87a7d97889d2d194465f0ad4f07915** است؛ هش ZIP متفاوت است. manifest واقعی `ir.lifeguide.app`، نسخه0.7.0/code6، label فارسی و منع cleartext را نشان داد. روی runner، امضای debug با v2 واقعاً تأیید شد؛ گواهی SHA256 آن `c1bf6ec0237985d9fadf7d12d614b2461e78dda64903dcff1009867b43a972e1` است و با گواهی debug اجرای قبلی تفاوت دارد. **نصب/ارتقای Android واقعی UNVERIFIED** است و تفاوت امضا می‌تواند ارتقای درجا را رد کند. برای رفع آن، برنامه یا داده دارای تغییر ارسال‌نشده را حذف نکنید. APK رسمی با کلید انتشار مالک هنوز ساخته نشده است.
+اندازه APK **168960986 بایت** و SHA256 آن **3a66f37971af6776fc2b22f0f79ed74cc35c68722bbcf5ee8b6c15fd6b41cd37** است؛ هش ZIP متفاوت است. manifest واقعی `ir.lifeguide.app`، نسخه0.7.1/code7، label فارسی و منع cleartext را نشان داد. روی runner، امضای debug با v2 واقعاً تأیید شد؛ گواهی SHA256 آن `5d2f033c8044dc0e45fb390b8cde08295cc23b57f4f3a26cf27980b86446c171` است و با گواهی debug اجرای قبلی تفاوت دارد. **نصب/ارتقای Android واقعی UNVERIFIED** است و تفاوت امضا می‌تواند ارتقای درجا را رد کند. برای رفع آن، برنامه یا داده دارای تغییر ارسال‌نشده را حذف نکنید. APK رسمی با کلید انتشار مالک هنوز ساخته نشده است.
 
 ## Windows/LAN: دستورهای محلی پس از دسترسی به PC
 
 Docker Desktop با WSL2، Git، Node22 و mkcert لازم‌اند. این فرمان‌ها روی Windows مالک **UNVERIFIED** هستند؛ اجرای Linux/Compose تیم جای پذیرش Windows و گوشی را نمی‌گیرد. فقط داده ساختگی استفاده کنید. یک پوشه تازه آماده کنید؛ checkout یا داده قبلی را reset/force نکنید:
 
 ```powershell
-git clone --branch feat/learning-content-operations --single-branch https://github.com/davoodmehraban89/LifeMate.git LifeGuide-test-0.7.1
+git clone --branch fix/study-duration-display --single-branch https://github.com/davoodmehraban89/LifeMate.git LifeGuide-test-0.7.1
 Set-Location LifeGuide-test-0.7.1
-git switch --detach 0831ee6ba81a4811f819e8d8dbfe3f7b24a566ef
+git switch --detach d0b3446d736b67fdb4e0218282ad15f0e74fdb55
 ipconfig
 ```
 
-[LifeGuide-web همین run](https://github.com/davoodmehraban89/LifeMate/actions/runs/38201011644/artifacts/11725840928) را همراه تمام فایل‌ها و `build-provenance.json` در `apps/lifemate/build/web` استخراج کنید؛ `index.html` باید مستقیم در همین پوشه باشد. artifact0.6 قدیمی با این منبع سازگار نیست. اگر checker رد کرد، provenance را برای معتبر جلوه دادن خروجی قدیمی stamp نکنید؛ build موفق همان منبع لازم است. روش build محلی در [STAGE0](STAGE0.md#بسته‌بندی-pwa-از-خروجی-build-بررسی‌شده) آمده است.
+[LifeGuide-web همین run](https://github.com/davoodmehraban89/LifeMate/actions/runs/38223988983/artifacts/11734794646) را همراه تمام فایل‌ها و `build-provenance.json` در `apps/lifemate/build/web` استخراج کنید؛ `index.html` باید مستقیم در همین پوشه باشد. artifact0.6 قدیمی با این منبع سازگار نیست. اگر checker رد کرد، provenance را برای معتبر جلوه دادن خروجی قدیمی stamp نکنید؛ build موفق همان منبع لازم است. روش build محلی در [STAGE0](STAGE0.md#بسته‌بندی-pwa-از-خروجی-build-بررسی‌شده) آمده است.
 
 PC و گوشی‌ها روی LAN مورد اعتماد باشند؛ guest Wi-Fi/client isolation می‌تواند اتصال را قطع کند. IP مثال زیر را با IP واقعی PC عوض کنید و برایش DHCP reservation بگذارید:
 

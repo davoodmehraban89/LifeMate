@@ -4,7 +4,8 @@
 
 - Fix a real three-account PWA acceptance blocker: public auth capabilities no longer consume sensitive login/delivery attempts, and refresh/logout have a separate bounded session bucket.
 - Keep strict sensitive-auth limits and trusted-proxy rules; near-match methods/paths remain strict. Add production-entrypoint PostgreSQL tests for shared-IP family rotation and rate-limit boundaries.
-- Flutter remains0.7.0+6 because the client protocol and application source are unchanged. Release signing, hardware/Safari/Iran access and real content review remain UNVERIFIED.
+- The initial auth-only hotfix kept Flutter0.7.0+6. Follow-up client0.7.1+7 shows exact minute/second durations in parent totals, daily trends, subjects and tasks; zero and whole-minute labels stay compatible. Bound the daily label width for narrow RTL screens and update the public static cache version.
+- Release signing, hardware/Safari/Iran access and real content review remain UNVERIFIED.
 
 ## 0.7.0 — 2026-10-12 — learning and family operations (test candidate)
 

@@ -117,6 +117,113 @@ Widget _page(HttpIdentityApi api, {String childId = 'child'}) => MaterialApp(
         api: api, familyId: 'family', childId: childId, childName: 'فرزند'));
 
 void main() {
+  for (final entry in <int, String>{
+    0: '0 دقیقه',
+    4: '4 ثانیه',
+    29: '29 ثانیه',
+    30: '30 ثانیه',
+    59: '59 ثانیه',
+    60: '1 دقیقه',
+    61: '1 دقیقه و 1 ثانیه',
+    90: '1 دقیقه و 30 ثانیه',
+    1500: '25 دقیقه',
+  }.entries) {
+    testWidgets('recorded ${entry.key} seconds keeps exact parent report time',
+        (tester) async {
+      final report = _report('تکلیف با زمان دقیق');
+      (report['periodMetrics'] as Map)['recordedDurationSeconds'] = entry.key;
+      final api = _api((_) async => _response(report));
+      await tester.pumpWidget(_page(api));
+      await tester.pumpAndSettle();
+      expect(find.text('زمان ثبت‌شده: ${entry.value}'), findsOneWidget);
+      expect(find.text('زمان برنامه‌ریزی‌شده: 30 دقیقه'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      api.close();
+    });
+  }
+
+  testWidgets('short duration remains exact in daily, subject and task rows',
+      (tester) async {
+    final report = _report('تکلیف چهارثانیه‌ای');
+    (report['periodMetrics'] as Map)['recordedDurationSeconds'] = 4;
+    report['daily'] = [
+      {'date': '2026-10-11', 'recordedDurationSeconds': 4}
+    ];
+    (report['periodSubjects'] as List).single['recordedDurationSeconds'] = 4;
+    report['items'] = [
+      {
+        'id': 'short-task',
+        'title': 'تکلیف چهارثانیه‌ای',
+        'kind': 'assignment',
+        'taskInRange': true,
+        'plannedDurationSeconds': 1800,
+        'recordedDurationSeconds': 4
+      }
+    ];
+    final api = _api((_) async => _response(report));
+    await tester.pumpWidget(_page(api));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('4 ثانیه'), 200);
+    expect(find.text('4 ثانیه'), findsOneWidget);
+    await tester.scrollUntilVisible(
+        find.textContaining('1/2 تکمیل تکلیف‌های بازه · 4 ثانیه'), 200);
+    expect(find.textContaining('1/2 تکمیل تکلیف‌های بازه · 4 ثانیه'),
+        findsOneWidget);
+    await tester.scrollUntilVisible(
+        find.textContaining('برنامه 30 دقیقه · ثبت 4 ثانیه'), 200);
+    expect(
+        find.textContaining('برنامه 30 دقیقه · ثبت 4 ثانیه'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    api.close();
+  });
+
+  testWidgets('legacy report preserves planned seconds without rounding',
+      (tester) async {
+    final report = _report('تکلیف سرور قبلی')
+      ..remove('periodMetrics')
+      ..remove('periodSubjects')
+      ..remove('periodExams');
+    (report['metrics'] as Map)
+      ..['plannedDurationSeconds'] = 95
+      ..['recordedDurationSeconds'] = 4;
+    final api = _api((_) async => _response(report));
+    await tester.pumpWidget(_page(api));
+    await tester.pumpAndSettle();
+    expect(
+        find.text('زمان برنامه‌ریزی‌شده: 1 دقیقه و 35 ثانیه'), findsOneWidget);
+    expect(find.text('زمان ثبت‌شده: 4 ثانیه'), findsOneWidget);
+    expect(find.textContaining('سرور آمار تکلیف‌های بازه را ارائه نکرده'),
+        findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    api.close();
+  });
+
+  testWidgets('mixed duration fits a narrow RTL daily report', (tester) async {
+    tester.view.physicalSize = const Size(320, 960);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final report = _report('تکلیف نیم‌دقیقه اضافه');
+    report['daily'] = [
+      {'date': '2026-10-11', 'recordedDurationSeconds': 90}
+    ];
+    final api = _api((_) async => _response(report));
+    await tester.pumpWidget(MaterialApp(
+        home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: LearningReportPage(
+                api: api,
+                familyId: 'family',
+                childId: 'child',
+                childName: 'فرزند'))));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('1 دقیقه و 30 ثانیه'), 200);
+    expect(find.text('1 دقیقه و 30 ثانیه'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    api.close();
+  });
+
   testWidgets(
       'range dashboard uses period counters and preserves explicitly labelled history',
       (tester) async {
