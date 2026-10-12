@@ -1,5 +1,5 @@
 name: lifemate
-version: 0.6.0+5
+version: 0.7.0+6
 publish_to: none
 description: LifeGuide personal, family and learning companion.
 environment:

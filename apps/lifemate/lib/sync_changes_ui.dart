@@ -223,6 +223,34 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
         _ => 'در انتظار تأیید سرور',
       };
 
+  String _entityTitle(Map<String, dynamic> mutation) =>
+      switch (mutation['entityType']) {
+        'study_session' => 'ثبت مطالعه',
+        'learning_progress' => 'پیشرفت درس',
+        'learning_attempt' => 'پاسخ آزمون',
+        'learning_feedback' => 'بازخورد آموزشی',
+        'learning_goal' => 'هدف یادگیری',
+        'family_operation' => 'تغییر خانواده',
+        'content_review' => 'بررسی بازخورد',
+        'content_brief' => 'درخواست برنامه توسعه محتوا',
+        'school_lifecycle_contexts' => 'فضای تحصیلی',
+        'school_lifecycle_years' => 'سال تحصیلی',
+        'school_lifecycle_terms' => 'نیم‌سال تحصیلی',
+        _ => 'تغییر کار',
+      };
+
+  String? _manualRetryPage(Map<String, dynamic> mutation) =>
+      switch (mutation['entityType']) {
+        'learning_goal' => 'اهداف یادگیری',
+        'family_operation' => 'مدیریت خانواده',
+        'content_review' || 'content_brief' => 'بررسی محتوای آموزشی',
+        'school_lifecycle_contexts' ||
+        'school_lifecycle_years' ||
+        'school_lifecycle_terms' =>
+          'مدیریت فضای تحصیلی',
+        _ => null,
+      };
+
   String _details(Map row, {bool server = false}) {
     const labels = {
       'title': 'عنوان',
@@ -274,6 +302,11 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
                     onPressed: busy || !storeReady ? null : _retry,
                     icon: const Icon(Icons.sync),
                     label: const Text('تلاش دوباره برای همگام‌سازی')),
+                if (queue.any((row) => _manualRetryPage(row) != null))
+                  const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Text(
+                          'تغییرهای خانواده، اهداف و مدیریت محتوا یا تحصیل از صفحه مربوط بررسی و دوباره ارسال می‌شوند. این دکمه آن‌ها را ارسال نمی‌کند.')),
                 if (queue.isEmpty)
                   const Padding(
                       padding: EdgeInsets.all(16),
@@ -283,10 +316,12 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
                     title: Text(hiddenEntities.contains(mutation['entityId'])
                         ? 'تغییر بدون دسترسی'
                         : (mutation['payload'] as Map)['title']?.toString() ??
-                            (mutation['entityType'] == 'study_session'
-                                ? 'ثبت مطالعه'
-                                : 'تغییر کار')),
-                    subtitle: Text(_status(mutation['queueStatus'])),
+                            _entityTitle(mutation)),
+                    subtitle: Text([
+                      _status(mutation['queueStatus']),
+                      if (_manualRetryPage(mutation) case final page?)
+                        'بررسی و ارسال از «$page»',
+                    ].join('\n')),
                     trailing: mutation['entityType'] == 'plan_item' &&
                             ['conflict', 'rejected']
                                 .contains(mutation['queueStatus']) &&
@@ -301,7 +336,7 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
                   Text('پیش‌نویس‌های نگه‌داری‌شده',
                       style: Theme.of(context).textTheme.titleMedium),
                   const Text(
-                      'این تغییرها ارسال نمی‌شوند. عنوان را برای بازیابی دستی در ویرایش کار نگه داشته‌ایم.'),
+                      'این تغییرها ارسال نمی‌شوند. اطلاعات آن‌ها برای بازیابی دستی در صفحه مربوط نگه داشته شده است.'),
                   for (final entry in journal)
                     ListTile(
                         title: Text(

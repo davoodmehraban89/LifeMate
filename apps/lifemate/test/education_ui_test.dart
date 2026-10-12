@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:ui' show SemanticsRole;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,6 +51,120 @@ void main() {
           client: MockClient(handler))
         ..accessToken = 'synthetic-fixture-token'
         ..currentUserId = 'synthetic-learner';
+
+  Future<void> showProgress(WidgetTester tester) async {
+    await tester.scrollUntilVisible(find.textContaining('پیشرفت شخصی:'), 100,
+        scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
+  }
+
+  void expectProgressAnnouncement(WidgetTester tester, String label) {
+    final announcement = find.bySemanticsLabel(label);
+    expect(announcement, findsOneWidget);
+    expect(
+        tester.getSemantics(announcement),
+        matchesSemantics(
+            label: label,
+            role: kIsWeb ? SemanticsRole.status : SemanticsRole.none,
+            isLiveRegion: !kIsWeb,
+            textDirection: TextDirection.rtl));
+  }
+
+  testWidgets(
+      'progress live region announces acknowledged status and timestamp after update and reopen',
+      (tester) async {
+    final semantics = tester.ensureSemantics();
+    Map<String, dynamic>? progress;
+    final api = makeApi((request) async {
+      if (request.method == 'PUT') {
+        final submitted = jsonDecode(request.body) as Map<String, dynamic>;
+        progress = {
+          ...submitted,
+          'unitId': firstId,
+          'version': 1,
+          'updatedAt': '2026-10-11T10:00:00Z',
+          'acceptedAt': '2026-10-11T10:00:00Z'
+        };
+        return response(progress!);
+      }
+      return response({
+        'id': courseId,
+        'titleFa': 'کتاب آزمایشی',
+        'units': [
+          {
+            'id': firstId,
+            'titleFa': 'درس آزمایشی',
+            'videos': [],
+            'progress': progress
+          }
+        ]
+      });
+    });
+    Widget lesson() => screen(
+        LearningLessonPage(api: api, courseId: courseId, unitId: firstId));
+    await tester.pumpWidget(lesson());
+    await tester.pumpAndSettle();
+    await showProgress(tester);
+    expectProgressAnnouncement(tester, 'پیشرفت شخصی: شروع نشده');
+    await tester.tap(find.text('در حال یادگیری'));
+    await tester.pumpAndSettle();
+    await showProgress(tester);
+    const accepted =
+        'پیشرفت شخصی: در حال یادگیری\nآخرین ثبت سرور: 2026-10-11T10:00:00Z';
+    expectProgressAnnouncement(tester, accepted);
+    expect(find.bySemanticsLabel('پیشرفت شخصی: شروع نشده'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(lesson());
+    await tester.pumpAndSettle();
+    await showProgress(tester);
+    expectProgressAnnouncement(tester, accepted);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    semantics.dispose();
+    api.close();
+  });
+
+  testWidgets(
+      'pending progress announcement preserves the prior server timestamp',
+      (tester) async {
+    final semantics = tester.ensureSemantics();
+    final api = makeApi((request) async {
+      if (request.method == 'PUT') {
+        throw http.ClientException('synthetic offline');
+      }
+      return response({
+        'id': courseId,
+        'titleFa': 'کتاب آزمایشی',
+        'units': [
+          {
+            'id': firstId,
+            'titleFa': 'درس آزمایشی',
+            'videos': [],
+            'progress': {
+              'unitId': firstId,
+              'status': 'in_progress',
+              'source': 'self_reported',
+              'version': 1,
+              'updatedAt': '2026-10-11T09:00:00Z'
+            }
+          }
+        ]
+      });
+    });
+    await tester.pumpWidget(screen(
+        LearningLessonPage(api: api, courseId: courseId, unitId: firstId)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('طبق گزارش من تکمیل شد'));
+    await tester.pumpAndSettle();
+    await showProgress(tester);
+    expectProgressAnnouncement(tester,
+        'پیشرفت شخصی: تکمیل طبق گزارش من\nتغییر روی دستگاه ذخیره شده؛ تأیید سرور دریافت نشده است.\nآخرین ثبت سرور: 2026-10-11T09:00:00Z');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    semantics.dispose();
+    api.close();
+  });
 
   testWidgets(
       'no education profile asks selection without silently choosing grade7',
@@ -164,6 +280,7 @@ void main() {
   testWidgets(
       'permission denial removes previously displayed personal progress',
       (tester) async {
+    final semantics = tester.ensureSemantics();
     var denied = false;
     final api = makeApi((request) async {
       if (denied) return http.Response('{"error":"forbidden"}', 403);
@@ -190,16 +307,24 @@ void main() {
         LearningLessonPage(api: api, courseId: courseId, unitId: firstId)));
     await tester.pumpAndSettle();
     expect(find.textContaining('تکمیل طبق گزارش من'), findsOneWidget);
+    await showProgress(tester);
+    expectProgressAnnouncement(tester,
+        'پیشرفت شخصی: تکمیل طبق گزارش من\nآخرین ثبت سرور: 2026-10-09T10:00:00Z');
     denied = true;
     await tester.scrollUntilVisible(find.text('همگام‌سازی و تازه‌سازی'), 250,
         scrollable: find.byType(Scrollable).first);
     await tester.tap(find.text('همگام‌سازی و تازه‌سازی'));
     await tester.pumpAndSettle();
     expect(find.textContaining('تکمیل طبق گزارش من'), findsNothing);
+    expect(
+        find.bySemanticsLabel(
+            RegExp('تکمیل طبق گزارش من|2026-10-09T10:00:00Z')),
+        findsNothing);
     expect(find.text('درس خصوصی آزمایشی'), findsNothing);
     expect(find.textContaining('نشست معتبر لازم است'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
+    semantics.dispose();
     api.close();
   });
 

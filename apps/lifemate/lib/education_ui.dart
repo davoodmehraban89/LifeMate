@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:ui' show SemanticsRole;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'api.dart';
@@ -595,6 +597,16 @@ class _LearningLessonPageState extends State<LearningLessonPage> {
     final current = unit?['progress'];
     final pending = current is Map && current['pending_sync'] == true;
     final conflict = current is Map && current['queueStatus'] == 'conflict';
+    final progressLines = [
+      'پیشرفت شخصی: ${current is Map ? {
+            'not_started': 'شروع نشده',
+            'in_progress': 'در حال یادگیری',
+            'completed': 'تکمیل طبق گزارش من'
+          }[current['status']] ?? 'نامشخص' : 'شروع نشده'}',
+      if (pending) 'تغییر روی دستگاه ذخیره شده؛ تأیید سرور دریافت نشده است.',
+      if (current is Map && current['updatedAt'] != null)
+        'آخرین ثبت سرور: ${current['updatedAt']}',
+    ];
     final units = (course?['units'] as List? ?? []).whereType<Map>().toList();
     final index = units.indexWhere((u) => u['id'] == widget.unitId);
     void move(int to) =>
@@ -654,16 +666,19 @@ class _LearningLessonPageState extends State<LearningLessonPage> {
                           api: widget.api, unitId: widget.unitId))),
               icon: const Icon(Icons.feedback_outlined),
               label: const Text('گزارش ایراد این درس')),
-          Text('پیشرفت شخصی: ${current is Map ? {
-                'not_started': 'شروع نشده',
-                'in_progress': 'در حال یادگیری',
-                'completed': 'تکمیل طبق گزارش من'
-              }[current['status']] ?? 'نامشخص' : 'شروع نشده'}'),
-          if (pending)
-            const Text(
-                'تغییر روی دستگاه ذخیره شده؛ تأیید سرور دریافت نشده است.'),
-          if (current is Map && current['updatedAt'] != null)
-            Text('آخرین ثبت سرور: ${current['updatedAt']}'),
+          Semantics(
+              key: const ValueKey('learning-progress-announcement'),
+              container: true,
+              // Flutter disallows status + liveRegion on the same node.
+              // Web status has implicit ARIA live semantics; native uses the flag.
+              role: kIsWeb ? SemanticsRole.status : SemanticsRole.none,
+              liveRegion: !kIsWeb,
+              excludeSemantics: true,
+              textDirection: Directionality.of(context),
+              label: progressLines.join('\n'),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: progressLines.map((line) => Text(line)).toList())),
           if (conflict)
             TextButton(
                 onPressed: busy ? null : resolve,
