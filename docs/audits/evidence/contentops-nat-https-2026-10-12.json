@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-12T03:40:13.185Z",
+  "origin": "https://127.0.0.1:8445",
+  "apiVersion": "0.7.1",
+  "mode": "actual local Compose HTTPS; normal verified TLS; restricted runtime API DB role; synthetic fixture only; no interception",
+  "status": "PASS",
+  "requests": 30,
+  "checks": [
+    "12 real HTTPS capabilities reads use bounded general budget",
+    "Three independent existing synthetic accounts log in from one IP without capability reads consuming sensitive budget",
+    "12 refreshes across three sessions rotate tokens in bounded60/600 budget",
+    "Independent child task and both permitted parent reports retain completed/version6/recorded4s after API image recreation; private note absent"
+  ],
+  "limits": {
+    "general": 120,
+    "session": 60,
+    "sensitiveAuth": 10
+  },
+  "limitations": [
+    "Boundary429 tests ran on isolated production entrypoint, not this shared stack",
+    "Real Android/Safari/Iran UNVERIFIED",
+    "Client source remains0.7.0+6"
+  ]
+}

@@ -1,5 +1,23 @@
 # LifeGuide Changelog
 
+## 0.7.1 — 2026-10-12 — shared-network session recovery
+
+- Fix a real three-account PWA acceptance blocker: public auth capabilities no longer consume sensitive login/delivery attempts, and refresh/logout have a separate bounded session bucket.
+- Keep strict sensitive-auth limits and trusted-proxy rules; near-match methods/paths remain strict. Add production-entrypoint PostgreSQL tests for shared-IP family rotation and rate-limit boundaries.
+- Flutter remains0.7.0+6 because the client protocol and application source are unchanged. Release signing, hardware/Safari/Iran access and real content review remain UNVERIFIED.
+
+## 0.7.0 — 2026-10-12 — learning and family operations (test candidate)
+
+- Preserve Feature 1 and the real shared backend; add owner-private goal mutation receipts, version conflicts, durable client retry and check-in/history UI.
+- Add role/admin-transfer/invitation lifecycle with current authorization, atomic invalidation and age-aware safeguards; keep profile category independent of permissions.
+- Add explicit school context/year/term editors and versioned lifecycle; preserve linked task/grade/class history when archived.
+- Add owner-only quiz/review history and period-scoped parent metrics; clear stale or denied views and stabilize report source fingerprints.
+- Add explicitly granted consented-feedback moderation and non-sensitive development briefs; withdrawals invalidate later reads/exports. No external AI, automatic messages or deployment.
+- Add a dedicated local synthetic-only publication CLI with review/hash/version gates and immutable attempt history; all real teaching media and question banks remain DRAFT.
+- Expose progress updates in Chromium accessibility semantics and add a public offline startup notice without caching API/auth/config or private data.
+- Harden expired/revoked-session writes after database lock waits; expand real PostgreSQL/runtime-role acceptance.
+- Real Android/Safari/Windows/Iran, full educational review, live hosting, owner release signing and complete product acceptance remain UNVERIFIED; see PROJECT_STATE.
+
 ## 0.6.0 — 2026-10-11 — reviewed learning infrastructure (test candidate)
 
 - Preserve existing online family/planner/study and Feature 1; add grade/academic-track catalogue, deterministic unit IDs and repeatable metadata importer.

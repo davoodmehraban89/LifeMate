@@ -33,10 +33,14 @@ async function assertLearningProgressSemantics(page, progress) {
   const session = await page.context().newCDPSession(page);
   try {
     const {nodes} = await session.send('Accessibility.getFullAXTree');
+    // Chromium flattens whitespace in computed accessible names. The DOM
+    // attribute above must remain exact; AX content is compared under the
+    // browser's name normalization without dropping status or timestamp.
+    const normalizedName = value => String(value).replace(/\s+/gu,' ').trim();
     const matches = nodes.filter(node => !node.ignored &&
-      node.role?.value === 'status' && node.name?.value === label);
+      node.role?.value === 'status' && normalizedName(node.name?.value) === normalizedName(label));
     assert.equal(matches.length, 1,
-      'The updated label must appear in Chromium accessibility, not only DOM attributes.');
+      `The updated label must appear in Chromium accessibility, not only DOM attributes; status names: ${JSON.stringify(nodes.filter(n=>!n.ignored&&n.role?.value==='status').map(n=>n.name?.value))}`);
     assert.equal(nodes.filter(node => !node.ignored &&
       node.role?.value === 'StaticText' && node.name?.value?.startsWith('پیشرفت شخصی:')).length, 0,
       'Do not duplicate progress announcements through excluded child Text widgets.');

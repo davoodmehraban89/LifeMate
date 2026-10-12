@@ -1,0 +1,319 @@
+{
+  "startedAt": "2026-10-12T03:20:16.466364+00:00",
+  "origin": "https://127.0.0.1:8445",
+  "data": "new synthetic-only three-account fixture",
+  "transport": "actual HTTPS; normal TLS certificate/hostname verification; no intercepted responses",
+  "checks": [
+    "Three independent synthetic accounts authenticated via verified HTTPS",
+    "A/1 child homework received server ACK; independent authenticated GET confirms id/version/private note",
+    "B/2 authorized mother logged into current PWA and rendered allowed planned homework",
+    "3/4/G actual-time timer start/pause/new child login/resume/stop: two intervals; replay does not double count",
+    "Harness-only expectation corrected to in_progress; resumed existing task/session without repeating create or timer writes",
+    "5 allowed report shows recorded duration; mother's saved PWA session refreshed after close/reopen",
+    "6/7/C child completion acknowledged; father's separate authenticated PWA sees new completed status",
+    "8/D two parent browser profiles closed/reopened and refreshed after natural auth-window expiry; independent child refresh retained task/session",
+    "Private owner note excluded from both allowed report JSON and rendered parent PWA"
+  ],
+  "parentBrowserRuns": [
+    {
+      "parent": "mother",
+      "resumed": false,
+      "screenshot": "contentops-mother-planned.png",
+      "log": "contentops-mother-planned.log",
+      "result": {
+        "mode": "actual local HTTPS gateway, normal browser trust, real API",
+        "browser": "151.0.7922.173",
+        "http": 200,
+        "requestCount": 24,
+        "externalRequests": [],
+        "failedRequests": [],
+        "browserErrors": [],
+        "httpErrors": [],
+        "syntheticParentLogin": true,
+        "syntheticParentAuthenticated": true,
+        "permittedChildReportRendered": true,
+        "serverReportBodyVerified": true,
+        "reportBodyLimit": null,
+        "resumedPersistedParentSession": false,
+        "authResponses": [
+          {
+            "path": "/api/v1/auth/login",
+            "status": 200
+          }
+        ],
+        "reportedTask": {
+          "title": "تمرین ریاضی — پذیرش آنلاین ۰٫۷ فقط داده آزمایشی",
+          "status": "planned",
+          "recordedDurationSeconds": 0,
+          "plannedDurationSeconds": 1800,
+          "activityState": "planned"
+        },
+        "fonts": [
+          "/assets/fonts/MaterialIcons-Regular.otf",
+          "/assets/assets/fonts/LifeGuidePersian.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideEmoji.ttf",
+          "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+        ],
+        "inputLabels": [],
+        "serviceWorkers": 1,
+        "limitations": "Safari install, Android, three physical devices and Iran reachability UNVERIFIED"
+      }
+    },
+    {
+      "parent": "mother",
+      "resumed": true,
+      "screenshot": "contentops-mother-recorded.png",
+      "log": "contentops-mother-recorded.log",
+      "result": {
+        "mode": "actual local HTTPS gateway, normal browser trust, real API",
+        "browser": "151.0.7922.173",
+        "http": 200,
+        "requestCount": 23,
+        "externalRequests": [],
+        "failedRequests": [],
+        "browserErrors": [],
+        "httpErrors": [],
+        "syntheticParentLogin": false,
+        "syntheticParentAuthenticated": true,
+        "permittedChildReportRendered": true,
+        "serverReportBodyVerified": false,
+        "reportBodyLimit": "Restored-tab JSON body UNVERIFIED; fresh-login runs independently validate JSON",
+        "resumedPersistedParentSession": true,
+        "authResponses": [
+          {
+            "path": "/api/v1/auth/refresh",
+            "status": 200
+          }
+        ],
+        "reportedTask": null,
+        "fonts": [
+          "/assets/fonts/MaterialIcons-Regular.otf",
+          "/assets/assets/fonts/LifeGuidePersian.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideEmoji.ttf",
+          "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+        ],
+        "inputLabels": [],
+        "serviceWorkers": 1,
+        "limitations": "Safari install, Android, three physical devices and Iran reachability UNVERIFIED"
+      }
+    },
+    {
+      "parent": "father",
+      "resumed": false,
+      "screenshot": "contentops-father-completed.png",
+      "log": "contentops-father-completed.log",
+      "result": {
+        "mode": "actual local HTTPS gateway, normal browser trust, real API",
+        "browser": "151.0.7922.173",
+        "http": 200,
+        "requestCount": 24,
+        "externalRequests": [],
+        "failedRequests": [],
+        "browserErrors": [],
+        "httpErrors": [],
+        "syntheticParentLogin": true,
+        "syntheticParentAuthenticated": true,
+        "permittedChildReportRendered": true,
+        "serverReportBodyVerified": true,
+        "reportBodyLimit": null,
+        "resumedPersistedParentSession": false,
+        "authResponses": [
+          {
+            "path": "/api/v1/auth/login",
+            "status": 200
+          }
+        ],
+        "reportedTask": {
+          "title": "تمرین ریاضی — پذیرش آنلاین ۰٫۷ فقط داده آزمایشی",
+          "status": "completed",
+          "recordedDurationSeconds": 4,
+          "plannedDurationSeconds": 1800,
+          "activityState": "completed"
+        },
+        "fonts": [
+          "/assets/fonts/MaterialIcons-Regular.otf",
+          "/assets/assets/fonts/LifeGuidePersian.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideEmoji.ttf",
+          "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+        ],
+        "inputLabels": [],
+        "serviceWorkers": 1,
+        "limitations": "Safari install, Android, three physical devices and Iran reachability UNVERIFIED"
+      }
+    },
+    {
+      "parent": "mother",
+      "resumed": true,
+      "screenshot": "contentops-mother-reopened.png",
+      "log": "contentops-mother-reopened.log",
+      "result": {
+        "mode": "actual local HTTPS gateway, normal browser trust, real API",
+        "browser": "151.0.7922.173",
+        "http": 200,
+        "requestCount": 23,
+        "externalRequests": [],
+        "failedRequests": [],
+        "browserErrors": [],
+        "httpErrors": [],
+        "syntheticParentLogin": false,
+        "syntheticParentAuthenticated": true,
+        "permittedChildReportRendered": true,
+        "serverReportBodyVerified": false,
+        "reportBodyLimit": "Restored-tab JSON body UNVERIFIED; fresh-login runs independently validate JSON",
+        "resumedPersistedParentSession": true,
+        "authResponses": [
+          {
+            "path": "/api/v1/auth/refresh",
+            "status": 200
+          }
+        ],
+        "reportedTask": null,
+        "fonts": [
+          "/assets/fonts/MaterialIcons-Regular.otf",
+          "/assets/assets/fonts/LifeGuidePersian.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideEmoji.ttf",
+          "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+        ],
+        "inputLabels": [],
+        "serviceWorkers": 1,
+        "limitations": "Safari install, Android, three physical devices and Iran reachability UNVERIFIED"
+      }
+    },
+    {
+      "parent": "father",
+      "resumed": true,
+      "screenshot": "contentops-father-reopened.png",
+      "log": "contentops-father-reopened.log",
+      "result": {
+        "mode": "actual local HTTPS gateway, normal browser trust, real API",
+        "browser": "151.0.7922.173",
+        "http": 200,
+        "requestCount": 23,
+        "externalRequests": [],
+        "failedRequests": [],
+        "browserErrors": [],
+        "httpErrors": [],
+        "syntheticParentLogin": false,
+        "syntheticParentAuthenticated": true,
+        "permittedChildReportRendered": true,
+        "serverReportBodyVerified": false,
+        "reportBodyLimit": "Restored-tab JSON body UNVERIFIED; fresh-login runs independently validate JSON",
+        "resumedPersistedParentSession": true,
+        "authResponses": [
+          {
+            "path": "/api/v1/auth/refresh",
+            "status": 200
+          }
+        ],
+        "reportedTask": null,
+        "fonts": [
+          "/assets/fonts/MaterialIcons-Regular.otf",
+          "/assets/assets/fonts/LifeGuidePersian.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideEmoji.ttf",
+          "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+        ],
+        "inputLabels": [],
+        "serviceWorkers": 1,
+        "limitations": "Safari install, Android, three physical devices and Iran reachability UNVERIFIED"
+      }
+    }
+  ],
+  "status": "PASS",
+  "limitations": [
+    "Child homework/timer/completion uses real authenticated HTTP API, not Android or child UI.",
+    "Parent PWA uses real Chromium at separate persistent browser profiles, not physical devices or Safari.",
+    "DOM semantic activation and screenshot rendering do not establish touch/screen-reader acceptance.",
+    "Session duration is timer-reported synthetic test time, not proof of real study.",
+    "No backend restart, Android exit/re-sync, Safari install, true BFCache, or Iran reachability is certified.",
+    "Database verification is separate and UNVERIFIED by this harness.",
+    "Recorded API duration is four real test seconds; current parent UI rounds it to zero minutes. This is not a claim that the UI displays exact seconds."
+  ],
+  "taskId": "c44c110c-a0fb-477e-8992-800241bf13d8",
+  "createMutationId": "500360e8-0ecb-4db6-975b-7d9e01bb2e26",
+  "sessionId": "34807baf-ab63-4709-8b18-7c9d4822a4cf",
+  "recordedSeconds": 4,
+  "session": {
+    "id": "34807baf-ab63-4709-8b18-7c9d4822a4cf",
+    "source": "timer",
+    "status": "completed",
+    "version": 4,
+    "startedAt": "2026-10-12T03:20:21.689Z",
+    "endedAt": "2026-10-12T03:20:27.320Z",
+    "intervals": [
+      {
+        "start": "2026-10-12T03:20:21.689Z",
+        "end": "2026-10-12T03:20:23.906Z"
+      },
+      {
+        "start": "2026-10-12T03:20:25.104Z",
+        "end": "2026-10-12T03:20:27.320Z"
+      }
+    ],
+    "recordedDurationSeconds": 4,
+    "isEvidenceOfStudy": false
+  },
+  "finishedAt": "2026-10-12T03:30:32.983023Z",
+  "previousHarnessFailure": {
+    "expectedStatusAfterTimer": "planned",
+    "correctStatusAfterTimer": "in_progress",
+    "appChange": false
+  },
+  "rateLimitObservation": {
+    "refreshStatus": 429,
+    "sessionStillPresent": true,
+    "ui": "requests too frequent; retry offered",
+    "scope": "one IP bucket for /v1/auth/* including login, capabilities and refresh",
+    "limit": 10,
+    "windowSeconds": 600,
+    "initialRetryAfterSeconds": 306,
+    "handling": "waited for normal bucket expiry; no reset/bypass/server/config change"
+  },
+  "finalTask": {
+    "id": "c44c110c-a0fb-477e-8992-800241bf13d8",
+    "title": "تمرین ریاضی — پذیرش آنلاین ۰٫۷ فقط داده آزمایشی",
+    "status": "completed",
+    "version": 6
+  },
+  "servedApiScope": "Current 0.7 local shared stack before the subsequent NAT limiter correction; observed original 10/600 auth bucket. No claim that this run certifies the corrected limiter.",
+  "browserRequestTotal": 117,
+  "visualInspection": {
+    "motherRecordedAndFatherCompleted": "opened and inspected current report screenshots",
+    "motherReopened": "opened and inspected completed report screenshot",
+    "fatherReopened": "byte-identical to inspected mother reopen report image; independently authenticated father browser request/refresh checks passed",
+    "exactSecondsInUI": "UNVERIFIED: current UI rounds recorded four-second duration to zero minutes"
+  },
+  "screenshotSha256": {
+    "contentops-mother-planned.png": "15ae0e1e1f61729598d157bbf3c65c48afd4c286bbf5dea2c5782b7367ba6a4e",
+    "contentops-mother-recorded.png": "158621aea6fec81e9bdd694c657a21bb1e3301453674df9030a948992ac6f6ba",
+    "contentops-father-completed.png": "7dc6ef247f95a9220704080676c90e7be270b27b008598294a434e12cea2c276",
+    "contentops-mother-reopened.png": "babd3dd9dc42fa49b96e9485242d304e302243a908ef610162f2a5fecea85a3e",
+    "contentops-father-reopened.png": "babd3dd9dc42fa49b96e9485242d304e302243a908ef610162f2a5fecea85a3e"
+  },
+  "rootIndependentSql": {
+    "at": "2026-10-12T03:23:00Z",
+    "scope": "separate actual Compose PostgreSQL queries; synthetic fixture only",
+    "task": {
+      "status": "completed",
+      "version": 6,
+      "visibility": "parent_guardian",
+      "plannedDurationSeconds": 1800
+    },
+    "session": {
+      "status": "completed",
+      "source": "timer",
+      "recordedDurationSeconds": 4,
+      "intervalCount": 2
+    },
+    "limitations": "Does not certify Android/Safari, physical study or corrected NAT policy."
+  }
+}

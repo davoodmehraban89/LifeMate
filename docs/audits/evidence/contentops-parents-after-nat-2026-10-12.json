@@ -1,0 +1,131 @@
+{
+  "verifiedAt": "2026-10-12T03:45:12.339004+00:00",
+  "origin": "https://127.0.0.1:8445",
+  "status": "PASS_WITH_INITIAL_ABORTS_RECORDED",
+  "apiScope": "Root rebuilt local API0.7.1 before this task; binary/source SHA verification and independent API/DB probe are root evidence, not performed by this browser runner.",
+  "transport": "Actual local HTTPS gateway, normal Chromium certificate/hostname trust, no intercepted responses or ignore-TLS option.",
+  "fixture": {
+    "taskId": "c44c110c-a0fb-477e-8992-800241bf13d8",
+    "sessionId": "34807baf-ab63-4709-8b18-7c9d4822a4cf",
+    "expectedStatus": "completed",
+    "recordedDurationSeconds": 4,
+    "plannedDurationSeconds": 1800
+  },
+  "manualOperations": "Resume existing saved parent profiles only; no new login or homework/study mutation. Ordinary app polling requests also execute.",
+  "passedBrowserRuns": [
+    {
+      "parent": "mother",
+      "log": "contentops-mother-after-nat-0.7.1-diagnostic.log",
+      "screenshot": "contentops-mother-after-nat-0.7.1-diagnostic.png",
+      "screenshotSha256": "900ab73544a0e5216650f03143a66da66200419daff40632724af6b809e0d43f",
+      "result": {
+        "mode": "actual local HTTPS gateway, normal browser trust, real API",
+        "browser": "151.0.7922.173",
+        "http": 200,
+        "requestCount": 23,
+        "externalRequests": [],
+        "failedRequests": [],
+        "browserErrors": [],
+        "httpErrors": [],
+        "syntheticParentLogin": false,
+        "syntheticParentAuthenticated": true,
+        "permittedChildReportRendered": true,
+        "serverReportBodyVerified": false,
+        "reportBodyLimit": "Restored-tab JSON body UNVERIFIED; fresh-login runs independently validate JSON",
+        "resumedPersistedParentSession": true,
+        "authResponses": [
+          {
+            "path": "/api/v1/auth/refresh",
+            "status": 200
+          }
+        ],
+        "reportedTask": null,
+        "fonts": [
+          "/assets/fonts/MaterialIcons-Regular.otf",
+          "/assets/assets/fonts/LifeGuidePersian.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideEmoji.ttf",
+          "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+        ],
+        "inputLabels": [],
+        "serviceWorkers": 1,
+        "limitations": "Safari install, Android, three physical devices and Iran reachability UNVERIFIED"
+      }
+    },
+    {
+      "parent": "father",
+      "log": "contentops-father-after-nat-0.7.1-diagnostic.log",
+      "screenshot": "contentops-father-after-nat-0.7.1-diagnostic.png",
+      "screenshotSha256": "900ab73544a0e5216650f03143a66da66200419daff40632724af6b809e0d43f",
+      "result": {
+        "mode": "actual local HTTPS gateway, normal browser trust, real API",
+        "browser": "151.0.7922.173",
+        "http": 200,
+        "requestCount": 23,
+        "externalRequests": [],
+        "failedRequests": [],
+        "browserErrors": [],
+        "httpErrors": [],
+        "syntheticParentLogin": false,
+        "syntheticParentAuthenticated": true,
+        "permittedChildReportRendered": true,
+        "serverReportBodyVerified": false,
+        "reportBodyLimit": "Restored-tab JSON body UNVERIFIED; fresh-login runs independently validate JSON",
+        "resumedPersistedParentSession": true,
+        "authResponses": [
+          {
+            "path": "/api/v1/auth/refresh",
+            "status": 200
+          }
+        ],
+        "reportedTask": null,
+        "fonts": [
+          "/assets/fonts/MaterialIcons-Regular.otf",
+          "/assets/assets/fonts/LifeGuidePersian.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideLatin.ttf",
+          "/assets/assets/fonts/LifeGuideEmoji.ttf",
+          "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+        ],
+        "inputLabels": [],
+        "serviceWorkers": 1,
+        "limitations": "Safari install, Android, three physical devices and Iran reachability UNVERIFIED"
+      }
+    }
+  ],
+  "initialFailedRuns": [
+    {
+      "parent": "mother",
+      "log": "contentops-mother-after-nat-0.7.1.log",
+      "failure": "requestfailed net::ERR_ABORTED",
+      "paths": [
+        "/api/v1/me/content-capabilities",
+        "/api/v1/reminders/claim-due",
+        "/api/v1/families/a1000000-0000-4000-8000-000000000001/members"
+      ],
+      "outcome": "Failed helper run retained; not counted as PASS"
+    },
+    {
+      "parent": "father",
+      "log": "contentops-father-after-nat-0.7.1.log",
+      "failure": "requestfailed net::ERR_ABORTED",
+      "paths": [
+        "/api/v1/auth/refresh"
+      ],
+      "outcome": "Failed helper run retained; not counted as PASS"
+    }
+  ],
+  "retryHandling": "Reopened the same saved profiles; no source/server/config change, new login, token injection, interception or ignored network error. Diagnostic runner copies existing helper and adds failure-only snapshot reporting; its PASS criteria are unchanged.",
+  "initialAbortCause": "UNVERIFIED; subsequent runs passed. No claim of hardware update/BFCache certification.",
+  "limitations": [
+    "Safari install, Android, three physical devices and Iran reachability UNVERIFIED.",
+    "Restored-tab report JSON body UNVERIFIED by browser runner; it verifies refresh200, new report HTTP200 and rendered values. Independent API/DB assertions are root evidence.",
+    "Four recorded test seconds render as zero rounded minutes in the current PWA; timer data is not proof of real study.",
+    "DOM semantic activation and screenshots do not certify real touch or screen readers.",
+    "Client semantic version is not independently certified here; this record scopes API0.7.1 update and current locally served PWA."
+  ],
+  "priorReceiptSha256": "c5a6286c8fd049122687d557f58f6165feede068a698cc2cf428805e3be1eaec",
+  "passedRequestTotal": 46,
+  "visualInspection": "Mother current completed report image opened/inspected; father image is byte-identical while father independently refreshed its own profile. Completion100%, task retained, private note not rendered."
+}
