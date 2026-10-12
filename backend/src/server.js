@@ -9,12 +9,15 @@ import { createPhase6Router } from './phase6.js';
 import { createLearningLibraryRouter } from './learning_library.js';
 import { createLearningFeedbackRouter } from './learning_feedback.js';
 import { createLearningAssessmentRouter } from './learning_assessment.js';
+import { createContentReviewRouter } from './content_review.js';
+import { createFamilyLifecycleRouter } from './family_lifecycle.js';
 import { configureTrustedProxy, operationalErrorHandler } from './operations.js';
 import { createSessionAuth } from './session_auth.js';
 import { createAuthRouter } from './auth_router.js';
 import { createStudySessionsRouter } from './study_sessions.js';
 import { createProfileRouter } from './profile_router.js';
 import { createSchoolCrudRouter } from './school_crud_router.js';
+import { createSchoolLifecycleRouter } from './school_lifecycle.js';
 import { normalizeEmail, normalizePhone, isEmail } from './auth_contacts.js';
 import { createEmailProvider, safelyDeliver } from './auth_delivery.js';
 
@@ -65,7 +68,8 @@ async function familyAccess(familyId, userId, { roles = [], admin = false } = {}
   return (admin && r.rows[0].is_admin) || roles.includes(r.rows[0].role);
 }
 
-async function familyAdminTransaction(familyId, userId, operation) {
+async function familyAdminTransaction(familyId, identity, operation) {
+  const userId = identity.sub;
   if (!uuid(familyId)) return { status: 403, body: { error: 'forbidden' } };
   const client = await pool.connect();
   try {
@@ -77,6 +81,15 @@ async function familyAdminTransaction(familyId, userId, operation) {
          and m.is_admin and u.disabled_at is null for update of m,u`, [familyId, userId],
     ) : { rowCount: 0 };
     const result = membership.rowCount ? await operation(client) : { status: 403, body: { error: 'forbidden' } };
+    const session = await client.query(`select 1 from auth_session s join app_user u on u.id=s.user_id
+      where s.id=$1 and s.user_id=$2 and s.revoked_at is null
+        and s.expires_at>statement_timestamp() and u.disabled_at is null for share of s`, [identity.sid, userId]);
+    const freshSession = session.rowCount ? await client.query(`select 1 from auth_session
+      where id=$1 and user_id=$2 and revoked_at is null and expires_at>statement_timestamp()`, [identity.sid,userId]) : {rowCount:0};
+    if (!freshSession.rowCount || (identity.exp != null && identity.exp * 1000 <= Date.now())) {
+      await client.query('rollback');
+      return { status: 401, body: { error: 'session_invalid' } };
+    }
     await client.query('commit');
     return result;
   } catch (error) {
@@ -125,6 +138,27 @@ app.post('/v1/families', auth, async (req, res) => {
   const c = await pool.connect();
   try {
     await c.query('begin');
+    const creator = await c.query('select id from app_user where id=$1 and disabled_at is null for update', [req.identity.sub]);
+    if (!creator.rowCount) {
+      await c.query('rollback');
+      return res.status(401).json({ error: 'session_invalid' });
+    }
+    // Profiles can be edited without an app_user lock. Acquire that row in a
+    // separate statement after the account lock, so a pre-wait join snapshot
+    // cannot confer administration using an obsolete birth date.
+    const profile = (await c.query(`select birth_date,
+      (birth_date is not null and birth_date>(current_date-interval '18 years')::date) known_minor
+      from profile where user_id=$1 for update`, [req.identity.sub])).rows[0];
+    if (profile?.known_minor) {
+      await c.query('rollback');
+      return res.status(403).json({ error: 'minor_cannot_admin' });
+    }
+    if (!profile?.birth_date && (await c.query(`select 1 from family_membership m
+      join family_workspace f on f.id=m.family_id where m.user_id=$1 and m.ended_at is null
+        and m.role='teen_minor' and f.archived_at is null limit 1`, [req.identity.sub])).rowCount) {
+      await c.query('rollback');
+      return res.status(403).json({ error: 'age_confirmation_required' });
+    }
     const f = await c.query(
       'insert into family_workspace(name,created_by) values($1,$2) returning id,name',
       [name, req.identity.sub],
@@ -137,6 +171,14 @@ app.post('/v1/families', auth, async (req, res) => {
       "insert into access_audit(actor_user_id,family_id,action,target_type,target_id) values($1,$2,'family.create','family',$3)",
       [req.identity.sub, f.rows[0].id, String(f.rows[0].id)],
     );
+    const session = await c.query(`select 1 from auth_session where id=$1 and user_id=$2
+      and revoked_at is null and expires_at>statement_timestamp() for share`, [req.identity.sid,req.identity.sub]);
+    const freshSession = session.rowCount ? await c.query(`select 1 from auth_session
+      where id=$1 and user_id=$2 and revoked_at is null and expires_at>statement_timestamp()`, [req.identity.sid,req.identity.sub]) : {rowCount:0};
+    if (!freshSession.rowCount || (req.identity.exp != null && req.identity.exp * 1000 <= Date.now())) {
+      await c.query('rollback');
+      return res.status(401).json({ error: 'session_invalid' });
+    }
     await c.query('commit');
     res.status(201).json(f.rows[0]);
   } catch (e) {
@@ -159,7 +201,7 @@ app.get('/v1/families/:familyId', auth, async (req, res) => {
 app.patch('/v1/families/:familyId', auth, async (req, res) => {
   const name = String(req.body?.name ?? '').trim();
   if (!name || name.length > 120) return res.status(400).json({ error: 'invalid_name' });
-  const result = await familyAdminTransaction(req.params.familyId, req.identity.sub, async (client) => {
+  const result = await familyAdminTransaction(req.params.familyId, req.identity, async (client) => {
     const updated = await client.query('update family_workspace set name=$2 where id=$1 returning id,name', [req.params.familyId, name]);
     await familyAudit(client, req.params.familyId, req.identity.sub, 'family.rename', 'family', req.params.familyId);
     return { status: 200, body: updated.rows[0] };
@@ -168,7 +210,7 @@ app.patch('/v1/families/:familyId', auth, async (req, res) => {
 });
 
 app.delete('/v1/families/:familyId', auth, async (req, res) => {
-  const result = await familyAdminTransaction(req.params.familyId, req.identity.sub, async (client) => {
+  const result = await familyAdminTransaction(req.params.familyId, req.identity, async (client) => {
     await client.query('update family_workspace set archived_at=now() where id=$1', [req.params.familyId]);
     await client.query("update family_invitation set status='revoked' where family_id=$1 and status='pending'", [req.params.familyId]);
     await client.query('update guardian_relationship set active=false where family_id=$1', [req.params.familyId]);
@@ -180,7 +222,7 @@ app.delete('/v1/families/:familyId', auth, async (req, res) => {
 
 app.delete('/v1/families/:familyId/members/:userId', auth, async (req, res) => {
   if (!uuid(req.params.userId)) return res.status(400).json({ error: 'invalid_member' });
-  const result = await familyAdminTransaction(req.params.familyId, req.identity.sub, async (client) => {
+  const result = await familyAdminTransaction(req.params.familyId, req.identity, async (client) => {
     const target = await client.query('select m.is_admin,u.disabled_at from family_membership m join app_user u on u.id=m.user_id where m.family_id=$1 and m.user_id=$2 and m.ended_at is null for update of m', [req.params.familyId, req.params.userId]);
     if (!target.rowCount) return { status: 204 };
     if (target.rows[0].is_admin && !target.rows[0].disabled_at) {
@@ -205,8 +247,10 @@ app.get('/v1/families/:familyId/members', auth, async (req, res) => {
   if (!allowed) return res.status(403).json({ error: 'forbidden' });
 
   const r = await pool.query(
-    `select m.user_id,m.role,m.is_admin,p.display_name,p.theme_preference
+    `select m.user_id,m.role,m.is_admin,m.version,m.updated_at,
+            (u.disabled_at is not null) as account_disabled,p.display_name,p.theme_preference
        from family_membership m
+       join app_user u on u.id=m.user_id
        join profile p on p.user_id=m.user_id
        join family_workspace f on f.id=m.family_id
       where m.family_id=$1 and m.ended_at is null and f.archived_at is null
@@ -240,7 +284,7 @@ app.post('/v1/families/:familyId/invitations', auth, async (req, res) => {
   }
 
   const token = randomToken();
-  const result = await familyAdminTransaction(req.params.familyId, req.identity.sub, async (client) => {
+  const result = await familyAdminTransaction(req.params.familyId, req.identity, async (client) => {
     const activeMember = await client.query(
       `select 1
          from family_membership m
@@ -302,7 +346,7 @@ app.post('/v1/invitations/accept', auth, async (req, res) => {
          join app_user u on u.id=$2
         where i.token_digest=$1
           and i.status='pending'
-          and i.expires_at>now()
+          and i.expires_at>statement_timestamp()
           and u.disabled_at is null
         for update of i`,
       [digest, req.identity.sub],
@@ -319,6 +363,36 @@ app.post('/v1/invitations/accept', auth, async (req, res) => {
     if (!matchesEmail && !matchesPhone) {
       await client.query('rollback');
       return res.status(403).json({ error: 'invitation_contact_mismatch' });
+    }
+
+    // Preserve the existing active-member conflict before validating any new
+    // role. All membership changes for this family share the family row lock;
+    // an older invitation cannot replace an already active membership.
+    const activeMembership = await client.query(`select 1 from family_membership
+      where family_id=$1 and user_id=$2 and ended_at is null`, [row.family_id, req.identity.sub]);
+    if (activeMembership.rowCount) {
+      await client.query('rollback');
+      return res.status(409).json({ error: 'member_already_active' });
+    }
+
+    // The family/invitation locks above serialize acceptance with transfer and
+    // revocation. The recipient account is already locked; lock the editable
+    // profile separately so a waiting statement cannot use an obsolete age.
+    // Profile category and theme never grant adult family permissions.
+    const profile = (await client.query(`select birth_date,
+      (birth_date is not null and birth_date>(current_date-interval '18 years')::date) known_minor
+      from profile where user_id=$1 for update`, [req.identity.sub])).rows[0];
+    if (row.intended_role !== 'teen_minor') {
+      if (profile?.known_minor) {
+        await client.query('rollback');
+        return res.status(403).json({ error: 'minor_role_upgrade_forbidden' });
+      }
+      if (!profile?.birth_date && (await client.query(`select 1 from family_membership m
+        join family_workspace f on f.id=m.family_id where m.user_id=$1 and m.ended_at is null
+          and m.role='teen_minor' and f.archived_at is null limit 1`, [req.identity.sub])).rowCount) {
+        await client.query('rollback');
+        return res.status(403).json({ error: 'age_confirmation_required' });
+      }
     }
 
     const membership = await client.query(
@@ -347,6 +421,20 @@ app.post('/v1/invitations/accept', auth, async (req, res) => {
       "insert into access_audit(actor_user_id,family_id,action,target_type,target_id) values($1,$2,'invitation.accept','membership',$3)",
       [req.identity.sub, row.family_id, String(req.identity.sub)],
     );
+    const session = await client.query(`select 1 from app_user u join auth_session s on s.user_id=u.id
+      where u.id=$1 and u.disabled_at is null and s.id=$2 and s.revoked_at is null
+        and s.expires_at>statement_timestamp() for share of s`, [req.identity.sub, req.identity.sid]);
+    const freshSession = session.rowCount ? await client.query(`select 1 from auth_session
+      where id=$1 and user_id=$2 and revoked_at is null and expires_at>statement_timestamp()`, [req.identity.sid,req.identity.sub]) : {rowCount:0};
+    if (!freshSession.rowCount || (req.identity.exp != null && req.identity.exp * 1000 <= Date.now())) {
+      await client.query('rollback');
+      return res.status(401).json({ error: 'session_invalid' });
+    }
+    const unexpired = await client.query('select 1 from family_invitation where id=$1 and expires_at>statement_timestamp()', [row.id]);
+    if (!unexpired.rowCount) {
+      await client.query('rollback');
+      return res.status(400).json({ error: 'invalid_or_expired_invitation' });
+    }
     await client.query('commit');
     res.status(204).end();
   } catch (error) {
@@ -361,7 +449,7 @@ app.post('/v1/families/:familyId/guardians', auth, async (req, res) => {
   const guardianUserId = String(req.body?.guardianUserId ?? '');
   const minorUserId = String(req.body?.minorUserId ?? '');
   if (!uuid(guardianUserId) || !uuid(minorUserId)) return res.status(400).json({ error: 'invalid_guardian_relationship' });
-  const result = await familyAdminTransaction(req.params.familyId, req.identity.sub, async (client) => {
+  const result = await familyAdminTransaction(req.params.familyId, req.identity, async (client) => {
     const roles = await client.query(`select m.user_id,m.role from family_membership m
       join app_user u on u.id=m.user_id where m.family_id=$1 and m.user_id in ($2,$3)
         and m.ended_at is null and u.disabled_at is null for update of m`, [req.params.familyId, guardianUserId, minorUserId]);
@@ -379,7 +467,7 @@ app.delete('/v1/families/:familyId/guardians', auth, async (req, res) => {
   const guardianUserId = String(req.body?.guardianUserId ?? '');
   const minorUserId = String(req.body?.minorUserId ?? '');
   if (!uuid(guardianUserId) || !uuid(minorUserId)) return res.status(400).json({ error: 'invalid_guardian_relationship' });
-  const result = await familyAdminTransaction(req.params.familyId, req.identity.sub, async (client) => {
+  const result = await familyAdminTransaction(req.params.familyId, req.identity, async (client) => {
     await client.query('update guardian_relationship set active=false where family_id=$1 and guardian_user_id=$2 and minor_user_id=$3', [req.params.familyId, guardianUserId, minorUserId]);
     await familyAudit(client, req.params.familyId, req.identity.sub, 'guardian.deactivate', 'guardian_relationship', guardianUserId);
     return { status: 204 };
@@ -388,12 +476,15 @@ app.delete('/v1/families/:familyId/guardians', auth, async (req, res) => {
 });
 
 app.use('/v1', createSchoolCrudRouter({ pool, auth }));
+app.use('/v1', createSchoolLifecycleRouter({ pool, auth }));
 app.use('/v1', createPhase3Router({ pool, auth }));
 app.use('/v1', createPhase4Router({ pool, auth }));
 app.use('/v1', createPhase6Router({ pool, auth }));
 app.use('/v1', createLearningLibraryRouter({ pool, auth }));
 app.use('/v1', createLearningFeedbackRouter({ pool, auth }));
 app.use('/v1', createLearningAssessmentRouter({ pool, auth }));
+app.use('/v1', createContentReviewRouter({ pool, auth }));
+app.use('/v1', createFamilyLifecycleRouter({ pool, auth }));
 app.use('/v1', createStudySessionsRouter({ pool, auth }));
 
 app.use(operationalErrorHandler);

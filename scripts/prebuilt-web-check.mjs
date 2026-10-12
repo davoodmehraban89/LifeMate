@@ -32,7 +32,7 @@ for (const path of files.filter(path => /\.(js|json|html)$/.test(path))) {
   const text = await readFile(path, 'utf8');
   assert(!/https?:[^\s"'<>]*(?:gstatic\.com|googleapis\.com|up\.railway\.app)/i.test(text), `External runtime dependency: ${relative(output, path)}`);
 }
-for (const path of ['index.html', 'main.dart.js', 'flutter_bootstrap.js', 'lifeguide-sw.js', 'canvaskit/canvaskit.wasm']) {
+for (const path of ['index.html', 'main.dart.js', 'flutter_bootstrap.js', 'lifeguide-sw.js', 'offline.html', 'offline-retry.js', 'canvaskit/canvaskit.wasm']) {
   assert(files.includes(join(output, path)), `Missing built resource: ${path}`);
 }
 for (const name of ['LifeGuidePersian.ttf', 'LifeGuideLatin.ttf', 'LifeGuideEmoji.ttf']) {
@@ -45,7 +45,7 @@ assert(config.apiBaseUrl === '/api', 'Prebuilt default API must use runtime same
 const builtTitle = /<title>([^<]+)<\/title>/.exec(await readFile(join(output, 'index.html'), 'utf8'))?.[1];
 const sourceTitle = /<title>([^<]+)<\/title>/.exec(await readFile(join(app, 'web/index.html'), 'utf8'))?.[1];
 assert(builtTitle === sourceTitle && builtTitle?.includes('LifeGuide'), 'LifeGuide HTML title must match source');
-for (const path of ['manifest.json', 'favicon.png', 'icons/Icon-192.png', 'icons/Icon-512.png', 'icons/Icon-maskable-192.png', 'icons/Icon-maskable-512.png']) {
+for (const path of ['manifest.json', 'lifeguide-sw.js', 'offline.html', 'offline-retry.js', 'favicon.png', 'icons/Icon-192.png', 'icons/Icon-512.png', 'icons/Icon-maskable-192.png', 'icons/Icon-maskable-512.png']) {
   assert((await readFile(join(output, path))).equals(await readFile(join(app, 'web', path))), `Built branding differs from source: ${path}`);
 }
 const provenance = join(output, 'build-provenance.json');

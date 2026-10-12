@@ -1,0 +1,257 @@
+{
+  "reviewedAt": "2026-10-12T08:06:14.472108+00:00",
+  "reviewer": "browser_abort_review (read-only investigation)",
+  "origin": "https://127.0.0.1:8445",
+  "scope": "Local synthetic parent persisted profile; current compiled PWA and API0.7.1 as supplied by root. No app/backend source change.",
+  "transport": "Normal Chromium trusted HTTPS; no response interception or TLS bypass.",
+  "priorObservedFailures": [
+    {
+      "parent": "mother",
+      "log": "contentops-mother-after-nat-0.7.1.log",
+      "failure": "requestfailed net::ERR_ABORTED",
+      "paths": [
+        "/api/v1/me/content-capabilities",
+        "/api/v1/reminders/claim-due",
+        "/api/v1/families/a1000000-0000-4000-8000-000000000001/members"
+      ],
+      "outcome": "Failed helper run retained; not counted as PASS"
+    },
+    {
+      "parent": "father",
+      "log": "contentops-father-after-nat-0.7.1.log",
+      "failure": "requestfailed net::ERR_ABORTED",
+      "paths": [
+        "/api/v1/auth/refresh"
+      ],
+      "outcome": "Failed helper run retained; not counted as PASS"
+    }
+  ],
+  "laterUninstrumentedFailedTrace": {
+    "failures": [
+      {
+        "timeSeconds": 4.4837,
+        "path": "/api/v1/today",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "timeSeconds": 4.486,
+        "path": "/api/v1/me/content-capabilities",
+        "failure": "net::ERR_ABORTED"
+      }
+    ],
+    "lifecycle": [
+      {
+        "timeSeconds": 5.4921,
+        "event": "before_family_tab_click"
+      },
+      {
+        "timeSeconds": 6.342,
+        "event": "before_child_report_click"
+      },
+      {
+        "timeSeconds": 8.0421,
+        "event": "beforeunload"
+      }
+    ],
+    "conclusion": "These failures preceded report navigation and teardown. Teardown is not a supported cause for this trace."
+  },
+  "latestActualProbe": {
+    "command": "python3 /workspace/scratch/contentops-pwa-browser-stream-probe.py https://127.0.0.1:8445 --profile /workspace/scratch/contentops-father-pwa-profile --screenshot /workspace/scratch/contentops-father-abort-review.png --synthetic-login-email stage0-father@lifeguide.test --synthetic-password-file <private-fixture-password-file> --resume-parent-session --expected-recorded-seconds 4 --expected-planned-seconds 1800 --expected-status completed",
+    "exitCode": 0,
+    "httpStatus": 200,
+    "requestCount": 23,
+    "externalRequests": [],
+    "failedRequests": [],
+    "browserErrors": [],
+    "httpErrors": [],
+    "resumedPersistedParentSession": true,
+    "refreshStatus": 200,
+    "permittedReportRendered": true,
+    "reportJsonBodyIndependentlyRead": false,
+    "readOnlyLimit": "No explicit login/data mutation. Ordinary app refresh-token rotation and reminder polling execute.",
+    "observer": "Wrap fetch/read/cancel/AbortController to record action, path, status and byte count only; original calls/response remain unchanged. Diagnostic instrumentation may affect timing.",
+    "observedActions": {
+      "chunk": 8,
+      "done": 8,
+      "cancel": 8
+    },
+    "apiBodyActions": {
+      "/api/v1/auth/refresh": [
+        {
+          "timeSeconds": 3.0241,
+          "action": "chunk",
+          "status": 200,
+          "bytes": 378
+        },
+        {
+          "timeSeconds": 3.0253,
+          "action": "done",
+          "status": 200,
+          "bytes": 0
+        },
+        {
+          "timeSeconds": 3.0261,
+          "action": "cancel",
+          "status": 200,
+          "bytes": 0
+        }
+      ],
+      "/api/v1/profile": [
+        {
+          "timeSeconds": 4.0454,
+          "action": "chunk",
+          "status": 200,
+          "bytes": 312
+        },
+        {
+          "timeSeconds": 4.0461,
+          "action": "done",
+          "status": 200,
+          "bytes": 0
+        },
+        {
+          "timeSeconds": 4.0463,
+          "action": "cancel",
+          "status": 200,
+          "bytes": 0
+        }
+      ],
+      "/api/v1/me/content-capabilities": [
+        {
+          "timeSeconds": 4.1197,
+          "action": "chunk",
+          "status": 200,
+          "bytes": 18
+        },
+        {
+          "timeSeconds": 4.1203,
+          "action": "done",
+          "status": 200,
+          "bytes": 0
+        },
+        {
+          "timeSeconds": 4.122,
+          "action": "cancel",
+          "status": 200,
+          "bytes": 0
+        }
+      ],
+      "/api/v1/today": [
+        {
+          "timeSeconds": 4.1223,
+          "action": "chunk",
+          "status": 200,
+          "bytes": 46
+        },
+        {
+          "timeSeconds": 4.1226,
+          "action": "done",
+          "status": 200,
+          "bytes": 0
+        },
+        {
+          "timeSeconds": 4.1228,
+          "action": "cancel",
+          "status": 200,
+          "bytes": 0
+        }
+      ],
+      "/api/v1/reminders/claim-due": [
+        {
+          "timeSeconds": 4.1425,
+          "action": "chunk",
+          "status": 200,
+          "bytes": 28
+        },
+        {
+          "timeSeconds": 4.143,
+          "action": "done",
+          "status": 200,
+          "bytes": 0
+        },
+        {
+          "timeSeconds": 4.1432,
+          "action": "cancel",
+          "status": 200,
+          "bytes": 0
+        }
+      ],
+      "/api/v1/families": [
+        {
+          "timeSeconds": 4.5938,
+          "action": "chunk",
+          "status": 200,
+          "bytes": 144
+        },
+        {
+          "timeSeconds": 4.595,
+          "action": "done",
+          "status": 200,
+          "bytes": 0
+        },
+        {
+          "timeSeconds": 4.5953,
+          "action": "cancel",
+          "status": 200,
+          "bytes": 0
+        }
+      ],
+      "/api/v1/families/a1000000-0000-4000-8000-000000000001/members": [
+        {
+          "timeSeconds": 4.6051,
+          "action": "chunk",
+          "status": 200,
+          "bytes": 733
+        },
+        {
+          "timeSeconds": 4.6064,
+          "action": "done",
+          "status": 200,
+          "bytes": 0
+        },
+        {
+          "timeSeconds": 4.6067,
+          "action": "cancel",
+          "status": 200,
+          "bytes": 0
+        }
+      ],
+      "/api/v1/families/a1000000-0000-4000-8000-000000000001/children/a0000000-0000-4000-8000-000000000001/learning-report": [
+        {
+          "timeSeconds": 6.1427,
+          "action": "chunk",
+          "status": 200,
+          "bytes": 2112
+        },
+        {
+          "timeSeconds": 6.143,
+          "action": "done",
+          "status": 200,
+          "bytes": 0
+        },
+        {
+          "timeSeconds": 6.1458,
+          "action": "cancel",
+          "status": 200,
+          "bytes": 0
+        }
+      ]
+    },
+    "logSha256": "87d9adbd6eba91a6aabe83fe01fd86bbba05ca2a7f0554409d0eb28430564b68",
+    "timelineSha256": "22bb25acbb88209d24f21c94337b91cd22cb75394e95103a164ea14496727cda"
+  },
+  "sourceFindings": {
+    "dependency": "http1.6.0 BrowserClient",
+    "file": "/home/agent/.pub-cache/hosted/pub.dev/http-1.6.0/lib/src/browser_client.dart",
+    "onCancel": "_readStreamBody installs controller.onCancel that calls reader.cancel(). BrowserClient.close aborts open request controllers.",
+    "streamResult": "All8 current probe API responses produced chunk→done→reader.cancel, no controller-abort/read-error, no failed requests. Cancelling the reader after EOF is observed even in passing runs.",
+    "applicationReadPath": "HttpIdentityApi calls http.Response.fromStream(await _client.send(request)) with20s timeout; it does not use an AbortableRequest here."
+  },
+  "causalConclusion": "UNVERIFIED. The abort did not reproduce in this one observer probe. Normal post-EOF reader cancellation is a candidate race, not proof of the earlier ERR_ABORTED. Prior failures are retained and not ignored/count-as-pass.",
+  "verifiedLimitations": [
+    "A passing run does not establish all retries/browser restarts error-free.",
+    "Restored-tab report body JSON was not independently read by this helper; new reportHTTP200 and rendered completion/time were checked. Root independent API/DB proof is separate.",
+    "Four recorded seconds are rounded to zero minutes in the current UI.",
+    "Real Safari/Android/device installation, true BFCache, touch/accessibility hardware and Iran reachability remain UNVERIFIED."
+  ]
+}

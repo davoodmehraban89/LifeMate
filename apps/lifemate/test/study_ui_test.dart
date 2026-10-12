@@ -138,7 +138,8 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     api.close();
   });
-  testWidgets('parent polling failure labels previous report stale',
+  testWidgets(
+      'parent polling failure clears report until current permission succeeds',
       (tester) async {
     var fail = false;
     var calls = 0;
@@ -177,12 +178,16 @@ void main() {
             childId: 'child',
             childName: 'فرزند')));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('ریاضی'), 200);
     expect(find.text('ریاضی'), findsOneWidget);
     fail = true;
     await tester.pump(const Duration(seconds: 15));
     await tester.pumpAndSettle();
-    expect(find.textContaining('داده قبلی به‌روز نیست'), findsOneWidget);
-    expect(find.text('ریاضی'), findsOneWidget);
+    await tester.scrollUntilVisible(
+        find.textContaining('اطلاعات فرزند بدون تأیید مجوز فعلی'), -200);
+    expect(find.textContaining('اطلاعات فرزند بدون تأیید مجوز فعلی'),
+        findsOneWidget);
+    expect(find.text('ریاضی'), findsNothing);
     expect(calls, 2);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 30));
@@ -224,6 +229,7 @@ void main() {
               childId: 'child',
               childName: 'فرزند')));
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('اطلاعات فرزند'), 200);
       expect(find.text('اطلاعات فرزند'), findsOneWidget);
       fail = true;
       await tester.pump(const Duration(seconds: 15));

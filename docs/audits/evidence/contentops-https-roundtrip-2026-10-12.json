@@ -1,0 +1,41 @@
+{
+  "origin": "https://127.0.0.1:8445",
+  "at": "2026-10-12T03:12:58.000Z",
+  "results": [
+    {
+      "name": "TLS",
+      "status": "PASS",
+      "detail": "Certificate chain and hostname verified by Node TLS"
+    },
+    {
+      "name": "/health",
+      "status": "PASS",
+      "detail": "HTTP 200 and database-backed status ok"
+    },
+    {
+      "name": "PWA",
+      "status": "PASS",
+      "detail": "HTTPS HTML and standalone manifest loaded; Safari installation UNVERIFIED"
+    },
+    {
+      "name": "runtime config",
+      "status": "PASS",
+      "detail": "Same-origin /api; no-store"
+    },
+    {
+      "name": "API auth boundary",
+      "status": "PASS",
+      "detail": "Anonymous planner request rejected with 401"
+    },
+    {
+      "name": "API round-trip",
+      "status": "PASS",
+      "detail": "Synthetic private homework created, independently read, and archived on server"
+    },
+    {
+      "name": "session cleanup",
+      "status": "PASS",
+      "detail": "Logout acknowledged; old access token rejected"
+    }
+  ]
+}

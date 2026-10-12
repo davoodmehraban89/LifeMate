@@ -1,0 +1,7 @@
+# LifeGuide — safe offline startup notice
+
+An installed/warmed PWA currently fails cold navigation without a network. Add a small public Persian RTL offline document to the existing worker. It requires no Flutter engine, API configuration, credentials or personal cache. It clearly says that fresh login/data require connection, does not read or erase pending work and offers manual retry. This is a dependable offline startup notice, not authenticated offline access or proof that Safari storage eviction is solved.
+
+Install fetches only this public document with omitted credentials. Eligible same-origin GET document navigation tries the network first and falls back only on network failure. API/config/auth/resource navigation never receives the HTML fallback. Worker caches no authenticated responses, URL query payloads or user data. Versioned cache retirement preserves other application stores. Static resources retain the existing network-first behavior. A normal online navigation always loads current code/settings, preventing an old-cache lock-in.
+
+Acceptance: unit execution of actual worker source verifies install, navigation fallback, API/config/auth exclusions and online precedence; final compiled Chromium over local trusted HTTPS verifies warm install → browser close → network offline → public notice → reconnect → current login/data. Real Safari/install/eviction remains UNVERIFIED. No live deployment is authorized.

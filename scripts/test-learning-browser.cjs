@@ -8,6 +8,7 @@ const os = require('node:os');
 const https = require('node:https');
 const {spawnSync} = require('node:child_process');
 const {chromium} = require('../apps/lifemate/node_modules/playwright');
+const {assertLearningProgressSemantics} = require('../apps/lifemate/tool/assert-learning-progress-semantics.cjs');
 
 const root = path.resolve(__dirname, '..');
 const origin = process.env.LEARNING_BROWSER_ORIGIN || 'https://127.0.0.1:8445';
@@ -23,7 +24,7 @@ assert(/^learning-browser-[a-f0-9]+@example\.test$/.test(email) && password.leng
 assert(process.env.ROOT_CA && process.env.LEARNING_COMPOSE_ENV,
   'ROOT_CA and private LEARNING_COMPOSE_ENV paths are required.');
 const receiptFile = path.resolve(process.argv[2] || path.join(root,
-  'docs/audits/evidence/learning-browser-2026-10-11.json'));
+  'docs/audits/evidence/content-operations-browser-2026-10-12.json'));
 const screenshotFile = receiptFile.replace(/\.json$/, '.png');
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const escaped = value => value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -185,6 +186,8 @@ async function lesson(page, course, unit) {
     const stored = dbJson(`select json_build_object('count',count(*),'status',max(status),'source',max(source),'version',max(version)) from learning_progress where owner_user_id='${owner}' and unit_id='${unit.id}';`);
     assert.deepEqual(stored,{count:1,status:'in_progress',source:'self_reported',version:1});
     await page.waitForLoadState('networkidle');
+    await assertLearningProgressSemantics(page,independent[0]);
+    check('compiled Chromium AXTree exposes one RTL status with acknowledged progress and server timestamp');
     await fs.mkdir(path.dirname(receiptFile),{recursive:true});
     await page.screenshot({path:receiptFile.replace(/\.json$/, '-progress.png'),fullPage:false});
     check('UI progress acknowledgement independently verified through API and PostgreSQL');
@@ -234,6 +237,7 @@ async function lesson(page, course, unit) {
     assert(auth.some(item => item.path === '/api/v1/auth/refresh' && item.status === 200));
     const afterRestart = (await api('GET','/v1/me/learning-progress',undefined,token)).json.progress;
     assert.equal(afterRestart.length,1); assert.equal(afterRestart[0].version,1);
+    await assertLearningProgressSemantics(page,afterRestart[0]);
     assert.equal(await page.locator('iframe').count(),0);
     check('closed and reopened Chromium refreshes persisted session; independent API retains one acknowledged progress record');
 
@@ -246,16 +250,97 @@ async function lesson(page, course, unit) {
     check('real compiled runtime uses only local API, fonts and CanvasKit without errors');
     await fs.mkdir(path.dirname(receiptFile),{recursive:true});
     await page.screenshot({path:screenshotFile,fullPage:false});
+
+    stage = 'offlineIntent';
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+      if (!navigator.serviceWorker.controller) await new Promise(resolve =>
+        navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
+    });
+    const offlineStart = {requests:paths.length,errors:errors.length,failures:failures.length};
+    const offlineKey = 'lifeguide.offline.v2.' + Buffer.from(origin+'/api|'+owner)
+      .toString('base64').replaceAll('+','-').replaceAll('/','_');
+    await context.setOffline(true);
+    await click(page.getByRole('button',{name:'طبق گزارش من تکمیل شد',exact:true}));
+    await bodyIncludes(page,'تغییر روی دستگاه ذخیره شده؛ تأیید سرور دریافت نشده است.');
+    const pendingBytes = await page.evaluate(key => localStorage.getItem(key),offlineKey);
+    assert(pendingBytes,'A real rendered offline action must create durable account-scoped bytes.');
+    const pending = JSON.parse(JSON.parse(pendingBytes)).queue;
+    assert.equal(pending.length,1);
+    assert.equal(pending[0].entityType,'learning_progress');
+    assert.equal(pending[0].entityId,unit.id);
+    assert.equal(pending[0].payload.status,'completed');
+    assert.equal(pending[0].payload.expectedVersion,1);
+    assert(uuid.test(pending[0].id));
+    assert.equal((await api('GET','/v1/me/learning-progress',undefined,token)).json.progress[0].version,1);
+    check('rendered offline action journals one stable progress intent; independent server remains unchanged');
+
+    stage = 'offlineReopen';
+    await page.close();
+    page = await context.newPage(); observe(page);
+    const disconnected = await page.goto(origin,{waitUntil:'networkidle',timeout:30000});
+    assert.equal(disconnected.status(),200);
+    assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
+    await page.getByRole('status').filter({hasText:'اتصال برقرار نیست'}).waitFor();
+    assert.equal(await page.locator('flt-glass-pane').count(),0);
+    assert(!(await page.locator('body').innerText()).includes(unit.titleFa));
+    assert.equal(await page.evaluate(key => localStorage.getItem(key),offlineKey),pendingBytes);
+    for (const endpoint of ['/api/health','/config.json']) {
+      const result = await page.evaluate(async endpoint => {
+        try { const r=await fetch(endpoint); return {reachable:true,text:await r.text()}; }
+        catch { return {reachable:false}; }
+      },endpoint);
+      assert.equal(result.reachable,false,'Private/API/config paths must not receive cached offline HTML.');
+    }
+    const cachedUrls = await page.evaluate(async () => {
+      const result=[];
+      for (const name of await caches.keys()) for (const request of await (await caches.open(name)).keys())
+        result.push(new URL(request.url).pathname);
+      return result;
+    });
+    assert(!cachedUrls.some(p=>p==='/'||p==='/index.html'||p==='/config.json'||p.startsWith('/api/')));
+    check('closed/reopened offline PWA shows only public RTL notice; exact pending bytes retained, API/config remain unavailable');
+
+    stage = 'offlineReconnect';
+    await context.setOffline(false);
+    await page.getByRole('button',{name:'تلاش دوباره',exact:true}).click();
+    await page.waitForFunction(() => !document.getElementById('startup-status'),null,{timeout:60000});
+    await page.locator('flt-glass-pane').waitFor({state:'attached'});
+    const placeholder=page.locator('flt-semantics-placeholder');
+    if(await placeholder.count()) await placeholder.evaluate(e=>e.click());
+    await school(page); await lesson(page,course,unit);
+    const replay = page.waitForResponse(r=>r.url().includes('/api/v1/me/learning-progress/')&&r.request().method()==='PUT');
+    await click(page.getByRole('button',{name:'همگام‌سازی و تازه‌سازی',exact:true}));
+    const accepted = await replay;
+    assert.equal(accepted.status(),200);
+    const replayBody=accepted.request().postDataJSON();
+    assert.deepEqual(replayBody,pending[0].payload);
+    await page.waitForLoadState('networkidle');
+    const synced=(await api('GET','/v1/me/learning-progress',undefined,token)).json.progress;
+    assert.equal(synced.length,1); assert.equal(synced[0].version,2); assert.equal(synced[0].status,'completed');
+    await assertLearningProgressSemantics(page,synced[0]);
+    const storedAfter=dbJson(`select json_build_object('count',count(*),'version',max(version),'status',max(status)) from learning_progress where owner_user_id='${owner}' and unit_id='${unit.id}';`);
+    assert.deepEqual(storedAfter,{count:1,version:2,status:'completed'});
+    const afterBytes=await page.evaluate(key=>localStorage.getItem(key),offlineKey);
+    assert.equal(JSON.parse(JSON.parse(afterBytes)).queue.length,0);
+    await click(page.getByRole('button',{name:'همگام‌سازی و تازه‌سازی',exact:true}));
+    await page.waitForLoadState('networkidle');
+    assert.equal((await api('GET','/v1/me/learning-progress',undefined,token)).json.progress[0].version,2);
+    check('manual reconnect authenticates current account and acknowledges identical intent once; second sync creates no duplicate');
+    assert.equal(paths.filter(item=>item.origin!==origin).length,0);
+    assert.equal(errors.length,offlineStart.errors);
     const receipt = {date:new Date().toISOString(),mode:'Actual isolated local Compose HTTPS; normal Node and Chromium CA trust; no network interception or TLS bypass',
       origin,browser:'Chromium',checks,fixture:'Dedicated synthetic account; no real family/private/media data',
-      counts:{requests:paths.length,externalRequests:0,iframes:0,browserErrors:0,failedRequests:0},
+      counts:{requests:paths.length,externalRequests:0,iframes:0,browserErrors:errors.length,
+        onlineFailedRequests:offlineStart.failures,expectedOfflineFailedRequests:failures.length-offlineStart.failures},
+      offlineEvidence:'Chromium context deliberately disconnected; real UI journals a stable intent, page closes/reopens through actual service worker public fallback, reconnect retries exact body and independent API/SQL verify version2 once. Context stays open during offline page restart; process-kill/storage-eviction/Safari remain UNVERIFIED.',
       realApprovedVideoCount:0,realApprovedQuestionBankCount:0,
       visualEvidence:{progressScreenshot:path.basename(receiptFile.replace(/\.json$/, '-progress.png')),
         reopenedLessonScreenshot:path.basename(screenshotFile),
-        automatedDynamicProgressSemantics:'UNVERIFIED: dynamic progress/timestamp text was absent from Chromium ARIA after updates; inspect rendered screenshots separately'},
+        automatedDynamicProgressSemantics:'Actual Chromium AXTree status label checked after acknowledgement and browser restart; physical screen-reader acceptance remains UNVERIFIED'},
       interactionMode:'Rendered Flutter semantic controls activated with DOM element.click because RTL hit rectangles are transformed; text entered through rendered fields and keyboard. No API or state injection. Physical touch/pointer/accessibility acceptance is UNVERIFIED.',
       authResponses:auth,fonts:[...new Set(paths.filter(item => /\.(ttf|otf|woff2)$/.test(item.path)).map(item => item.path))],
-      limitations:['Real Android devices UNVERIFIED','Safari/Add to Home Screen UNVERIFIED','Video playback and teaching quality UNVERIFIED','Iran VPN-free reachability UNVERIFIED','Offline cold startup UNVERIFIED','Dynamic progress accessibility semantics after updates remain unverified; screenshots require separate visual review']};
+      limitations:['Real Android devices UNVERIFIED','Safari/Add to Home Screen UNVERIFIED','Video playback and teaching quality UNVERIFIED','Iran VPN-free reachability UNVERIFIED','Physical touch and screen reader UNVERIFIED']};
     await fs.writeFile(receiptFile,JSON.stringify(receipt,null,2)+'\n');
     console.log(JSON.stringify(receipt,null,2));
   } catch (error) {

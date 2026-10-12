@@ -101,6 +101,7 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: node tool/test_web_bootstrap.mjs
+      - run: node --test tool/test_offline_worker.mjs
       - run: flutter build web --release --no-web-resources-cdn --pwa-strategy=none
       - run: node tool/test_web_bootstrap.mjs
       - name: Bundle local resources and reject external runtime services

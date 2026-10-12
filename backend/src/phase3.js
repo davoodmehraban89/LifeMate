@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import express from 'express';
+import { schoolLifecycleError, assertSchoolSession } from './school_lifecycle.js';
 import { applyPlanMutation, createPlanItem, updatePlanItem, planTransaction, serializePlanItem, validUuid, PlanMutationError } from './plan_mutations.js';
 
 const allowedKinds = new Set(['task','event','routine','goal','assignment','exam','study_session']);
@@ -10,6 +11,28 @@ function schoolDate(value) {
   const date = new Date(`${value}T00:00:00Z`);
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
+
+
+// These legacy create paths retain their contracts; the database lifecycle
+// guards also serialize them with new archive/date changes.
+const schoolRoute = (pool, handler, write = true) => async (req, res, next) => {
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    const account = await client.query(`select 1 from app_user where id=$1 and disabled_at is null for ${write ? 'update' : 'share'}`, [req.identity.sub]);
+    if (!account.rowCount) { await client.query('rollback'); return res.status(401).json({ error: 'session_invalid' }); }
+    await assertSchoolSession(client, req.identity);
+    const result = await handler(req, client);
+    await assertSchoolSession(client, req.identity);
+    await client.query('commit');
+    res.status(result.status).json(result.body);
+  } catch (raw) {
+    await client.query('rollback').catch(() => {});
+    const error = schoolLifecycleError(raw);
+    if (error.status && (error.code?.startsWith('school_') || error.code === 'session_invalid')) return res.status(error.status).json({ error: error.code });
+    next(error);
+  } finally { client.release(); }
+};
 
 function asDate(value) {
   if (value == null || value === '') return null;
@@ -198,125 +221,126 @@ export function createPhase3Router({ pool, auth }) {
     res.json({ notifications: r.rows });
   });
 
-  router.get('/life-contexts', auth, async (req, res) => {
-    const r = await pool.query(
+  router.get('/life-contexts', auth, schoolRoute(pool, async (req, client) => {
+    const r = await client.query(
       'select * from life_context where user_id=$1 and active order by created_at',
       [req.identity.sub],
     );
-    res.json({ contexts: r.rows });
-  });
+    return { status: 200, body: { contexts: r.rows } };
+  }, false));
 
-  router.post('/life-contexts', auth, async (req, res) => {
+  router.post('/life-contexts', auth, schoolRoute(pool, async (req, client) => {
     const kind = String(req.body.kind ?? '');
     const title = String(req.body.title ?? '').trim();
-    if (!['student','work','personal'].includes(kind) || !title) {
-      return res.status(400).json({ error: 'invalid_life_context' });
+    if (!['student','work','personal'].includes(kind) || !schoolText(req.body.title)) {
+      return { status: 400, body: { error: 'invalid_life_context' } };
     }
-    const r = await pool.query(
+    const r = await client.query(
       'insert into life_context(user_id,kind,title) values($1,$2,$3) returning *',
       [req.identity.sub, kind, title],
     );
-    res.status(201).json(r.rows[0]);
-  });
+    return { status: 201, body: r.rows[0] };
+  }));
 
-  router.post('/school/years', auth, async (req, res) => {
+  router.post('/school/years', auth, schoolRoute(pool, async (req, client) => {
     const body = req.body ?? {};
     const title = String(body.title ?? '').trim();
     const startsOn = body.startsOn;
     const endsOn = body.endsOn;
     const lifeContextId = body.lifeContextId;
     if (!validUuid(lifeContextId) || !schoolText(body.title) || !schoolDate(startsOn) || !schoolDate(endsOn) || endsOn < startsOn) {
-      return res.status(400).json({ error: 'invalid_academic_year' });
+      return { status: 400, body: { error: 'invalid_academic_year' } };
     }
-    const ctx = await pool.query(
+    const ctx = await client.query(
       `select 1 from life_context
         where id=$1 and user_id=$2 and kind='student' and active`,
       [lifeContextId, req.identity.sub],
     );
     if (!ctx.rowCount || !title || !startsOn || !endsOn) {
-      return res.status(400).json({ error: 'invalid_academic_year' });
+      return { status: 400, body: { error: 'invalid_academic_year' } };
     }
-    const r = await pool.query(
+    const r = await client.query(
       `insert into academic_year(student_user_id,life_context_id,title,starts_on,ends_on)
        values($1,$2,$3,$4,$5) returning *`,
       [req.identity.sub, lifeContextId, title, startsOn, endsOn],
     );
-    res.status(201).json(r.rows[0]);
-  });
+    return { status: 201, body: r.rows[0] };
+  }));
 
-  router.post('/school/years/:yearId/terms', auth, async (req, res) => {
+  router.post('/school/years/:yearId/terms', auth, schoolRoute(pool, async (req, client) => {
     const body = req.body ?? {};
     if (!validUuid(req.params.yearId) || !schoolText(body.title) || !schoolDate(body.startsOn) || !schoolDate(body.endsOn) || body.endsOn < body.startsOn) {
-      return res.status(400).json({ error: 'invalid_academic_term' });
+      return { status: 400, body: { error: 'invalid_academic_term' } };
     }
-    const y = await pool.query(
+    const y = await client.query(
       'select student_user_id,active,starts_on::text,ends_on::text from academic_year where id=$1',
       [req.params.yearId],
     );
-    if (!y.rowCount) return res.status(404).json({ error: 'not_found' });
+    if (!y.rowCount) return { status: 404, body: { error: 'not_found' } };
     if (y.rows[0].student_user_id !== req.identity.sub) {
-      return res.status(403).json({ error: 'forbidden' });
+      return { status: 403, body: { error: 'forbidden' } };
     }
     if (!y.rows[0].active || body.startsOn < y.rows[0].starts_on || body.endsOn > y.rows[0].ends_on) {
-      return res.status(400).json({ error: 'invalid_academic_term' });
+      return { status: 400, body: { error: 'invalid_academic_term' } };
     }
-    const r = await pool.query(
+    const r = await client.query(
       `insert into academic_term(academic_year_id,title,starts_on,ends_on)
        values($1,$2,$3,$4) returning *`,
       [req.params.yearId, String(body.title ?? '').trim(), body.startsOn, body.endsOn],
     );
-    res.status(201).json(r.rows[0]);
-  });
+    return { status: 201, body: r.rows[0] };
+  }));
 
-  router.post('/school/terms/:termId/subjects', auth, async (req, res) => {
+  router.post('/school/terms/:termId/subjects', auth, schoolRoute(pool, async (req, client) => {
     const body = req.body ?? {};
     if (!validUuid(req.params.termId) || !schoolText(body.name) ||
         !schoolOptionalText(body.teacherName) ||
-        !schoolOptionalText(body.colorKey, 40)) return res.status(400).json({ error: 'invalid_subject' });
-    const t = await pool.query(
+        !schoolOptionalText(body.colorKey, 40)) return { status: 400, body: { error: 'invalid_subject' } };
+    const t = await client.query(
       `select y.student_user_id
          from academic_term t
          join academic_year y on y.id=t.academic_year_id
          join life_context l on l.id=y.life_context_id
-        where t.id=$1 and y.active and l.active`,
+        where t.id=$1 and t.active and y.active and l.active`,
       [req.params.termId],
     );
-    if (!t.rowCount) return res.status(404).json({ error: 'not_found' });
+    if (!t.rowCount) return { status: 404, body: { error: 'not_found' } };
     if (t.rows[0].student_user_id !== req.identity.sub) {
-      return res.status(403).json({ error: 'forbidden' });
+      return { status: 403, body: { error: 'forbidden' } };
     }
     const name = String(body.name ?? '').trim();
-    if (!name) return res.status(400).json({ error: 'invalid_subject' });
-    const r = await pool.query(
+    if (!name) return { status: 400, body: { error: 'invalid_subject' } };
+    const r = await client.query(
       `insert into subject(student_user_id,academic_term_id,name,teacher_name,color_key)
        values($1,$2,$3,$4,$5) returning *`,
       [req.identity.sub, req.params.termId, name, body.teacherName?.trim() || null, body.colorKey?.trim() || null],
     );
-    res.status(201).json(r.rows[0]);
-  });
+    return { status: 201, body: r.rows[0] };
+  }));
 
-  router.get('/school/:studentUserId/overview', auth, async (req, res) => {
+  router.get('/school/:studentUserId/overview', auth, schoolRoute(pool, async (req, client) => {
     const studentUserId = req.params.studentUserId;
-    if (!(await assertStudentAcademic(pool, studentUserId, req.identity.sub))) {
-      return res.status(403).json({ error: 'forbidden' });
+    if (!(await assertStudentAcademic(client, studentUserId, req.identity.sub))) {
+      return { status: 403, body: { error: 'forbidden' } };
     }
     const [years, subjects, workload, grades] = await Promise.all([
-      pool.query(
-        `select y.* from academic_year y where y.student_user_id=$1 and y.active
+      client.query(
+        `select y.* from academic_year y join life_context l on l.id=y.life_context_id where y.student_user_id=$1 and l.user_id=$1 and y.active and l.active
           and ($1=$2 or exists(select 1 from academic_term t join subject s on s.academic_term_id=t.id
             join plan_item p on p.subject_id=s.id where t.academic_year_id=y.id and can_view_plan_item($2,p.id)))
           order by y.starts_on desc`,
         [studentUserId, req.identity.sub],
       ),
-      pool.query(
+      client.query(
         `select s.*,t.title as term_title,y.title as year_title
            from subject s join academic_term t on t.id=s.academic_term_id
            join academic_year y on y.id=t.academic_year_id
-          where s.student_user_id=$1 and s.archived_at is null and ($1=$2 or exists(select 1 from plan_item p
+           join life_context l on l.id=y.life_context_id
+          where t.active and y.active and l.active and l.user_id=$1 and s.student_user_id=$1 and s.archived_at is null and ($1=$2 or exists(select 1 from plan_item p
             where p.subject_id=s.id and can_view_plan_item($2,p.id))) order by s.name`,
         [studentUserId, req.identity.sub],
       ),
-      pool.query(
+      client.query(
         `select *
            from plan_item
           where owner_user_id=$1 and can_view_plan_item($2,id)
@@ -325,7 +349,7 @@ export function createPhase3Router({ pool, auth }) {
           order by coalesce(due_at,starts_at) nulls last`,
         [studentUserId, req.identity.sub],
       ),
-      pool.query(
+      client.query(
         `select id,title,subject_id,grade_points,grade_out_of,due_at
            from plan_item
           where owner_user_id=$1 and can_view_plan_item($2,id)
@@ -335,29 +359,34 @@ export function createPhase3Router({ pool, auth }) {
         [studentUserId, req.identity.sub],
       ),
     ]);
-    res.json({
+    if (!(await assertStudentAcademic(client, studentUserId, req.identity.sub))) return { status: 403, body: { error: 'forbidden' } };
+    return { status: 200, body: {
       years: years.rows,
       subjects: subjects.rows,
       workload: workload.rows.map((item) => serializePlanItem(item, req.identity.sub)),
       grades: grades.rows,
-    });
-  });
+    } };
+  }, false));
 
-  router.get('/school/:studentUserId/timetable', auth, async (req, res) => {
-    if (!(await assertStudentAcademic(pool, req.params.studentUserId, req.identity.sub))) {
-      return res.status(403).json({ error: 'forbidden' });
+  router.get('/school/:studentUserId/timetable', auth, schoolRoute(pool, async (req, client) => {
+    if (!(await assertStudentAcademic(client, req.params.studentUserId, req.identity.sub))) {
+      return { status: 403, body: { error: 'forbidden' } };
     }
-    const r = await pool.query(
+    const r = await client.query(
       `select c.*,s.name as subject_name,s.color_key
          from class_session c
          join subject s on s.id=c.subject_id
-        where s.student_user_id=$1 and s.archived_at is null and c.archived_at is null and ($1=$2 or exists(select 1 from plan_item p
+         join academic_term t on t.id=s.academic_term_id
+         join academic_year y on y.id=t.academic_year_id
+         join life_context l on l.id=y.life_context_id
+        where t.active and y.active and l.active and l.user_id=$1 and s.student_user_id=$1 and s.archived_at is null and c.archived_at is null and ($1=$2 or exists(select 1 from plan_item p
           where p.subject_id=s.id and can_view_plan_item($2,p.id)))
         order by c.weekday,c.starts_at`,
       [req.params.studentUserId, req.identity.sub],
     );
-    res.json({ classes: r.rows });
-  });
+    if (!(await assertStudentAcademic(client, req.params.studentUserId, req.identity.sub))) return { status: 403, body: { error: 'forbidden' } };
+    return { status: 200, body: { classes: r.rows } };
+  }, false));
 
   router.patch('/school/plan-items/:itemId/grade', auth, async (req, res) => {
     const access = await assertPlanWrite(pool, req.params.itemId, req.identity.sub);

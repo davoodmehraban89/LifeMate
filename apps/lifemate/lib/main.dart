@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -5,6 +7,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'api.dart';
 import 'iran_hub.dart';
 import 'education_ui.dart';
+import 'content_review_sync.dart';
+import 'content_review_ui.dart';
+import 'learning_reviews_ui.dart';
+import 'learning_goals_ui.dart';
+import 'family_management_ui.dart';
 import 'phase3_ui.dart';
 import 'runtime_controller.dart';
 import 'endpoint_settings.dart';
@@ -1021,11 +1028,17 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int index = 0;
   String themePreference = 'adult_blue';
   bool adultShell = false;
   String? contextError;
+  Set<String> contentPermissions = {};
+  Timer? capabilityPoll;
+  int capabilityEpoch = 0;
+
+  HttpIdentityApi? get httpApi =>
+      widget.api is HttpIdentityApi ? widget.api as HttpIdentityApi : null;
 
   static const studentPages = [
     'امروز',
@@ -1050,13 +1063,82 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     loadContext();
+    if (httpApi != null) {
+      loadCapabilities();
+      capabilityPoll = Timer.periodic(
+          const Duration(seconds: 30), (_) => loadCapabilities());
+    }
+  }
+
+  @override
+  void dispose() {
+    capabilityEpoch++;
+    capabilityPoll?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    capabilityEpoch++;
+    if (mounted) setState(() => contentPermissions = {});
+    if (state == AppLifecycleState.resumed) loadCapabilities();
+  }
+
+  Future<void> loadCapabilities() async {
+    final api = httpApi;
+    final scope = api?.cacheNamespace;
+    final epoch = ++capabilityEpoch;
+    if (mounted) setState(() => contentPermissions = {});
+    if (api == null || scope == null) return;
+    try {
+      final permissions = await ContentReviewSync(api).capabilities();
+      if (mounted &&
+          epoch == capabilityEpoch &&
+          identical(api, httpApi) &&
+          scope == api.cacheNamespace) {
+        setState(() => contentPermissions = permissions);
+      }
+    } catch (_) {
+      // A menu is only a navigation aid. The actual operations always re-check
+      // current server capabilities; family/profile roles never grant them.
+    }
+  }
+
+  Future<void> openReviewedLesson(BuildContext origin, String unitId) async {
+    final api = httpApi;
+    if (api == null) return;
+    final scope = api.cacheNamespace;
+    try {
+      final result = await api.requestJson(
+          'GET', '/v1/education/units/${Uri.encodeComponent(unitId)}');
+      if (!origin.mounted || scope == null || scope != api.cacheNamespace) {
+        return;
+      }
+      final unit = result['unit'];
+      if (unit is! Map || unit['id'] != unitId || unit['courseId'] is! String) {
+        throw const ApiException(502, 'invalid_unit_response');
+      }
+      await Navigator.of(origin).push(MaterialPageRoute(
+          builder: (_) => LearningLessonPage(
+              api: api, courseId: unit['courseId'] as String, unitId: unitId)));
+    } catch (error) {
+      if (origin.mounted && scope == api.cacheNamespace) {
+        ScaffoldMessenger.of(origin).showSnackBar(SnackBar(
+            content: Text(error is ApiException && error.statusCode == 404
+                ? 'این درس دیگر در فهرست فعال نیست؛ تاریخچه ثبت‌شده محفوظ است.'
+                : uiErrorText(error))));
+      }
+    }
   }
 
   Future<void> loadContext() async {
+    final scope = httpApi?.cacheNamespace;
     try {
       final profile = await widget.api.getProfile();
-      if (mounted) {
+      if (mounted && (httpApi == null || scope == httpApi!.cacheNamespace)) {
         setState(() {
           themePreference =
               profile['theme_preference']?.toString() ?? 'adult_blue';
@@ -1219,6 +1301,39 @@ class _HomeShellState extends State<HomeShell> {
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (_) => SyncChangesPage(api: widget.api)));
                       }),
+                  if (httpApi != null)
+                    ListTile(
+                        leading: const Icon(Icons.flag_outlined),
+                        title: const Text('اهداف یادگیری'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) =>
+                                  LearningGoalsPage(api: httpApi!)));
+                        }),
+                  if (httpApi != null)
+                    ListTile(
+                        leading: const Icon(Icons.history_edu_outlined),
+                        title: const Text('مرور و تاریخچه یادگیری'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => LearningReviewsPage(
+                                  api: httpApi!,
+                                  onOpenLesson: openReviewedLesson)));
+                        }),
+                  if (httpApi != null &&
+                      contentPermissions.contains('feedback.read'))
+                    ListTile(
+                        leading: const Icon(Icons.fact_check_outlined),
+                        title: const Text('بررسی محتوای آموزشی'),
+                        onTap: () async {
+                          Navigator.pop(context);
+                          await Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) =>
+                                  ContentReviewPage(api: httpApi!)));
+                          if (mounted) await loadCapabilities();
+                        }),
                   if (widget.onEndpointSettings != null && !kIsWeb)
                     ListTile(
                         leading: const Icon(Icons.settings_ethernet),
@@ -1371,17 +1486,22 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
                           title: Text(family['name']?.toString() ?? 'خانواده'),
                           subtitle: Text(
                               '${family['is_admin'] == true ? 'مدیر خانواده · ' : ''}${family['role'] ?? ''}'),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => FamilyMembersPage(
-                                api: widget.api,
-                                familyId: family['id'].toString(),
-                                familyName:
-                                    family['name']?.toString() ?? 'خانواده',
-                                isAdmin: family['is_admin'] == true,
-                              ),
-                            ),
-                          ),
+                          onTap: () async {
+                            final api = widget.api;
+                            await Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) => api is HttpIdentityApi
+                                    ? FamilyManagementPage(
+                                        api: api,
+                                        familyId: family['id'].toString())
+                                    : FamilyMembersPage(
+                                        api: api,
+                                        familyId: family['id'].toString(),
+                                        familyName:
+                                            family['name']?.toString() ??
+                                                'خانواده',
+                                        isAdmin: family['is_admin'] == true)));
+                            if (mounted) setState(() => data = load());
+                          },
                           trailing: IconButton(
                               onPressed: family['is_admin'] == true
                                   ? () => invite(family['id'].toString())

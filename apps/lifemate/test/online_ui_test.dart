@@ -248,6 +248,12 @@ void main() {
     expect(find.text('ورود'), findsNothing);
     tester.firstState<ScaffoldState>(find.byType(Scaffold)).openDrawer();
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('تنظیم اتصال'), 100,
+        scrollable: find
+            .descendant(
+                of: find.byType(Drawer), matching: find.byType(Scrollable))
+            .first);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('تنظیم اتصال'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
@@ -532,6 +538,12 @@ void main() {
     await tester.pumpWidget(LifeMateApp(runtime: runtime));
     await tester.pumpAndSettle();
     tester.firstState<ScaffoldState>(find.byType(Scaffold)).openDrawer();
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('تنظیم اتصال'), 100,
+        scrollable: find
+            .descendant(
+                of: find.byType(Drawer), matching: find.byType(Scrollable))
+            .first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('تنظیم اتصال'));
     await tester.pumpAndSettle();

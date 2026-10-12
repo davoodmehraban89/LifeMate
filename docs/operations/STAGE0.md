@@ -5,7 +5,7 @@
 ## آماده‌سازی Windows
 
 1. Docker Desktop با WSL2، Git، Node >=22 و mkcert را نصب کنید. گوشی‌ها و PC به LAN مورد اعتماد متصل باشند. IP محلی PC را با `ipconfig` پیدا و DHCP آن را ثابت کنید. دریافت اولیه وابستگی‌ها ممکن است به VPN توسعه‌دهنده نیاز داشته باشد؛ اجرای کلاینت CDN خارجی ندارد.
-2. ابتدا خروجی بررسی‌شده وب را طبق بخش «بسته‌بندی PWA» آماده کنید: برای شاخه آموزش0.6.0، artifact کامل [LifeGuide-web](https://github.com/davoodmehraban89/LifeMate/actions/runs/38148788571/artifacts/11706251327) را همراه provenance در `apps/lifemate/build/web` استخراج کنید، یا build واقعی محلی را انجام دهید. خروجی تاریخی0.5.1 با ورودی‌های آموزش جدید سازگار نیست. سپس از ریشه مخزن، در PowerShell، IP نمونه را عوض کنید:
+2. ابتدا خروجی بررسی‌شده وب را طبق بخش «بسته‌بندی PWA» آماده کنید: برای source `0831ee6ba81a4811f819e8d8dbfe3f7b24a566ef`، artifact کامل [LifeGuide-web](https://github.com/davoodmehraban89/LifeMate/actions/runs/38201011644/artifacts/11725840928) را همراه provenance در `apps/lifemate/build/web` استخراج کنید، یا build واقعی محلی را انجام دهید. خروجی تاریخی0.5.1 با ورودی‌های آموزش جدید سازگار نیست. سپس از ریشه مخزن، در PowerShell، IP نمونه را عوض کنید:
 
    ```powershell
    New-Item -ItemType Directory -Force deployment/tls | Out-Null
@@ -56,11 +56,11 @@ Linux محلی، پس از همین build و بررسی: `bash scripts/local-dep
 
 اگر شبکه توسعه از proxy با CA سازمانی استفاده می‌کند، فقط گواهی **عمومی** آن را در `BUILD_CA_FILE` تنظیم کنید. script از override اختیاری `docker-compose.build-proxy.yml` و BuildKit secret استفاده می‌کند؛ گواهی یا proxy URL داخل کلاینت نهایی قرار نمی‌گیرد. TLS verification خاموش نمی‌شود. این گزینه مخصوص build است؛ CA اعتماد Stage 0 روی گوشی، گواهی جداگانه mkcert است.
 
-این fixture، فقط برای دیتابیس تازه Stage 0 است؛ تحویل واقعی ایمیل/SMS را اثبات نمی‌کند. رمز را خودتان تولید و فقط در محیط محلی نگه دارید. ثبت/ورود کاربران محصول باید از API عادی بگذرد.
+این fixture با job محلی کوتاه‌مدت migrator ساخته می‌شود؛ API محدود حق bootstrap هویت ندارد. فقط برای دیتابیس تازه Stage 0 است؛ تحویل واقعی ایمیل/SMS را اثبات نمی‌کند. رمز را خودتان تولید و فقط در محیط محلی نگه دارید. ثبت/ورود کاربران محصول باید از API عادی بگذرد.
 
 ```powershell
 $env:SYNTHETIC_PASSWORD = '<یک رمز آزمایشی تصادفی حداقل ۱۰ کاراکتر>'
-docker compose exec -e ALLOW_SYNTHETIC_SEED=yes -e SYNTHETIC_PASSWORD api node scripts/seed-compose-smoke.js
+docker compose run --rm --no-deps -e ALLOW_SYNTHETIC_SEED=yes -e SYNTHETIC_PASSWORD migrate node scripts/seed-compose-smoke.js
 $env:SMOKE_EMAIL = 'compose-smoke@lifeguide.test'
 $env:SMOKE_PASSWORD = $env:SYNTHETIC_PASSWORD
 $env:SMOKE_ALLOW_SYNTHETIC_WRITE = 'yes'
@@ -71,7 +71,7 @@ node scripts/reachability-smoke.mjs https://192.168.1.10
 برای پذیرش چندکاربره، روی **همین DB ساختگی Stage 0** می‌توانید قبل از پاک کردن متغیر رمز، fixture خانواده را بسازید:
 
 ```powershell
-docker compose exec -e ALLOW_SYNTHETIC_SEED=yes -e SYNTHETIC_PASSWORD api node scripts/seed-stage0-family.js
+docker compose run --rm --no-deps -e ALLOW_SYNTHETIC_SEED=yes -e SYNTHETIC_PASSWORD migrate node scripts/seed-stage0-family.js
 ```
 
 حساب‌های `stage0-child@lifeguide.test`، `stage0-mother@lifeguide.test` و `stage0-father@lifeguide.test` با همان رمز آزمایشی ساخته می‌شوند؛ عضویت و دو رابطه guardian در DB مشترک‌اند. script حساب/family غیرfixture را تغییر نمی‌دهد. تأیید ایمیل این fixture مستقیم و صریحاً آزمایشی است؛ تحویل ایمیل/SMS محصول را اثبات نمی‌کند. Android فرزند و PWA هر والد باید با حساب مستقل وارد همان origin شوند. سناریوی واقعی تکلیف/مطالعه/تازه‌سازی را از API عادی انجام دهید؛ موفقیت seed جای پذیرش سه دستگاه نیست.

@@ -5,6 +5,7 @@ import 'offline_store.dart';
 import 'plan_sync.dart';
 import 'study_ui.dart';
 import 'dashboard_ui.dart';
+import 'school_management_ui.dart';
 
 String faKind(String kind) => switch (kind) {
       'assignment' => 'تکلیف',
@@ -802,42 +803,12 @@ class _SchoolPageState extends State<SchoolPage> {
     } catch (_) {/* FutureBuilder renders retry failure. */}
   }
 
-  Future<void> quickSetup() async {
-    if (writing) return;
-    setState(() {
-      writing = true;
-      writeError = null;
-    });
-    try {
-      var contexts = await widget.api.listLifeContexts();
-      Map<String, dynamic>? student;
-      for (final row in contexts) {
-        if (row['kind'] == 'student') {
-          student = row;
-          break;
-        }
-      }
-      student ??=
-          await widget.api.createLifeContext(kind: 'student', title: 'مدرسه');
-      final now = DateTime.now();
-      final year = await widget.api.createAcademicYear({
-        'lifeContextId': student['id'],
-        'title': 'سال تحصیلی ${now.year}-${now.year + 1}',
-        'startsOn': '${now.year}-09-01',
-        'endsOn': '${now.year + 1}-06-30',
-      });
-      final term = await widget.api.createAcademicTerm(year['id'].toString(), {
-        'title': 'نیمسال اول',
-        'startsOn': '${now.year}-09-01',
-        'endsOn': '${now.year + 1}-01-31',
-      });
-      await widget.api.createSubject(term['id'].toString(), {'name': 'ریاضی'});
-      await reload();
-    } catch (error) {
-      if (mounted) setState(() => writeError = uiErrorText(error));
-    } finally {
-      if (mounted) setState(() => writing = false);
-    }
+  Future<void> openManagement() async {
+    if (widget.api is! HttpIdentityApi || writing) return;
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) =>
+            SchoolManagementPage(api: widget.api as HttpIdentityApi)));
+    if (mounted) await reload();
   }
 
   Future<void> addSchoolItem(String kind) async {
@@ -889,11 +860,13 @@ class _SchoolPageState extends State<SchoolPage> {
                   icon: Icons.school_outlined,
                   title: 'مدرسه را آماده کن',
                   subtitle:
-                      'سال تحصیلی، نیمسال و اولین درس را با شروع سریع بساز.',
+                      'عنوان‌ها، تاریخ سال و نیمسال و درس‌ها را خودت انتخاب کن.',
                   action: FilledButton.icon(
-                    onPressed: writing ? null : quickSetup,
-                    icon: const Icon(Icons.auto_fix_high),
-                    label: const Text('شروع سریع'),
+                    onPressed: writing || widget.api is! HttpIdentityApi
+                        ? null
+                        : openManagement,
+                    icon: const Icon(Icons.school_outlined),
+                    label: const Text('مدیریت مدرسه'),
                   ),
                 )
               else ...[
@@ -905,6 +878,13 @@ class _SchoolPageState extends State<SchoolPage> {
                         children: [
                           Text('مدرسه',
                               style: Theme.of(context).textTheme.headlineSmall),
+                          TextButton.icon(
+                              onPressed:
+                                  writing || widget.api is! HttpIdentityApi
+                                      ? null
+                                      : openManagement,
+                              icon: const Icon(Icons.manage_accounts_outlined),
+                              label: const Text('مدیریت مدرسه')),
                           const SizedBox(height: 10),
                           Wrap(spacing: 8, runSpacing: 8, children: [
                             Chip(label: Text('${subjects.length} درس')),

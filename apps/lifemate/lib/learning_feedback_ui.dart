@@ -15,6 +15,14 @@ const feedbackCategories = {
   'topic_request': 'پیشنهاد موضوع آموزشی',
 };
 
+const feedbackStatusLabels = {
+  'received': 'دریافت‌شده',
+  'triaged': 'بررسی اولیه',
+  'planned': 'در برنامه بررسی و توسعه',
+  'released': 'انتشار ثبت‌شده',
+  'declined': 'پذیرفته‌نشده',
+};
+
 /// Explicitly chosen feedback only; never extracts private conversations.
 class LearningFeedbackSync {
   LearningFeedbackSync(this.api, {OfflineStore? store})
@@ -305,7 +313,7 @@ class _LearningFeedbackPageState extends State<LearningFeedbackPage> {
                     ? row['summary']?.toString() ?? 'بازخورد'
                     : 'رضایت ارسال پس گرفته شد'),
                 subtitle: Text(row['withdrawnAt'] == null
-                    ? 'وضعیت بررسی: ${row['status'] ?? 'دریافت‌شده'}'
+                    ? 'وضعیت بررسی: ${feedbackStatusLabels[row['status']] ?? 'نامشخص'}'
                     : 'متن بازخورد حذف شده است.'),
                 trailing: row['withdrawnAt'] != null
                     ? null

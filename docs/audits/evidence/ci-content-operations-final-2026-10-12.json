@@ -1,0 +1,302 @@
+{
+  "date": "2026-10-12",
+  "source": "0831ee6ba81a4811f819e8d8dbfe3f7b24a566ef",
+  "backendVersion": "0.7.1",
+  "clientVersion": "0.7.0+6",
+  "mode": "Official GitHub connector observed completed run/jobs and decoded actual logs; root downloaded actual APK ZIP and inspected bytes/manifest. No live deploy.",
+  "run": {
+    "id": 38201011644,
+    "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38201011644",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "jobs": [
+    {
+      "id": 114654207749,
+      "name": "security",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Reject tracked credentials and private artifacts",
+          "conclusion": "success"
+        },
+        {
+          "name": "Audit product naming",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 114654207932,
+      "name": "flutter",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run subosito/flutter-action@v2",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run flutter pub get",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run flutter --version --machine",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run dart format --output=none --set-exit-if-changed lib test",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run flutter analyze",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run flutter test",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run node tool/test_web_bootstrap.mjs",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run node --test tool/test_offline_worker.mjs",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run flutter build web --release --no-web-resources-cdn --pwa-strategy=none",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run node tool/test_web_bootstrap.mjs",
+          "conclusion": "success"
+        },
+        {
+          "name": "Bundle local resources and reject external runtime services",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check compiled browser requests for local fonts and CanvasKit",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check exclusive web instance before session and cache access",
+          "conclusion": "success"
+        },
+        {
+          "name": "Preserve unsent changes across forced session expiry",
+          "conclusion": "success"
+        },
+        {
+          "name": "Record checked prebuilt web provenance",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify Windows checkout preserves the checked web artifact",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build test APK (debug certificate; not a release)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Inspect the actual APK manifest and debug signature",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run subosito/flutter-action@v2",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 114654207943,
+      "name": "backend",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify reachability smoke rejects untrusted TLS",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run npm ci",
+          "conclusion": "success"
+        },
+        {
+          "name": "Apply migrations and verify repeat run",
+          "conclusion": "success"
+        },
+        {
+          "name": "Import checked educational metadata and verify repeat run",
+          "conclusion": "success"
+        },
+        {
+          "name": "SQL authorization matrix",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run npm test && npm run check && npm audit --audit-level=high",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify isolated database roles and runtime family scenario",
+          "conclusion": "success"
+        },
+        {
+          "name": "Backup and restore synthetic database",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "observedLogLines": {
+    "backend": [
+      "2026-10-12T03:45:59.8733649Z # tests 5",
+      "2026-10-12T03:45:59.8734711Z # pass 5",
+      "2026-10-12T03:45:59.8735131Z # fail 0",
+      "2026-10-12T03:46:02.2385483Z found 0 vulnerabilities",
+      "2026-10-12T03:46:46.7776248Z # tests 245",
+      "2026-10-12T03:46:46.7776627Z # pass 245",
+      "2026-10-12T03:46:46.7776820Z # fail 0",
+      "2026-10-12T03:46:48.5397591Z Syntax checked 68 source/script/test files.",
+      "2026-10-12T03:46:48.9422588Z found 0 vulnerabilities",
+      "2026-10-12T03:46:55.6181829Z # tests 9",
+      "2026-10-12T03:46:55.6182381Z # pass 9",
+      "2026-10-12T03:46:55.6182634Z # fail 0",
+      "2026-10-12T03:47:19.7852013Z # tests 96",
+      "2026-10-12T03:47:19.7852537Z # pass 96",
+      "2026-10-12T03:47:19.7852840Z # fail 0",
+      "2026-10-12T03:47:22.6885189Z PASS restored checksum ledger entries, migrator ownership/repeat, runtime denial matrix, guardian/private policy and paused-study600seconds"
+    ],
+    "flutter": [
+      "2026-10-12T03:46:04.4853765Z No issues found! (ran in 11.1s)",
+      "2026-10-12T03:46:44.9102969Z 🎉 200 tests passed.",
+      "2026-10-12T03:47:28.6453321Z ✓ Built build/web",
+      "2026-10-12T03:53:07.3732339Z ✓ Built build/app/outputs/flutter-apk/app-debug.apk",
+      "2026-10-12T03:53:08.4895751Z Verified using v2 scheme (APK Signature Scheme v2): true",
+      "2026-10-12T03:53:08.4921889Z V2 Signer: certificate SHA-256 digest: c1bf6ec0237985d9fadf7d12d614b2461e78dda64903dcff1009867b43a972e1"
+    ]
+  },
+  "artifacts": [
+    {
+      "id": 11725931941,
+      "name": "LifeGuide-debug-apk",
+      "sizeInBytes": 87871626,
+      "zipDigest": "sha256:0e4e03a528721ff1273721745277e0e65da5e5a5bf5e2427fd271f8ac7c9b51e",
+      "expiresAt": "2027-01-10T03:45:29Z",
+      "source": "0831ee6ba81a4811f819e8d8dbfe3f7b24a566ef",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38201011644/artifacts/11725931941"
+    },
+    {
+      "id": 11725840928,
+      "name": "LifeGuide-web",
+      "sizeInBytes": 19039012,
+      "zipDigest": "sha256:ef5fd4791557f77d11bedba4818fd406c08b34280b5da3fed053623c81285a5d",
+      "expiresAt": "2027-01-10T03:45:29Z",
+      "source": "0831ee6ba81a4811f819e8d8dbfe3f7b24a566ef",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38201011644/artifacts/11725840928"
+    }
+  ],
+  "rootApkInspection": {
+    "zipSha256": "0e4e03a528721ff1273721745277e0e65da5e5a5bf5e2427fd271f8ac7c9b51e",
+    "zipTest": "PASS; one entry LifeGuide-debug.apk",
+    "apkBytes": 168960414,
+    "apkSha256": "b9b8599de796986cf2800ce24782ee85bc87a7d97889d2d194465f0ad4f07915",
+    "manifest": "PASS ir.lifeguide.app, version0.7.0 code6, Persian label, debuggabletrue, allowBackupfalse, cleartextfalse, Internet, min24 target36",
+    "signature": "Actual CI apksigner v2 true; root local apksigner UNVERIFIED/unavailable",
+    "debugCertificateSha256": "c1bf6ec0237985d9fadf7d12d614b2461e78dda64903dcff1009867b43a972e1",
+    "previousDebugCertificateSha256": "0261b9196bfe99e293c5d2c202817922927392744917ad19873663b85af76dbd",
+    "upgrade": "UNVERIFIED; different debug certificate may block upgrade. Do not uninstall/erase unsent data."
+  },
+  "limitations": [
+    "Owner release signing UNVERIFIED",
+    "Actual Android install/upgrade UNVERIFIED",
+    "Safari/A2HS UNVERIFIED",
+    "Iran reachability UNVERIFIED",
+    "Public deployment not performed",
+    "Zero real reviewed/published videos and question banks"
+  ]
+}

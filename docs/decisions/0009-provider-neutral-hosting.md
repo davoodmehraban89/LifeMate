@@ -57,7 +57,7 @@
 5. اسکریپت Stage 0 در اولین اجرا `.env` را از نمونه، با secretهای تصادفی محلی و origin انتخاب‌شده می‌سازد؛ `.env` قبلی را خودکار بازنویسی نمی‌کند. origin/API runtime را روی `https://<LAN-IP>` بگذارید. دستور مورد انتظار بسته از ریشه مخزن:
 
    ```powershell
-   ./scripts/local-deploy.ps1 -Origin https://192.168.1.10 -Certificate deployment/tls/server.pem -PrivateKey deployment/tls/server-key.pem -Project lifeguide-stage0
+   ./scripts/local-deploy.ps1 -Origin https://192.168.1.10 -Certificate deployment/tls/server.pem -PrivateKey deployment/tls/server-key.pem
    ```
 
    IP مثال باید عوض شود. جزئیات build، migration و ایجاد `config.json` در [STAGE0.md](../operations/STAGE0.md) است. این دستور روی Windows مالک **UNVERIFIED** است؛ گزارش اجرای Linux/Compose جای آن را نمی‌گیرد. `docker compose config` خروجی secretدار می‌تواند داشته باشد؛ آن را عمومی یا در چت ارسال نکنید.

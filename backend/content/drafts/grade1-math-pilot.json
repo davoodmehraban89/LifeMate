@@ -1,0 +1,793 @@
+{
+  "schemaVersion": 1,
+  "kind": "lifeguide_original_learning_pilot_draft",
+  "pilotId": "ir-105-1405-1406-theme-01",
+  "version": 1,
+  "publicationStatus": "draft",
+  "reviewRecord": null,
+  "createdAt": "2026-10-11",
+  "authorKind": "AI-authored original draft; not a licensed educator approval",
+  "language": "fa-IR",
+  "audience": {
+    "grade": 1,
+    "readAloudByTrustedAdultMayBeNeeded": true,
+    "noAgeInferenceFromGrade": true
+  },
+  "book": {
+    "bookCode": "105",
+    "grade": 1,
+    "subjectCode": "math",
+    "trackCodes": [
+      "common"
+    ],
+    "variant": "standard",
+    "titleFa": "ریاضی (اول)",
+    "schoolYear": "1405-1406",
+    "sourceUrl": "http://www.chap.sch.ir/books/14145",
+    "pdfUrl": "http://www.chap.sch.ir/sites/default/files/lbooks/1405-1406/8/C105.pdf",
+    "officialDetailHttpStatus": 200,
+    "officialPdfHttpStatus": 200,
+    "pdfBytes": 38215789,
+    "pdfSha256": "8c2323ce542adcb4e53d79287cccb16a050a2a63ef2484ac337addf076b118d4",
+    "pdfPageCount": 184,
+    "imprintVerified": "چاپ شانزدهم1405 — PDF page2 inspected as extracted text",
+    "pageInspection": {
+      "printedPages": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "pdfPages": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "method": "pdftotext layout + actual PNG render visual inspection",
+      "status": "verified_only_for_this_scope"
+    },
+    "excludedExperimentalBookCode": "1051"
+  },
+  "unit": {
+    "unitKey": "theme-01",
+    "titleFa": "تم۱: دسته‌بندی، شمارش، نمایش تعداد و الگو",
+    "orderIndex": 1,
+    "indexKind": "lesson",
+    "sourceEvidenceUrl": "http://www.chap.sch.ir/sites/default/files/lbooks/1405-1406/8/C105.pdf#page=7",
+    "printedPageRange": [
+      1,
+      7
+    ],
+    "pdfPageRange": [
+      7,
+      13
+    ],
+    "scopeNoteFa": "پایلوت تم نخست کتاب استاندارد105؛ یک سال کامل یا کتاب آزمایشی1051 نیست. هدف‌های زیر طراحی اصلی لایف‌گاید بر مبنای صفحات بررسی‌شده‌اند."
+  },
+  "objectives": [
+    {
+      "id": "sort_count",
+      "statementFa": "شکل‌های هم‌نوع را جدا کنم و هر کدام را فقط یک‌بار، تا پنج، بشمارم.",
+      "printedPages": [
+        2
+      ]
+    },
+    {
+      "id": "cardinality",
+      "statementFa": "بگویم آخرین واژه شمارش، تعداد کل دسته را نشان می‌دهد؛ با جابه‌جایی بدون افزودن یا برداشتن، تعداد عوض نمی‌شود.",
+      "printedPages": [
+        2,
+        6
+      ],
+      "alignmentNoteFa": "پیامد آموزشی طراحی‌شده از شمارش و مقایسه دسته‌ها؛ جمله عیناً از کتاب برداشته نشده است."
+    },
+    {
+      "id": "quantity_representation",
+      "statementFa": "برای هر شیء، یک خانه یا یک نشانه نشان دهم و تعداد را با نشانه‌ها مقایسه کنم.",
+      "printedPages": [
+        3,
+        7
+      ]
+    },
+    {
+      "id": "same_quantity",
+      "statementFa": "دسته‌های هم‌تعداد را حتی وقتی نوع شکل یا فاصله آن‌ها متفاوت است، پیدا کنم.",
+      "printedPages": [
+        6
+      ]
+    },
+    {
+      "id": "pattern",
+      "statementFa": "بخش تکراری یک الگوی ساده را توضیح دهم و همان ترتیب را ادامه بدهم.",
+      "printedPages": [
+        4,
+        5,
+        7
+      ]
+    },
+    {
+      "id": "flexible_representation",
+      "statementFa": "یک تعداد کمتر از پنج را به بیش از یک روش با انگشتان یا کارت‌ها نشان دهم.",
+      "printedPages": [
+        7
+      ]
+    }
+  ],
+  "prerequisites": [
+    {
+      "id": "familiar_objects",
+      "statementFa": "تشخیص چند شیء یا شکل آشنا؛ در صورت نیاز بزرگسال نام‌ها را می‌گوید."
+    },
+    {
+      "id": "single_touch",
+      "statementFa": "امکان اشاره، جابه‌جایی یا انتخاب یک شیء در هر نوبت؛ روش جایگزین متناسب با توانایی حرکتی فراهم شود."
+    }
+  ],
+  "notPrerequisitesFa": [
+    "خواندن روان",
+    "نوشتن ارقام",
+    "سرعت پاسخ",
+    "شمردن بیش از پنج",
+    "دسترسی به ویدیو یا هوش مصنوعی"
+  ],
+  "learnerIntroductionFa": "امروز چیزهای مثل هم را جدا می‌کنیم، یکی‌یکی می‌شماریم و شکل‌های تکرارشونده می‌سازیم. می‌توانی فکر کنی، کمک بخواهی یا استراحت کنی؛ مسابقه سرعت نیست.",
+  "entryCheck": {
+    "mode": "adult_read_aloud_or_picture_based",
+    "purpose": "choose_support_not_grade_or_lockout",
+    "promptsFa": [
+      "دو کارت آشنا پیدا کن و نشان بده.",
+      "می‌توانی این سه کارت را هرکدام فقط یک‌بار بشماری؟",
+      "در یک الگوی گردـمثلثـگردـمثلث، بخش تکراری را نشان بده."
+    ],
+    "noStoredDiagnosis": true
+  },
+  "sessionGuidance": {
+    "suggestedBlockMinutes": [
+      5,
+      10
+    ],
+    "policyStatus": "draft product scheduling suggestion; not a scientifically optimal duration for every child",
+    "breaksAllowed": true,
+    "startMidyearAllowed": true,
+    "allModulesNavigationAllowed": true,
+    "materialsFa": [
+      "کارت کاغذی بزرگ با لبه بی‌خطر",
+      "مداد و کاغذ",
+      "اشیای آشنای ایمن با نظارت بزرگسال؛ از اشیای کوچک یا تیز استفاده نشود"
+    ],
+    "fingerAlternativeRequired": true,
+    "noRecordingOrCameraRequired": true
+  },
+  "modules": [
+    {
+      "id": "notice_sort_count",
+      "titleFa": "با اشیای آشنا دسته بساز و بشمار",
+      "objectiveIds": [
+        "sort_count",
+        "cardinality"
+      ],
+      "printedPages": [
+        1,
+        2
+      ],
+      "workedExampleFa": "دو کارت گرد و سه کارت چهارگوش می‌چینیم. می‌گویم «فعلاً فقط کارت‌های گرد را می‌شمارم». هر کارت گرد را یک‌بار به سمت دیگر می‌برم و می‌گویم «یک، دو». سپس می‌گویم «دو کارت گرد داریم»؛ کارت‌های چهارگوش را در شمارش این دسته وارد نمی‌کنم.",
+      "guidedPracticeFa": "دو تا پنج کارت بزرگ و آشنا آماده کن. بزرگسال یک دسته را نام ببرد و فقط برای شروع یادآوری کند که هر کارت یک اشاره و یک واژه می‌گیرد؛ پاسخ را از قبل نگوید.",
+      "independentPracticeFa": "خودت از میان چند شکل، یک دسته هم‌نوع انتخاب کن؛ ابتدا بگو قرار است چه چیزی را بشماری، بعد تعداد را بگو. مجبور نیستی رقم بنویسی.",
+      "successEvidenceFa": "انتخاب درست دسته، یک‌بار شمردن هر عضو و گفتن تعداد کل؛ مشاهده ساختگی یا تایمر این رفتار را تأیید نمی‌کند.",
+      "metacognitivePromptFa": "چطور مطمئن شدی چیزی جا نیفتاده یا دوبار شمرده نشده؟"
+    },
+    {
+      "id": "one_object_one_cell",
+      "titleFa": "از کارت به خانه‌های نشانه‌دار",
+      "objectiveIds": [
+        "quantity_representation"
+      ],
+      "printedPages": [
+        3
+      ],
+      "workedExampleFa": "سه کارت روی میز است و پنج خانه روی یک کاغذ داریم. برای هر کارت فقط یک خانه علامت می‌زنم. سه خانه علامت‌دار و دو خانه خالی می‌ماند. می‌گویم «این سه خانه، سه کارت را نشان می‌دهند».",
+      "guidedPracticeFa": "با دو کارت، هر کارت را کنار یک خانه بگذار و همان خانه را علامت بزن. از کودک بپرس خانه خالی چه معنایی دارد؛ لازم نیست مفهوم عدد صفر را آموزش بدهی.",
+      "independentPracticeFa": "برای چهار کارت روی کاغذ خودت پنج خانه بکش و به تعداد کارت‌ها علامت بزن؛ سپس دوباره با جفت‌کردن بررسی کن.",
+      "successEvidenceFa": "تعداد خانه‌های علامت‌دار دقیقاً برابر تعداد کارت‌ها؛ توضیح پیوند یک‌به‌یک."
+    },
+    {
+      "id": "repeat_and_explain",
+      "titleFa": "بخش تکراری الگو را پیدا کن",
+      "objectiveIds": [
+        "pattern"
+      ],
+      "printedPages": [
+        4,
+        5
+      ],
+      "workedExampleFa": "یک کارت گرد، یک کارت چهارگوش؛ دوباره یک گرد، یک چهارگوش. آغاز ردیف را با برچسب مشخص می‌کنم و هر جفت را کنار هم نشان می‌دهم. می‌گویم «بخش گردـچهارگوش تکرار می‌شود»؛ پس بعد از گرد، چهارگوش می‌آید.",
+      "guidedPracticeFa": "دو بخش «گردـگردـمثلث» بساز. هر بخش را با فاصله یا کادر مشخص کن؛ کودک بخش تازه را با کمک جزئی بچیند.",
+      "independentPracticeFa": "یک ردیف تکراری و یک ردیف نامنظم با کارت‌های تازه بساز. کودک بخش تکراری ردیف درست را نشان دهد، قاعده را به زبان خودش بگوید و دو کارت دیگر اضافه کند.",
+      "successEvidenceFa": "قاعده توضیح داده می‌شود و ادامه با همان قاعده سازگار است؛ حدس یک شکل به‌تنهایی کافی نیست.",
+      "accessibilityNoteFa": "رنگ به‌تنهایی حامل اطلاعات نباشد؛ شکل و نام هم مشخص باشد. جهت آغاز ردیف صریح است، به LTR/RTL مبهم تکیه نشود."
+    },
+    {
+      "id": "equal_groups",
+      "titleFa": "نوع یا فاصله عوض می‌شود، تعداد نه",
+      "objectiveIds": [
+        "same_quantity",
+        "cardinality"
+      ],
+      "printedPages": [
+        6
+      ],
+      "workedExampleFa": "سه کارت کوچک و سه کارت بزرگ را جفت می‌کنم. برای هر کوچک یک بزرگ هست و چیزی اضافه نمی‌ماند؛ پس هم‌تعدادند. سپس کارت‌های بزرگ را با فاصله می‌چینم؛ هنوز سه جفت برقرار است.",
+      "guidedPracticeFa": "دو کارت گرد و دو کارت مثلث را جفت کن. سپس یک مثلث اضافه کن و از کودک بخواه کارت بدون جفت را نشان دهد.",
+      "independentPracticeFa": "میان دسته‌های دو، سه و چهارکارت، دسته هم‌تعداد با سه شیء آشنا را پیدا کن و با جفت‌کردن دلیل بیاور.",
+      "successEvidenceFa": "هم‌تعداد بودن از شمارش یا تناظر بررسی می‌شود، نه اندازه ظاهری."
+    },
+    {
+      "id": "show_in_two_ways",
+      "titleFa": "یک تعداد را به دو روش نشان بده",
+      "objectiveIds": [
+        "flexible_representation",
+        "quantity_representation"
+      ],
+      "printedPages": [
+        7
+      ],
+      "workedExampleFa": "سه انگشت باز را می‌شمارم؛ بعد سه انگشت دیگر را باز می‌کنم. انتخاب انگشت‌ها عوض شده ولی تعداد سه است. اگر دست‌ورزی راحت نیست، سه کارت را یک‌بار در ردیف و یک‌بار در مثلث می‌چینم.",
+      "guidedPracticeFa": "کودک دو انگشت یا دو کارت را نشان دهد؛ بزرگسال بپرسد «راه دیگری هم می‌بینی؟» و فرصت فکر بدهد.",
+      "independentPracticeFa": "سه را با دو نمایش متفاوت نشان بده؛ هر نمایش را با شمارش بررسی کن.",
+      "successEvidenceFa": "هر دو نمایش یک تعداد دارند؛ توانایی حرکتی دست شرط قبولی نیست."
+    },
+    {
+      "id": "retrieve_and_transfer",
+      "titleFa": "از حافظه کمک بگیر و در موقعیت تازه امتحان کن",
+      "objectiveIds": [
+        "sort_count",
+        "quantity_representation",
+        "same_quantity",
+        "pattern",
+        "flexible_representation"
+      ],
+      "printedPages": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "workedExampleFa": "بزرگسال با صدای بلند راهبرد خود را مدل می‌کند: «هدفم شمردن کارت‌های گرد است. اول جدا می‌کنم، سپس کارت شمرده‌شده را جابه‌جا می‌کنم، در پایان با خانه‌ها بررسی می‌کنم».",
+      "guidedPracticeFa": "در سؤال تازه فقط راهبرد پرسیده شود؛ اگر کودک نیاز داشت، از اشیای ملموس کمک بگیرد. کمک‌گرفتن ثبت شود، به‌عنوان پاسخ مستقل جا زده نشود.",
+      "independentPracticeFa": "یکی از سؤال‌های بازیابی با شکل‌های تازه و یکی از موقعیت‌های انتقال انجام شود؛ کودک بگوید کدام راهبرد کمک کرد.",
+      "successEvidenceFa": "پاسخ‌ها، دلیل‌ها و میزان کمک در چند موقعیت ثبت می‌شوند؛ نه ادعای تسلط یا فهم تضمینی."
+    }
+  ],
+  "assessmentDraft": {
+    "publicationStatus": "draft",
+    "mode": "formative_multiple_choice",
+    "maxQuestionsPerSittingSuggestion": 3,
+    "readAloudAdultSupportMustBeLabelled": true,
+    "questionBankCount": 10,
+    "questions": [
+      {
+        "id": "count_three",
+        "objectiveId": "sort_count",
+        "promptFa": "این نشانه‌ها را یکی‌یکی بشمار: ○ ○ ○. چند نشانه داریم؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "دو"
+          },
+          {
+            "id": "b",
+            "textFa": "سه"
+          },
+          {
+            "id": "c",
+            "textFa": "چهار"
+          }
+        ],
+        "correctChoiceId": "b",
+        "explanationFa": "هر نشانه یک اشاره و یک واژه می‌گیرد: یک، دو، سه؛ آخرین واژه «سه» تعداد کل را می‌گوید.",
+        "remediationFa": "سه کارت بزرگ را از سمت نشمرده به سمت شمرده منتقل کن؛ برای هر کارت فقط یک واژه بگو.",
+        "printedPages": [
+          2
+        ]
+      },
+      {
+        "id": "sort_circles",
+        "objectiveId": "sort_count",
+        "promptFa": "در این ردیف فقط دایره‌ها را بشمار: ○ □ ○ △. چند دایره داریم؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "دو"
+          },
+          {
+            "id": "b",
+            "textFa": "سه"
+          },
+          {
+            "id": "c",
+            "textFa": "چهار"
+          }
+        ],
+        "correctChoiceId": "a",
+        "explanationFa": "دو دایره داریم. مربع و مثلث در دسته دایره‌ها نیستند؛ آن‌ها را در این پرسش نمی‌شماریم.",
+        "remediationFa": "روی کاغذ دو دایره و دو شکل دیگر بکش. نخست دور همه دایره‌ها علامت بگذار، بعد فقط همان دسته را بشمار.",
+        "printedPages": [
+          2
+        ]
+      },
+      {
+        "id": "puppet_duplicate",
+        "objectiveId": "sort_count",
+        "promptFa": "چهار کارت داریم. عروسک کارت اول را دوبار شمرده و گفته «پنج کارت». کدام کار به او کمک می‌کند؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "هر کارت را یک‌بار جابه‌جا کند و یک واژه بگوید."
+          },
+          {
+            "id": "b",
+            "textFa": "واژه‌ها را تندتر بگوید."
+          },
+          {
+            "id": "c",
+            "textFa": "همه کارت‌ها را دوباره دوبار بشمارد."
+          }
+        ],
+        "correctChoiceId": "a",
+        "explanationFa": "وقتی یک کارت دوبار شمرده شود، پاسخ از تعداد واقعی بیشتر می‌شود. یک اشاره و یک واژه برای هر کارت، از تکرار جلوگیری می‌کند.",
+        "remediationFa": "با چهار کارت، خودت نقش عروسک را بازی کن. کارت شمرده‌شده را کنار بگذار و درباره جاافتادن یا تکرار کارت توضیح بده.",
+        "printedPages": [
+          2
+        ]
+      },
+      {
+        "id": "four_cells",
+        "objectiveId": "quantity_representation",
+        "promptFa": "برای چهار کارت، به ازای هر کارت یک خانه پر می‌کنیم. کدام ردیف درست است؟ خانه پر با ■ نشان داده شده است.",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "■ ■ □ □ □"
+          },
+          {
+            "id": "b",
+            "textFa": "■ ■ ■ □ □"
+          },
+          {
+            "id": "c",
+            "textFa": "■ ■ ■ ■ □"
+          }
+        ],
+        "correctChoiceId": "c",
+        "explanationFa": "چهار کارت به چهار خانه پر نیاز دارند. خانه خالی را در شمارش خانه‌های پر حساب نمی‌کنیم.",
+        "remediationFa": "چهار کارت را یکی‌یکی بالای پنج خانه بگذار. برای هر کارت یک خانه علامت بزن؛ باید یک خانه خالی بماند.",
+        "printedPages": [
+          3
+        ]
+      },
+      {
+        "id": "match_three",
+        "objectiveId": "same_quantity",
+        "promptFa": "سه دایره داریم: ○ ○ ○. کدام دسته همان تعداد را دارد؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "△ △"
+          },
+          {
+            "id": "b",
+            "textFa": "□ □ □"
+          },
+          {
+            "id": "c",
+            "textFa": "○ ○ ○ ○"
+          }
+        ],
+        "correctChoiceId": "b",
+        "explanationFa": "دسته سه مربع هم‌تعداد سه دایره است؛ نوع شکل تعداد را تغییر نمی‌دهد. می‌توانی هر دایره را با یک مربع جفت کنی.",
+        "remediationFa": "سه کارت گرد و سه کارت چهارگوش را دوتادوتا جفت کن؛ اگر هیچ کارت اضافه نماند، تعداد دو دسته برابر است.",
+        "printedPages": [
+          6
+        ]
+      },
+      {
+        "id": "spread_count",
+        "objectiveId": "cardinality",
+        "promptFa": "چهار کارت کنار هم است. فقط فاصله کارت‌ها را بیشتر می‌کنیم و هیچ کارتی اضافه یا کم نمی‌کنیم. حالا چند کارت داریم؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "سه"
+          },
+          {
+            "id": "b",
+            "textFa": "چهار"
+          },
+          {
+            "id": "c",
+            "textFa": "پنج"
+          }
+        ],
+        "correctChoiceId": "b",
+        "explanationFa": "جای کارت‌ها عوض شده، اما هیچ کارتی اضافه یا برداشته نشده است؛ هنوز چهار کارت داریم.",
+        "remediationFa": "چهار کارت را ابتدا کنار هم و بعد دور از هم بگذار. هر بار همه را یک‌بار بشمار و درباره یکسان ماندن تعداد توضیح بده.",
+        "printedPages": [
+          2,
+          6
+        ]
+      },
+      {
+        "id": "pattern_ab",
+        "objectiveId": "pattern",
+        "promptFa": "الگو از دایره شروع می‌شود و به ترتیب «دایره، مثلث» تکرار می‌شود: ○ △ ○ △ ○ … . شکل بعدی چیست؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "دایره"
+          },
+          {
+            "id": "b",
+            "textFa": "مثلث"
+          },
+          {
+            "id": "c",
+            "textFa": "مربع"
+          }
+        ],
+        "correctChoiceId": "b",
+        "explanationFa": "بخش تکراری، یک دایره و یک مثلث است. بعد از دایره، مثلث می‌آید؛ از همان ترتیب استفاده می‌کنیم.",
+        "remediationFa": "با کارت‌های دارای شکل، هر جفت دایره‌ـمثلث را جدا کن و بلند بگو. بعد یک جفت تازه بساز.",
+        "printedPages": [
+          4,
+          5,
+          7
+        ]
+      },
+      {
+        "id": "pattern_aab",
+        "objectiveId": "pattern",
+        "promptFa": "این ترتیب از سمت آغاز نوشته‌شده تکرار می‌شود: «مربع، مربع، مثلث | مربع، مربع، مثلث | …». در آغاز بخش بعد چه شکلی می‌آید؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "مثلث"
+          },
+          {
+            "id": "b",
+            "textFa": "دایره"
+          },
+          {
+            "id": "c",
+            "textFa": "مربع"
+          }
+        ],
+        "correctChoiceId": "c",
+        "explanationFa": "بخش تکراری دو مربع و یک مثلث است؛ هر بخش تازه با مربع آغاز می‌شود. قاعده، یکی‌درمیان نیست.",
+        "remediationFa": "شش کارت بساز و آن‌ها را در دو دسته «مربع، مربع، مثلث» بچین. هر دسته را یک بخش بنام و بخش سوم را خودت بساز.",
+        "printedPages": [
+          4,
+          5,
+          7
+        ]
+      },
+      {
+        "id": "fingers_three",
+        "objectiveId": "flexible_representation",
+        "promptFa": "نیما سه انگشت را نشان می‌دهد. سارا هم سه انگشت دیگر را باز کرده است. آیا می‌توانند تعداد یکسانی را با انگشت‌های متفاوت نشان بدهند؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "بله؛ تعداد انگشت‌های باز مهم است."
+          },
+          {
+            "id": "b",
+            "textFa": "نه؛ باید دقیقاً همان انگشت‌ها باز باشند."
+          }
+        ],
+        "correctChoiceId": "a",
+        "explanationFa": "اگر هر نفر سه انگشت باز داشته باشد، تعداد هر دو سه است؛ انتخاب انگشت‌ها می‌تواند متفاوت باشد.",
+        "remediationFa": "اگر استفاده از دست برایت راحت است، سه انگشت را به دو روش نشان بده. در غیر این صورت سه کارت را به دو آرایش بچین؛ هر آرایش را بشمار.",
+        "printedPages": [
+          7
+        ]
+      },
+      {
+        "id": "explain_same",
+        "objectiveId": "same_quantity",
+        "promptFa": "سه کارت کوچک و سه کارت بزرگ داریم. کدام دلیل نشان می‌دهد دو دسته هم‌تعداد هستند؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "کارت‌های بزرگ جای بیشتری می‌گیرند."
+          },
+          {
+            "id": "b",
+            "textFa": "می‌توان هر کارت کوچک را با یک کارت بزرگ جفت کرد و هیچ کارت اضافه نماند."
+          },
+          {
+            "id": "c",
+            "textFa": "رنگ هر دو دسته باید یکسان باشد."
+          }
+        ],
+        "correctChoiceId": "b",
+        "explanationFa": "یک جفت برای هر کارت و بدون کارت اضافه، برابری تعداد را نشان می‌دهد. بزرگی، رنگ و فاصله شرط هم‌تعداد بودن نیستند.",
+        "remediationFa": "سه کارت کوچک و سه کارت بزرگ را کنار هم جفت کن. سپس یک کارت بزرگ اضافه کن و توضیح بده چرا دیگر هم‌تعداد نیستند.",
+        "printedPages": [
+          6
+        ]
+      }
+    ],
+    "resultInterpretationFa": "پاسخ انتخابی یک نشانه محدود از یادگیری است. حدس، کمک بزرگسال و مهارت خواندن می‌تواند بر نتیجه اثر بگذارد. پاسخ صحیح یک‌باره مساوی تسلط نیست.",
+    "noPassingThresholdClaim": true
+  },
+  "retrievalDraft": {
+    "publicationStatus": "draft",
+    "questions": [
+      {
+        "id": "recall_count",
+        "objectiveId": "sort_count",
+        "promptFa": "بدون نگاه به پاسخ قبلی، این دسته تازه را بشمار: □ □ □ □. چند مربع است؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "سه"
+          },
+          {
+            "id": "b",
+            "textFa": "چهار"
+          },
+          {
+            "id": "c",
+            "textFa": "پنج"
+          }
+        ],
+        "correctChoiceId": "b",
+        "explanationFa": "چهار مربع داریم؛ هر مربع فقط یک‌بار شمرده می‌شود.",
+        "remediationFa": "یک مربع را پس از شمردن با مداد علامت بزن تا جا نیفتد یا دوبار شمرده نشود.",
+        "printedPages": [
+          2
+        ]
+      },
+      {
+        "id": "recall_pattern",
+        "objectiveId": "pattern",
+        "promptFa": "الگو با مثلث شروع شده و «مثلث، مربع» تکرار می‌شود: △ □ △ □ △ … . شکل بعدی چیست؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "مربع"
+          },
+          {
+            "id": "b",
+            "textFa": "دایره"
+          },
+          {
+            "id": "c",
+            "textFa": "مثلث"
+          }
+        ],
+        "correctChoiceId": "a",
+        "explanationFa": "بخش تکراری مثلث و مربع است؛ بعد از مثلث، مربع می‌آید.",
+        "remediationFa": "دو جفت مثلث‌ـمربع بساز و شروع الگو را با یک نشانه مشخص کن.",
+        "printedPages": [
+          4,
+          5,
+          7
+        ]
+      },
+      {
+        "id": "recall_match",
+        "objectiveId": "same_quantity",
+        "promptFa": "چهار نشانه داریم: ○ ○ ○ ○. کدام دسته هم‌تعداد است؟",
+        "choices": [
+          {
+            "id": "a",
+            "textFa": "□ □ □"
+          },
+          {
+            "id": "b",
+            "textFa": "△ △ △ △"
+          },
+          {
+            "id": "c",
+            "textFa": "○ ○"
+          }
+        ],
+        "correctChoiceId": "b",
+        "explanationFa": "چهار مثلث با چهار دایره هم‌تعداد است؛ جفت‌کردن بدون کارت اضافه، راه بررسی است.",
+        "remediationFa": "چهار نشانه را با چهار کارت دیگر جفت کن و بعد فاصله‌ها را عوض کن؛ تعداد را دوباره بررسی کن.",
+        "printedPages": [
+          6
+        ]
+      }
+    ],
+    "delayPlan": {
+      "firstCheckAfterDays": 1,
+      "secondCheckAfterDays": 7,
+      "laterMixedCheckAfterDays": 21,
+      "policyStatus": "original pilot policy; not validated optimal spacing, distinct from existing server pilot-1-or-3-days schedule"
+    },
+    "useFreshRepresentations": true,
+    "noReplayOfIdenticalAnswersAsMastery": true
+  },
+  "delayedTransferRubrics": [
+    {
+      "id": "serving_cards",
+      "objectiveIds": [
+        "same_quantity",
+        "sort_count"
+      ],
+      "promptFa": "برای سه عروسکِ اسباب‌بازی، به هرکدام یک کارت «بشقاب» بده. چند کارت لازم است؟ بعد عروسک‌ها را با فاصله دیگر بچین؛ توضیح بده آیا تعداد کارت لازم تغییر کرد.",
+      "expectedEvidenceFa": "سه کارت و یک کارت برای هر عروسک؛ توضیح حفظ تعداد بعد از تغییر فاصله.",
+      "ratingPolicy": "not_yet / with_support / independently_observed; adult observation is attributed, not automatic verified proof",
+      "noDataCollectionBeyondChosenLearningSummary": true
+    },
+    {
+      "id": "new_pattern",
+      "objectiveIds": [
+        "pattern"
+      ],
+      "promptFa": "با کارت‌های «ستاره، دایره، دایره» دو بخش یک الگو بساز؛ یک بخش تازه اضافه کن و قاعده را به زبان خودت بگو.",
+      "expectedEvidenceFa": "سه‌عضوی بودن بخش تکراری و ادامه سازگار؛ ستاره‌ـدایره‌ـدایره، سه مرتبه.",
+      "ratingPolicy": "not_yet / with_support / independently_observed; no diagnostic or mastery label"
+    },
+    {
+      "id": "count_to_marks",
+      "objectiveIds": [
+        "quantity_representation",
+        "flexible_representation"
+      ],
+      "promptFa": "چهار شیء آشنا را با چهار نشانه روی کاغذ نمایش بده؛ بعد همان تعداد را با کارت یا انگشتان به شیوه دیگری نشان بده.",
+      "expectedEvidenceFa": "یک نشانه برای هر شیء؛ هر دو نمایش چهارتایی و شرح کوتاه پیوند.",
+      "ratingPolicy": "not_yet / with_support / independently_observed; motor ability is not scored"
+    }
+  ],
+  "confidencePrompts": {
+    "beforeAnswerFa": "کدام مناسب‌تر است: هنوز مطمئن نیستم؛ کمی مطمئنم؛ می‌توانم دلیلش را بگویم.",
+    "afterFeedbackFa": "پاسخ یا راه من کجا نیاز به تغییر داشت؟ دفعه بعد با چه روشی بررسی می‌کنم؟",
+    "noPunishmentForLowConfidence": true
+  },
+  "feedbackPolicyFa": "ابتدا فرصت پاسخ بده، سپس دلیل و تمرین اصلاحی را نشان بده. خطا را به روش حل مرتبط کن، نه هوش یا شخصیت کودک. زمان و تلاش را اثبات یادگیری معرفی نکن.",
+  "mediaCandidates": [
+    {
+      "hash": "Ux4Du",
+      "metadataUrl": "https://www.aparat.com/etc/api/video/videohash/Ux4Du",
+      "httpStatus": 200,
+      "checkedAt": "2026-10-11T16:57:52.300800+00:00",
+      "publicationStatus": "draft",
+      "titleFa": "آموزش صفحه 1 و 2 کتاب ریاضی اول دبستان",
+      "creatorName": "میکانیکی — نام نمایش کانال: آموزش دروس کلاس اول و دوم دبستان",
+      "creatorUrl": "https://www.aparat.com/MMikaniki",
+      "durationSeconds": 693,
+      "publishedDateFa": "22 شهریور 1399 13:34",
+      "providerCostType": "free",
+      "freeAccessEvidence": "Aparat metadata cost_type.type=free; full playback not performed",
+      "printedPageClaims": [
+        1,
+        2
+      ],
+      "officialCurrentEditionAlignment": "UNVERIFIED",
+      "fullVideoWatched": false,
+      "captionAvailability": "UNVERIFIED — no caption field exposed in fetched video metadata; absence is not proven",
+      "iframeUrl": "https://www.aparat.com/video/video/embed/videohash/Ux4Du/vt/frame",
+      "displayRights": "UNVERIFIED — creator description prohibits copying/changes; published iframe metadata is not a complete rights clearance",
+      "originalMetadataDescriptionReviewed": true,
+      "noMediaDownloaded": true
+    },
+    {
+      "hash": "l9713d3",
+      "metadataUrl": "https://www.aparat.com/etc/api/video/videohash/l9713d3",
+      "httpStatus": 200,
+      "checkedAt": "2026-10-11T16:57:53.323619+00:00",
+      "publicationStatus": "draft",
+      "titleFa": "آموزش صفحه 3 کتاب ریاضی اول دبستان",
+      "creatorName": "میکانیکی — نام نمایش کانال: آموزش دروس کلاس اول و دوم دبستان",
+      "creatorUrl": "https://www.aparat.com/MMikaniki",
+      "durationSeconds": 301,
+      "publishedDateFa": "23 شهریور 1399 12:19",
+      "providerCostType": "free",
+      "freeAccessEvidence": "Aparat metadata cost_type.type=free; full playback not performed",
+      "printedPageClaims": [
+        3
+      ],
+      "officialCurrentEditionAlignment": "UNVERIFIED",
+      "fullVideoWatched": false,
+      "captionAvailability": "UNVERIFIED — no caption field exposed in fetched video metadata; absence is not proven",
+      "iframeUrl": "https://www.aparat.com/video/video/embed/videohash/l9713d3/vt/frame",
+      "displayRights": "UNVERIFIED — creator description prohibits copying/changes; published iframe metadata is not a complete rights clearance",
+      "originalMetadataDescriptionReviewed": true,
+      "noMediaDownloaded": true
+    },
+    {
+      "hash": "y93e145",
+      "metadataUrl": "https://www.aparat.com/etc/api/video/videohash/y93e145",
+      "httpStatus": 200,
+      "checkedAt": "2026-10-11T16:57:53.990053+00:00",
+      "publicationStatus": "draft",
+      "titleFa": "آموزش صفحه 4 و 5 کتاب ریاضی اول دبستان",
+      "creatorName": "میکانیکی — نام نمایش کانال: آموزش دروس کلاس اول و دوم دبستان",
+      "creatorUrl": "https://www.aparat.com/MMikaniki",
+      "durationSeconds": 551,
+      "publishedDateFa": "24 شهریور 1399 13:16",
+      "providerCostType": "free",
+      "freeAccessEvidence": "Aparat metadata cost_type.type=free; full playback not performed",
+      "printedPageClaims": [
+        4,
+        5
+      ],
+      "officialCurrentEditionAlignment": "UNVERIFIED",
+      "fullVideoWatched": false,
+      "captionAvailability": "UNVERIFIED — no caption field exposed in fetched video metadata; absence is not proven",
+      "iframeUrl": "https://www.aparat.com/video/video/embed/videohash/y93e145/vt/frame",
+      "displayRights": "UNVERIFIED — creator description prohibits copying/changes; published iframe metadata is not a complete rights clearance",
+      "originalMetadataDescriptionReviewed": true,
+      "noMediaDownloaded": true
+    },
+    {
+      "hash": "x95j64m",
+      "metadataUrl": "https://www.aparat.com/etc/api/video/videohash/x95j64m",
+      "httpStatus": 200,
+      "checkedAt": "2026-10-11T16:57:55.256622+00:00",
+      "publicationStatus": "draft",
+      "titleFa": "آموزش صفحه 6 و 7 کتاب ریاضی اول دبستان",
+      "creatorName": "میکانیکی — نام نمایش کانال: آموزش دروس کلاس اول و دوم دبستان",
+      "creatorUrl": "https://www.aparat.com/MMikaniki",
+      "durationSeconds": 449,
+      "publishedDateFa": "25 شهریور 1399 12:57",
+      "providerCostType": "free",
+      "freeAccessEvidence": "Aparat metadata cost_type.type=free; full playback not performed",
+      "printedPageClaims": [
+        6,
+        7
+      ],
+      "officialCurrentEditionAlignment": "UNVERIFIED",
+      "fullVideoWatched": false,
+      "captionAvailability": "UNVERIFIED — no caption field exposed in fetched video metadata; absence is not proven",
+      "iframeUrl": "https://www.aparat.com/video/video/embed/videohash/x95j64m/vt/frame",
+      "displayRights": "UNVERIFIED — creator description prohibits copying/changes; published iframe metadata is not a complete rights clearance",
+      "originalMetadataDescriptionReviewed": true,
+      "noMediaDownloaded": true
+    }
+  ],
+  "internationalEvidence": [
+    {
+      "url": "https://educationendowmentfoundation.org.uk/education-evidence/guidance-reports/early-maths",
+      "applicationFa": "فعالیت کوتاه هدفمند، شناخت پیش‌دانسته و زبان شمارش در موقعیت روزمره."
+    },
+    {
+      "url": "https://educationendowmentfoundation.org.uk/early-years/maths/use-manipulatives-and-representations-to-develop-understanding",
+      "applicationFa": "پیوند صریح ابزار ملموس و نمایش؛ انگشتان/کارت‌های جایگزین؛ توجه به عامل حواس‌پرتی ابزار."
+    },
+    {
+      "url": "https://ies.ed.gov/ncee/WWC/PracticeGuide/1",
+      "applicationFa": "مثال حل‌شده همراه حل مستقل، بازیابی، مرور با فاصله، توضیح راهبرد؛ فاصله عددی این پایلوت مصداق اثبات‌شده منبع نیست."
+    }
+  ],
+  "remainingGates": [
+    "licensed_or_qualified_grade1_educator_review",
+    "independent_question_and_distractor_review",
+    "all_video_minutes_watched_and_logged",
+    "current_edition_video_alignment",
+    "creator_and_textbook_rights_review",
+    "real_child_pilot_with_required_consent",
+    "reading_and_motor_accessibility_device_review",
+    "actual_Android_Safari_playback_and_iran_reachability",
+    "learning_effectiveness_and_delayed_transfer_observation"
+  ],
+  "privacyLimits": {
+    "noPrivateChatsNotesHealthOrAbuseDisclosureCollection": true,
+    "noExternalAiVoice": true,
+    "feedbackOnlyExplicitChosenConsent": true,
+    "serverPrivateAttemptsRemainOwnerOnly": true
+  },
+  "licensingNoteFa": "تمام مثال‌ها و پرسش‌های این فایل به‌صورت اصلی برای لایف‌گاید نوشته شده‌اند؛ صفحات/تصاویر/تمرین‌های کتاب یا فیلم کپی نشده‌اند. استناد به صفحه، مجوز بازنشر اجزای کتاب یا clearance حقوق نشر فیلم نیست."
+}

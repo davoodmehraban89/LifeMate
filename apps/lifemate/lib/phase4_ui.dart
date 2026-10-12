@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'api.dart';
+import 'learning_goals_ui.dart';
 
 class Phase4Hub extends StatefulWidget {
   const Phase4Hub({super.key, required this.api, this.adultShell = false});
@@ -17,7 +18,9 @@ class _Phase4HubState extends State<Phase4Hub> {
   @override
   void initState() {
     super.initState();
-    goals = widget.api.listLearningGoals();
+    goals = widget.api is HttpIdentityApi
+        ? Future.value([])
+        : widget.api.listLearningGoals();
   }
 
   Future<void> addGoal() async {
@@ -277,9 +280,15 @@ class _Phase4HubState extends State<Phase4Hub> {
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: addGoal,
+                  onPressed: widget.api is HttpIdentityApi
+                      ? () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => LearningGoalsPage(
+                              api: widget.api as HttpIdentityApi)))
+                      : addGoal,
                   icon: const Icon(Icons.flag_outlined),
-                  label: const Text('هدف یادگیری'),
+                  label: Text(widget.api is HttpIdentityApi
+                      ? 'مدیریت هدف‌های یادگیری'
+                      : 'هدف یادگیری'),
                 ),
               ),
             ],
@@ -296,42 +305,44 @@ class _Phase4HubState extends State<Phase4Hub> {
             ),
           ),
           const SizedBox(height: 12),
-          Text('هدف‌های یادگیری',
-              style: Theme.of(context).textTheme.titleMedium),
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: goals,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snapshot.data!.isEmpty) {
-                return const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.flag_outlined),
-                    title: Text('هنوز هدفی ثبت نشده'),
-                  ),
-                );
-              }
-              return Column(
-                children: snapshot.data!
-                    .map(
-                      (goal) => Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.flag_circle_outlined),
-                          title: Text(goal['title']?.toString() ?? ''),
-                          subtitle: Text(goal['target']?.toString() ?? ''),
-                          trailing: const Icon(Icons.add_chart_outlined),
-                          onTap: () => learningCheckin(goal),
+          if (widget.api is! HttpIdentityApi)
+            Text('هدف‌های یادگیری',
+                style: Theme.of(context).textTheme.titleMedium),
+          if (widget.api is! HttpIdentityApi)
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: goals,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (snapshot.data!.isEmpty) {
+                  return const Card(
+                    child: ListTile(
+                      leading: Icon(Icons.flag_outlined),
+                      title: Text('هنوز هدفی ثبت نشده'),
+                    ),
+                  );
+                }
+                return Column(
+                  children: snapshot.data!
+                      .map(
+                        (goal) => Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.flag_circle_outlined),
+                            title: Text(goal['title']?.toString() ?? ''),
+                            subtitle: Text(goal['target']?.toString() ?? ''),
+                            trailing: const Icon(Icons.add_chart_outlined),
+                            onTap: () => learningCheckin(goal),
+                          ),
                         ),
-                      ),
-                    )
-                    .toList(),
-              );
-            },
-          ),
+                      )
+                      .toList(),
+                );
+              },
+            ),
         ],
       );
 }
