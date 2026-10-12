@@ -63,7 +63,17 @@ export function configureTrustedProxy(app, value = process.env.TRUSTED_PROXY_CID
 
 function profileFor(req) {
   const path = req.path;
-  if (path.startsWith('/v1/auth/')) {
+  const discovery = req.method === 'GET' && path === '/v1/auth/capabilities';
+  // Express accepts case variants and trailing slashes. Only these literal
+  // method/path pairs receive the session quota; near matches remain strict.
+  if (!discovery && /^\/v1\/auth(?:\/|$)/i.test(path)) {
+    if (req.method === 'POST' && (path === '/v1/auth/refresh' || path === '/v1/auth/logout')) {
+      return {
+        name: 'session',
+        limit: positiveInt(process.env.RATE_LIMIT_SESSION_MAX, 60),
+        windowSeconds: positiveInt(process.env.RATE_LIMIT_SESSION_WINDOW_SECONDS, 10 * 60),
+      };
+    }
     return {
       name: 'auth',
       limit: positiveInt(process.env.RATE_LIMIT_AUTH_MAX, 10),
