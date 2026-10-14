@@ -18,6 +18,16 @@ Proof of an **online synthetic-data-only** vertical slice for one child and two 
 - The prior hosting decision `docs/decisions/0009-provider-neutral-hosting.md` remains the production baseline. This investigation proposes only a **QA exception**; it does not approve any production migration.
 - No `service_role`, `secret`, Postgres password, JWT secret, API master key or signing key in Flutter, PWA, a public GitHub branch, comments, screenshots or chat. Supabase publishable/anon keys alone are not authorization.
 
+## Provider re-check — 2026-10-15 (BLOCKED: organization identity ambiguity)
+
+Read-only Supabase checks completed:
+- `list_organizations` returned exactly one visible organization named `LifeGuide` with ID `kpbskbvjspggwzmgqyze`; `get_organization` confirmed **Free**.
+- `get_cost(type=project, organization_id=kpbskbvjspggwzmgqyze)` returned **amount: 0; recurrence: monthly**. This is not proof that a separate organization/free slot is available.
+- **Critical identity mismatch:** `kpbskbvjspggwzmgqyze` is the *same* organization ID previously observed as `Finora` (before owner action). Name alone does not establish independence; it may be a rename or an integration visibility issue.
+- Current `list_projects` returned an empty list. Direct reads of previously visible `Finora`/`EasyFactor` project IDs returned **permission denied**. The projects' deletion, transfer or state must **not** be inferred from this result.
+- **STOP before `confirm_cost` / `create_project`**. Ask the owner to confirm that **both Finora and LifeGuide are simultaneously visible as separate organizations** in the Supabase dashboard; request new LifeGuide organization ID/slug (non-secret) if it differs. Recheck with the connected account before proceeding.
+- No database/project creation, schema write, migration, public deployment, payment or access change performed.
+
 ## Actual inventory at preparation time (not deployment)
 
 - Supabase connector can list organizations/projects and create projects, but **cannot create organizations**.
