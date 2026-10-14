@@ -1,9 +1,24 @@
 # ADR 0011 — Supabase Free trial as isolated LifeGuide QA (conditional)
 
 Date: 2026-10-15  
-Status: **PROPOSED FOR QA ONLY — not activated**
+Status: **ACCEPTED FOR ISOLATED QA — initial infrastructure active; production unchanged**
 
-## Owner-approved naming update — 2026-10-15 (manual execution pending)
+## Superseding actual QA decision and execution — 2026-10-15
+
+**Accepted for isolated synthetic-data QA ONLY; initial infrastructure provisioned. NOT a production hosting or schema migration decision.**
+
+Owner selected the existing independent Supabase organization now displayed as **DM Studio**, ID `unrlckipyubhegrpqgei`. The earlier proposal to create a separate `LifeGuide` organization is **withdrawn**. The project itself must be isolated; Supabase Free allows at most two active free projects across account-controlled organizations.
+
+- Verified Free plan, provider creation quote **$0/month**, connector cost-confirmation, and `LifeGuide-QA` project successfully created with ID `iqkrwxeprxvdiubdfcrb` in `eu-central-1` on PostgreSQL17.11.
+- One additive, intentionally private, synthetic-only migration in schema `lifeguide_qa` passed SQL write/read and checked deny-by-default privileges/RLS.
+- A separate JWT-gated synthetic Edge runtime probe was deployed `ACTIVE`; an unauthenticated external GET was **401**. This is not the LifeGuide app's REST API.
+- Existing `Finora ERP – Production` was read-only inspected and remained `ACTIVE_HEALTHY`; there was **no** reuse, transfer or mutation of existing project resources.
+- No child data, 20 application migrations, release signing, real API/PWA/Android, DNS change or public product rollout. Production hosting ADR 0009 remains unchanged.
+- Full evidence: [QA provisioning audit](../audits/2026-10-15-supabase-qa-provisioning.md).
+
+The original planning narrative below is **historical**. Its independent-organization creation requirement and older pending statuses are overridden by this recorded owner decision and observed provider facts.
+
+## Historical owner-approved naming update — 2026-10-15 (manual execution pending)
 
 Owner selected `DM Studio` as the general-purpose **display name** for the *existing* Supabase Free organization with ID `kpbskbvjspggwzmgqyze`, previously displayed as `Finora` then `LifeGuide`. This is a **rename, not a new organization**. The connector exposes no rename operation; final dashboard action and verification are **pending**. The previously proposed separate LifeGuide organization requirement is withdrawn by this decision.
 
