@@ -3,6 +3,12 @@
 Date: 2026-10-15  
 Status: **PROPOSED FOR QA ONLY — not activated**
 
+## Owner-approved naming update — 2026-10-15 (manual execution pending)
+
+Owner selected `DM Studio` as the general-purpose **display name** for the *existing* Supabase Free organization with ID `kpbskbvjspggwzmgqyze`, previously displayed as `Finora` then `LifeGuide`. This is a **rename, not a new organization**. The connector exposes no rename operation; final dashboard action and verification are **pending**. The previously proposed separate LifeGuide organization requirement is withdrawn by this decision.
+
+Application isolation still requires separate Supabase **projects**, with `LifeGuide-QA` to be created only after the $0 monthly cost and free-project capacity checks and approval. Nothing authorizes overwriting an existing Finora/EasyFactor project, exceeding free limits or changing production hosting ADR 0009.
+
 ## Context
 
 Owner explicitly requests an independent **LifeGuide** Supabase organization and a no-payment online test environment for child/parent Android+PWA shared state. International card payments are unavailable. Current application 0.7.1 uses Node/Express, PostgreSQL, native Argon2 and custom auth; previous production hosting ADR 0009 selected a self-hosted Compose approach due to cost, reachability and runtime constraints.
