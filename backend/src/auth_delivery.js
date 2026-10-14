@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import nodemailer from 'nodemailer';
+import { createKavenegarSmsProvider } from './kavenegar_sms.js';
 
 // Provider ports have no authority to create/verify users or issue sessions.
 export class SmsProvider {
@@ -50,6 +51,7 @@ class WebhookSmsProvider extends SmsProvider {
 export function createSmsProvider({ env = process.env, fetchImpl = fetch, timeoutMs = 10000 } = {}) {
   const selection = String(env.SMS_PROVIDER ?? '').trim().toLowerCase();
   if (['', 'none', 'disabled'].includes(selection)) return new SmsProvider();
+  if (selection === 'kavenegar') return createKavenegarSmsProvider({ env, fetchImpl, timeoutMs });
   if (selection !== 'webhook') throw new Error('sms_provider_unsupported');
   let url;
   try { url = new URL(env.SMS_PROVIDER_URL); } catch { throw new Error('sms_provider_url_invalid'); }
