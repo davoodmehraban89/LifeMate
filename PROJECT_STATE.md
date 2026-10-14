@@ -1,6 +1,20 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
-## Supabase isolated QA workstream — 2026-10-15 (PREPARATION ONLY)
+## Supabase QA verified checkpoint — 2026-10-15 (CURRENT)
+
+**LifeGuide-QA is provisioned on Supabase Free but the LifeGuide mobile/PWA app is NOT deployed or connected.**
+
+- Supabase organization: **DM Studio**, id `unrlckipyubhegrpqgei`, Free. User approved it as the shared administration umbrella for multiple *isolated* projects. Exact `get_cost(project)`: **$0/month**; confirmation performed. Provider accepted the new project.
+- Separate project: **LifeGuide-QA**, id `iqkrwxeprxvdiubdfcrb`, Frankfurt (`eu-central-1`), PostgreSQL17.11, `ACTIVE_HEALTHY`. Other observed project `Finora ERP – Production` (id `hcsixhqbyuhpshfwqpjx`) remained `ACTIVE_HEALTHY` and was **not changed**.
+- Only a PRIVATE QA schema `lifeguide_qa` and `setup_probe` table were created in the new project via additive migration `20261014210221_lifeguide_qa_isolated_connectivity_baseline`. One `synthetic_backend_handshake` write/read passed. Zero application tables under `public`. Privileges for `anon` and `authenticated` explicitly absent; RLS enabled and forced. Security advisor issued INFO `rls_enabled_no_policy`, expected for a deliberately closed table.
+- Synthetic-only JWT-gated Supabase Edge Function `lifeguide-qa-health` v1 deployed `ACTIVE` with `verify_jwt=true`; an external unauthenticated GET received **HTTP 401**. Authenticated success NOT VERIFIED. This endpoint is NOT the current Node/Express backend.
+- PostgreSQL current setup proof is **not** the application's 20 migrations or guardian permissions. No child/parent accounts created, no existing application data, production domain, Railway/Neon/other Supabase project, `main` or stacked PRs changed. Real Android and iOS Safari, Iran no-VPN connectivity and PWA are UNVERIFIED.
+- Evidence: [Provisioning audit](docs/audits/2026-10-15-supabase-qa-provisioning.md), [Supabase migration](supabase/migrations/20261014210221_lifeguide_qa_isolated_connectivity_baseline.sql), [Edge source](supabase/functions/lifeguide-qa-health/index.ts), [QA runbook](docs/operations/SUPABASE_QA_BOOTSTRAP.md).
+- **Next:** compatibility assessment of Express/Argon2/JWT session model/managed Supabase PG grants before any real application SQL or Auth adaptation. Resolve API hosting and privacy parity, then synthetic child→authorized mother/father task/study sync and physical devices. Production hosting ADR0009 remains the baseline.
+
+The Supabase preparation/identity notes retained below are **historical snapshots** from earlier connector states. When they contradict this checkpoint, **this checkpoint is authoritative**. The unchanged 0.7.1 engineering checkpoint below is still valid for that earlier source/CI.
+
+## Supabase historical preparation — 2026-10-15 (SUPERSEDED)
 
 Owner approved evaluating a **separate Free Supabase organization `LifeGuide`** and synthetic-data QA project. This is **not** a new public deployment, a database migration, or a replacement for production hosting ADR 0009.
 
@@ -12,14 +26,14 @@ Owner approved evaluating a **separate Free Supabase organization `LifeGuide`** 
 - Gate status: organization **BLOCKED on owner action**; cost check, new DB, deployment, Android/Safari/without-VPN Iran acceptance **NOT RUN**.
 - Technical runbook: [Supabase QA bootstrap](docs/operations/SUPABASE_QA_BOOTSTRAP.md); [QA decision](docs/decisions/0011-supabase-free-qa-trial.md). Original 0.7.1 evidence below is unchanged.
 
-## Supabase organization naming decision — 2026-10-15
+## Supabase historical naming decision — 2026-10-15 (SUPERSEDED)
 
 - Owner **approved the general-purpose organization display name `DM Studio`** for managing several software projects; `LifeGuide` remains the product name.
 - **Organization rename PENDING manual dashboard action**: connected Supabase tools have no organization-update operation. Last verified actual name is `LifeGuide`; ID `kpbskbvjspggwzmgqyze` was formerly named `Finora`. Do not claim a second independent organization exists.
 - Proposed project is still `LifeGuide-QA`, in the existing organization after its display name is updated. Independent **projects** rather than independent organizations are the isolation boundary.
 - Supabase reported project cost `$0/month` for current Free org; do not create any project before verifying current Free active-project quota, original Finora/EasyFactor resources and explicit owner confirmation of exact charge. No new Supabase project or DB has been provisioned.
 
-## Supabase independent-organization verification — 2026-10-15
+## Supabase historical organization visibility issue — 2026-10-15 (RESOLVED)
 
 - Read-only Supabase connector reports `LifeGuide` Free and `get_cost(project)` **$0/month**.
 - **Identity mismatch blocks provisioning:** currently listed LifeGuide ID `kpbskbvjspggwzmgqyze` is precisely the ID previously seen as `Finora`. Both separate organizations are not visible to this connection. `list_projects` returns empty and direct access to previously listed unrelated projects returns permission denied; no assertion of deletion, reassignment or independent organization creation is supported.
