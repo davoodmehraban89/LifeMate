@@ -1,10 +1,24 @@
 # LifeGuide — Supabase Free isolated QA bootstrap (proposed / not deployed)
 
-Status: **PREPARATION ONLY — blocked on independent organization creation and cost check**  
+Status: **QA project DB provisioned; app integration not deployed**  
 Prepared: 2026-10-15  
 Repository: `davoodmehraban89/LifeMate`  
 QA preparation branch: `infra/lifeguide-supabase-qa`  
 Baseline: `fix/study-duration-display` (LifeGuide 0.7.1, source CI `d0b3446d736b67fdb4e0218282ad15f0e74fdb55`)
+
+## CURRENT VERIFIED RESULT — 2026-10-15
+
+**Gate 0 / Gate 1: DONE.** User selected shared organization **DM Studio**. Connected Supabase verifies org `unrlckipyubhegrpqgei` on Free; `get_cost(project)` returned **$0/month** and the connector completed cost confirmation. Provider created **LifeGuide-QA** (`iqkrwxeprxvdiubdfcrb`) in Frankfurt on PostgreSQL17.11; status `ACTIVE_HEALTHY`. Existing `Finora ERP – Production` remains `ACTIVE_HEALTHY` and was not modified.
+
+**Private database probe: DONE.** One `lifeguide_qa.setup_probe` synthetic row created/read, `public` app tables 0, anon/authenticated grants false, RLS enabled+forced. Migration `20261014210221_lifeguide_qa_isolated_connectivity_baseline`, mirrored in source. INFO advisor `rls_enabled_no_policy` expected: no access is deliberately allowed to this probe.
+
+**Edge runtime probe: DONE.** `lifeguide-qa-health` v1 deployed with `verify_jwt=true`; unauthenticated external GET **401**. Authenticated GET, real family account and permission checks, app API, Android/PWA, Iran no-VPN **NOT DONE**.
+
+**Next milestone:** review managed Postgres roles against the 20 existing application migrations and decide how to host/adapt the Node/Express+native Argon2/JWT server. Do NOT run original db-role scripts unreviewed, do NOT enable client-direct access to old app tables or configure Flutter with the raw project URL. Only synthetic user data when implementing the small task/report flow.
+
+**Authoritative receipt:** [2026-10-15 Supabase QA provisioning](../audits/2026-10-15-supabase-qa-provisioning.md).
+
+The previous organization-creation instructions, pending statuses and first plan below are **historical**, superseded by the actual shared DM Studio choice and successful QA provisioning. They must not be re-executed.
 
 ## Objective and non-negotiables
 
@@ -95,16 +109,20 @@ Deliverable: migration compatibility table and chosen **smallest reversible QA s
 - Gate E: Backups/export and recovery proof with **synthetic** data, plus a safe teardown plan for QA-only resources (no teardown without approval).
 - Gate F: Release/migration approval is separate. Do not merge stacked production PRs, change existing DNS, change signing, import real children records, or activate public rollout based only on this PoC.
 
-## Execution ledger
+## Execution ledger (current)
 
-| Item | State | Evidence |
-| --- | --- | --- |
-| Current Supabase organization/project inventory | **DONE — read-only** | Existing Finora organization and EasyFactor/Finora projects inspected via connected Supabase tool |
-| Isolated QA branch prepared | **DONE** | `infra/lifeguide-supabase-qa` forked from `fix/study-duration-display` |
-| Independent LifeGuide Supabase organization | **BLOCKED — owner dashboard action** | No create-organization action is exposed by connected Supabase tool |
-| Exact $0 price / active-project capacity | **NOT RUN — requires new org ID** | Call `get_cost` against LifeGuide after Gate 0 |
-| Supabase LifeGuide-QA project | **NOT CREATED** | Must pass cost/capacity approval |
-| API migration / SQL applied / Edge Functions / PWA deployed | **NOT RUN** | Must pass all gates |
-| Real Android, iOS Safari, Iran no-VPN | **UNVERIFIED** | Requires real-device/network testing |
+| Item | Verified outcome |
+| --- | --- |
+| DM Studio Free org `unrlckipyubhegrpqgei` | **PASS** |
+| Exact project creation charge `$0/month`, user/provider confirmation | **PASS** |
+| LifeGuide-QA `iqkrwxeprxvdiubdfcrb` in Frankfurt | **ACTIVE_HEALTHY** |
+| Isolation from Finora ERP – Production | **NO WRITES** to existing project; existing status remains healthy |
+| Supabase PostgreSQL17.11, `pgcrypto` present | **PASS** |
+| Private `lifeguide_qa` migration, synthetic insert/read, anon/auth denied | **PASS** |
+| Supabase JWT-gated Edge runtime `lifeguide-qa-health` | **ACTIVE**, unauthenticated GET **401** |
+| Existing LifeGuide 20 application SQL migrations in Supabase | **NOT RUN**; compatibility gate |
+| Real shared family API, RLS/guardian negative tests | **NOT RUN** |
+| PWA/Android, Safari, Iran no VPN, backup restore | **UNVERIFIED** |
+| Production DNS, real data, original projects, billing | **UNCHANGED** |
 
-Next step: Owner creates **Free LifeGuide organization only**, sends its non-secret ID. Continue cost check and isolated project provisioning without touching Finora/EasyFactor.
+See [actual evidence](../audits/2026-10-15-supabase-qa-provisioning.md). No further owner action necessary for the completed provisioning step. Next code/data changes must retain distinct QA-only scope and pass compatibility/security checks.
