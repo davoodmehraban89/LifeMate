@@ -60,6 +60,17 @@ Post-migration security advisor: one **INFO** `rls_enabled_no_policy` finding fo
 
 Remediation reference: https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy
 
+## JWT-protected Edge runtime probe — verified
+
+A single synthetic-only Edge Function was deployed:
+- slug `lifeguide-qa-health`, function ID `1f9a5c60-7f37-4bfa-ae68-663e46875dc1`
+- status `ACTIVE`, version `1`, `verify_jwt=true`, no database calls, no credentials, no real data, and GET-only JSON response.
+- GitHub source: `supabase/functions/lifeguide-qa-health/index.ts` and `deno.json`.
+- An unauthenticated HTTP GET from an external fetch service to `https://iqkrwxeprxvdiubdfcrb.supabase.co/functions/v1/lifeguide-qa-health` was **HTTP 401**, as intended. This is a real negative access test, **not** proof of an authenticated 200 or of parent/child policy.
+- The function is strictly a private QA runtime proof, **not** the existing Node/Express v0.7.1 `/api`, PWA deployment or Android backend.
+
+The existing `Finora ERP – Production` project remained listed as `ACTIVE_HEALTHY` after QA provisioning. No writes to it were made by this workstream.
+
 ## Compatibility conclusion and remaining gates
 
 Existing LifeGuide v0.7.1:
