@@ -12,6 +12,13 @@ Owner approved evaluating a **separate Free Supabase organization `LifeGuide`** 
 - Gate status: organization **BLOCKED on owner action**; cost check, new DB, deployment, Android/Safari/without-VPN Iran acceptance **NOT RUN**.
 - Technical runbook: [Supabase QA bootstrap](docs/operations/SUPABASE_QA_BOOTSTRAP.md); [QA decision](docs/decisions/0011-supabase-free-qa-trial.md). Original 0.7.1 evidence below is unchanged.
 
+## Supabase organization naming decision — 2026-10-15
+
+- Owner **approved the general-purpose organization display name `DM Studio`** for managing several software projects; `LifeGuide` remains the product name.
+- **Organization rename PENDING manual dashboard action**: connected Supabase tools have no organization-update operation. Last verified actual name is `LifeGuide`; ID `kpbskbvjspggwzmgqyze` was formerly named `Finora`. Do not claim a second independent organization exists.
+- Proposed project is still `LifeGuide-QA`, in the existing organization after its display name is updated. Independent **projects** rather than independent organizations are the isolation boundary.
+- Supabase reported project cost `$0/month` for current Free org; do not create any project before verifying current Free active-project quota, original Finora/EasyFactor resources and explicit owner confirmation of exact charge. No new Supabase project or DB has been provisioned.
+
 ## Supabase independent-organization verification — 2026-10-15
 
 - Read-only Supabase connector reports `LifeGuide` Free and `get_cost(project)` **$0/month**.
