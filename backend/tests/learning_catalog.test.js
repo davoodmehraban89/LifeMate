@@ -1,6 +1,8 @@
 import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
+import { stableBookKey } from '../src/learning_catalog.js';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -17,9 +19,26 @@ test('offline importer keeps repeat IDs stable, HTTP evidence exact and metadata
  const rows=await read();assert.equal(rows.length,1);assert.equal(rows[0].source_evidence_url,'http://www.chap.sch.ir/');assert.equal(rows[0].publication_status,'draft');assert.equal(run(data).status,0);assert.deepEqual(await read(),rows);
 });
 test('invalid hashes and provider injection fail before catalogue mutation',async()=>{
- const before=(await pool.query('select count(*)::int n from textbook_catalog')).rows[0].n;
- for(const change of [v=>{v.aparatId='../bad?token=x';},v=>{v.creatorUrl='https://www.aparat.com.evil.test/teacher';}]){const data=dataset();data.books[0].bookCode='598';change(data.books[0].units[0].videos[0]);const result=run(data);assert.notEqual(result.status,0);assert.match(result.stderr,/invalid_catalog_(aparat_hash|video_source)/);}
- assert.equal((await pool.query('select count(*)::int n from textbook_catalog')).rows[0].n,before);
+ // Other fixture tests write to this shared synthetic database concurrently.
+ // Scope the invariant to a unique rejected book, not a global row count.
+ const code=String(crypto.randomInt(10000000,100000000));
+ const book={...dataset().books[0],bookCode:code};
+ const key=stableBookKey(book);
+ const snapshot=async()=>({
+   books:(await pool.query('select id from textbook_catalog where stable_book_key=$1',[key])).rows,
+   subjects:(await pool.query('select id from curriculum_subject where code=$1',[key])).rows,
+ });
+ const before=await snapshot();
+ assert.deepEqual(before,{books:[],subjects:[]});
+ for(const change of [v=>{v.aparatId='../bad?token=x';},v=>{v.creatorUrl='https://www.aparat.com.evil.test/teacher';}]){
+   const data=dataset();
+   data.books[0].bookCode=code;
+   change(data.books[0].units[0].videos[0]);
+   const result=run(data);
+   assert.notEqual(result.status,0);
+   assert.match(result.stderr,/invalid_catalog_(aparat_hash|video_source)/);
+   assert.deepEqual(await snapshot(),before,'rejected fixture must not write its book or subject');
+ }
 });
 test('publication rejects incomplete pedagogical review despite free metadata',async()=>{await assert.rejects(pool.query("update learning_video_resource set publication_status='published',review_record='{}'::jsonb where aparat_id='Ab123'"),{code:'23514'});});
 function fullReview(row){return {reviewerName:'Synthetic local reviewer',reviewedAt:'2026-10-09T10:00:00Z',bookCode:'599',schoolYear:'1405-1406',unitKey:'lesson-01',bookEvidenceUrl:'http://www.chap.sch.ir/',unitEvidenceUrl:'http://www.chap.sch.ir/',materialHash:row.material_hash,watchedEntireVideo:true,editionAligned:true,accuracyApproved:true,suitabilityApproved:true,embedRightsApproved:true,questionCoverageReviewed:true,alignmentNotes:'Synthetic alignment evidence',accuracyNotes:'Synthetic accuracy evidence',suitabilityNotes:'Synthetic age suitability',embedRightsEvidence:'Synthetic rights fixture, never a real permission',questionCoverageNotes:'Synthetic question coverage'};}

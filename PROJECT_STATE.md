@@ -1,5 +1,87 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## Supabase LifeGuide-QA full private schema — 2026-10-15 (LATEST VERIFIED)
+
+**20/20 original PostgreSQL migrations copied to the isolated QA database, SQL family/privacy assertions PASS, client-access remains DENY ALL.** This is a **database integration milestone**, not a publicly operational LifeGuide Android/PWA.
+
+- Supabase Free `DM Studio` → `LifeGuide-QA` project `iqkrwxeprxvdiubdfcrb` Frankfurt PostgreSQL17.11; $0/month project creation quote. Existing `Finora ERP – Production` not touched and remains `ACTIVE_HEALTHY`.
+- Two checked, atomic, provider-applied migrations: `20261014215436_lifeguide_qa_app_schema_0001_0010`, `20261014215539_lifeguide_qa_app_schema_0011_0020`. Exact SQL committed in `supabase/migrations/202610150001_...` and `202610150002_...`; 20 filename/SHA256 source hashes persist in `lifeguide_qa.schema_migration`. No original migration SQL rewritten in the source tree.
+- Real database read-after-write verification: **59 private tables**, **19 functions**, **20 migration entries**, **0 public app tables**, **0 user/family/task/session rows after rollback**. All tables RLS ENABLED+FORCED, and `anon`, `authenticated`, `service_role` lack QA schema USAGE. Exactly five fixed school function search paths were redirected from `public` to QA. Supabase security advisor emits only INFO `rls_enabled_no_policy` for intentional deny-all; this does **not** mean clients can access the tables.
+- Real SQL family fixture, transaction ROLLBACK: two authorized parents see child academic/shared-task state, unrelated outsider denied, private child task denied to parent, father access revoked while mother retained, study session **4s preserved**. Verified no fixture persisted. This is DB function evaluation, not an HTTP JWT test.
+- Owner's Kavenegar `lifeguideotp` OTP template still **under review**; adapter source/mock tests available on PR14, no key configured, no paid SMS ever sent.
+- Backend Node/Express/native Argon2/custom sessions **not yet hosted** on the QA project; Supabase is managed PG not the long-running existing app server. No real PWA or Android app pointed at Supabase, no production domain/DNS/Railway/Finora changes. No-VPN Iran, device tests and live SMS UNVERIFIED.
+- **Authoritative evidence:** [Full schema / rollback family test](docs/audits/2026-10-15-supabase-full-schema-family-acceptance.md); [initial provider bootstrap](docs/audits/2026-10-15-supabase-qa-provisioning.md); [Kavenegar setup](docs/operations/KAVENEGAR_SMS_SETUP.md); [Draft PR14](https://github.com/davoodmehraban89/LifeMate/pull/14).
+- **NEXT:** determine no-card free compatible host for existing Express/Argon2, implement server-side least-privileged access with real HTTPS negative-role API tests, then connect QA Android/PWA. Keep production rollout gated. PostgreSQL private QA schema has no client policies by design.
+
+Older checkpoints below are retained as historical evidence; this latest verified entry supersedes outdated statements about no application migrations, no table structures or unsolved Supabase organization access.
+
+## Kavenegar template owner verification — 2026-10-15
+
+- Owner screenshot from Kavenegar console shows SMS VerifyLookup template **`lifeguideotp` created** with status **در حال بررسی / under review**, NOT approved and NOT sent.
+- Visible message preview contains literal `%token`, LifeGuide brand, 5-minute validity and "do not share" warning.
+- Console lists **نام اپلیکیشن = `lifeguideotp`**, which duplicates the template name instead of product name LifeGuide. Prefer correcting the display name to `LifeGuide` if provider supports editing; do not delete/recreate the pending template without need.
+- No actual Kavenegar API key, OTP, phone number, or SMS delivery proof is available. No paid SMS sent. Keep live provider configuration disabled until approval, secure secret placement, and explicit owner consent for a paid test.
+- Latest GitHub CI for QA branch `c79939351b88` run [38640974777](https://github.com/davoodmehraban89/LifeMate/actions/runs/38640974777) was still **in progress** at check; do not mark adapter CI passed.
+
+## Kavenegar API adapter — 2026-10-15 (QA CODE, NOT LIVE)
+
+- Provider **Kavenegar**, verified by owner screenshots of `console.kavenegar.com`; screenshot shows masked API key and a draft new validation template. The key was **not** obtained or stored.
+- Suggested `lifeguideotp` validation pattern with literal `%token`, product name LifeGuide, SMS mobile-app use, fallback resend disabled. Provider approval **UNVERIFIED**.
+- Backend opt-in `SMS_PROVIDER=kavenegar` implemented on isolated QA branch using `backend/src/kavenegar_sms.js`, minimal factory change in `backend/src/auth_delivery.js`, blank secret variable `KAVENEGAR_API_KEY` in `.env.example`, and mock-only tests in `backend/tests/kavenegar_sms.test.js`. Existing disabled/webhook provider paths kept.
+- Implementation confines API key to server env, uses fixed HTTPS Kavenegar VerifyLookup host, no logged provider response/secret/OTP, and no automatic retry of non-idempotent SMS sends. It does **not** use account credentials in Supabase, and the real Node/Express backend still has no approved online hosting.
+- New draft [PR14](https://github.com/davoodmehraban89/LifeMate/pull/14) opened to run CI; test results **PENDING**, no merge or live deployment.
+- Owner's prepaid Kavenegar balance is finite. **No paid real SMS** sent/approved yet; requesting template name/approval status, never API key. The public `app.lifeguide.ir` is not connected to LifeGuide-QA.
+- Guide: [KAVENEGAR_SMS_SETUP.md](docs/operations/KAVENEGAR_SMS_SETUP.md). Provider official `VerifyLookup` documented in the official Kavenegar Node SDK.
+
+## Public domain and owner SMS panel — 2026-10-15 (READ-ONLY CHECK)
+
+- **Official product name: LifeGuide** (not آرام). Repository path `davoodmehraban89/LifeMate` and package/protocol identifiers remain unchanged unless separately approved.
+- User reports an external **SMS provider panel is set up** for registration/login. **Provider name, API documentation, SMS template/pattern ID, permitted sender, delivery capability and available provider credentials are not yet verified or integrated.** Never request any API secrets in a chat/Git repository or issue a real OTP without explicit operational consent.
+- Existing v0.7.1 Node/Express backend includes `SmsProvider` and a generic HTTPS `webhook` adapter in `backend/src/auth_delivery.js`, `/v1/auth/phone/request-otp` and `/v1/auth/phone/verify-otp` in `backend/src/auth_router.js`, plus phone registration and OTP recovery. `.env.example` defaults to `SMS_PROVIDER=disabled`. No deployed provider integration confirmed.
+- The existing LifeGuide-QA Supabase project currently contains only a private synthetic `lifeguide_qa.setup_probe` table and JWT-protected health Edge Function; **it is not the complete LifeGuide API/DB**. No public `app.lifeguide.ir` origin/runtime-config/DNS change was performed by this workstream.
+- Attempts on this date to fetch `https://app.lifeguide.ir/`, `/config.json`, `/api/health`, `/ready` through public fetch tools produced inaccessible or empty content, so **live domain/API behavior is UNVERIFIED**, not established as either healthy or down. Historical probe of 2026-10-12 saw HTML fallback for API/config paths; this is not a current observation.
+- Next: obtain provider **name and public API documentation** from owner (never secret token); design and test a safe adapter in an isolated branch, preserve account-level OTP rate limits, 5-minute expiry, guardian privacy, and secrets confined to server configuration. Separately deploy/verify an authenticated QA API against Supabase PostgreSQL before switching domain/Android/PWA. Any public/domain change and real SMS sending need independent approval.
+
+## Supabase QA verified checkpoint — 2026-10-15 (CURRENT)
+
+**LifeGuide-QA is provisioned on Supabase Free but the LifeGuide mobile/PWA app is NOT deployed or connected.**
+
+- Supabase organization: **DM Studio**, id `unrlckipyubhegrpqgei`, Free. User approved it as the shared administration umbrella for multiple *isolated* projects. Exact `get_cost(project)`: **$0/month**; confirmation performed. Provider accepted the new project.
+- Separate project: **LifeGuide-QA**, id `iqkrwxeprxvdiubdfcrb`, Frankfurt (`eu-central-1`), PostgreSQL17.11, `ACTIVE_HEALTHY`. Other observed project `Finora ERP – Production` (id `hcsixhqbyuhpshfwqpjx`) remained `ACTIVE_HEALTHY` and was **not changed**.
+- Only a PRIVATE QA schema `lifeguide_qa` and `setup_probe` table were created in the new project via additive migration `20261014210221_lifeguide_qa_isolated_connectivity_baseline`. One `synthetic_backend_handshake` write/read passed. Zero application tables under `public`. Privileges for `anon` and `authenticated` explicitly absent; RLS enabled and forced. Security advisor issued INFO `rls_enabled_no_policy`, expected for a deliberately closed table.
+- Synthetic-only JWT-gated Supabase Edge Function `lifeguide-qa-health` v1 deployed `ACTIVE` with `verify_jwt=true`; an external unauthenticated GET received **HTTP 401**. Authenticated success NOT VERIFIED. This endpoint is NOT the current Node/Express backend.
+- PostgreSQL current setup proof is **not** the application's 20 migrations or guardian permissions. No child/parent accounts created, no existing application data, production domain, Railway/Neon/other Supabase project, `main` or stacked PRs changed. Real Android and iOS Safari, Iran no-VPN connectivity and PWA are UNVERIFIED.
+- Evidence: [Provisioning audit](docs/audits/2026-10-15-supabase-qa-provisioning.md), [Supabase migration](supabase/migrations/20261014210221_lifeguide_qa_isolated_connectivity_baseline.sql), [Edge source](supabase/functions/lifeguide-qa-health/index.ts), [QA runbook](docs/operations/SUPABASE_QA_BOOTSTRAP.md).
+- **Next:** compatibility assessment of Express/Argon2/JWT session model/managed Supabase PG grants before any real application SQL or Auth adaptation. Resolve API hosting and privacy parity, then synthetic child→authorized mother/father task/study sync and physical devices. Production hosting ADR0009 remains the baseline.
+
+The Supabase preparation/identity notes retained below are **historical snapshots** from earlier connector states. When they contradict this checkpoint, **this checkpoint is authoritative**. The unchanged 0.7.1 engineering checkpoint below is still valid for that earlier source/CI.
+
+## Supabase historical preparation — 2026-10-15 (SUPERSEDED)
+
+Owner approved evaluating a **separate Free Supabase organization `LifeGuide`** and synthetic-data QA project. This is **not** a new public deployment, a database migration, or a replacement for production hosting ADR 0009.
+
+- Working branch: `infra/lifeguide-supabase-qa`, forked from the 0.7.1 test head `fix/study-duration-display`. No Flutter/Backend runtime code changed for this trial.
+- Current connected Supabase account: existing unrelated Free organization `Finora` and two unrelated projects `Finora` (INACTIVE) / `EasyFactor` (ACTIVE_HEALTHY). Do **not** modify/reuse them.
+- The connected Supabase tool cannot create organizations; owner must first create **LifeGuide / Free** manually in their dashboard. No new LifeGuide organization or project has been verified.
+- After the independent organization appears, verify **$0** exact project cost through `get_cost` and available account-wide free-project quota before creating `LifeGuide-QA`. The two free active projects limit spans organizations; an INACTIVE label alone is not quota evidence.
+- Node/Express/Argon2 and Supabase Edge Functions are not drop-in interchangeable; review DB roles/security and design minimal auth-safe prototype before deploying. No secrets or real child records in tests.
+- Gate status: organization **BLOCKED on owner action**; cost check, new DB, deployment, Android/Safari/without-VPN Iran acceptance **NOT RUN**.
+- Technical runbook: [Supabase QA bootstrap](docs/operations/SUPABASE_QA_BOOTSTRAP.md); [QA decision](docs/decisions/0011-supabase-free-qa-trial.md). Original 0.7.1 evidence below is unchanged.
+
+## Supabase historical naming decision — 2026-10-15 (SUPERSEDED)
+
+- Owner **approved the general-purpose organization display name `DM Studio`** for managing several software projects; `LifeGuide` remains the product name.
+- **Organization rename PENDING manual dashboard action**: connected Supabase tools have no organization-update operation. Last verified actual name is `LifeGuide`; ID `kpbskbvjspggwzmgqyze` was formerly named `Finora`. Do not claim a second independent organization exists.
+- Proposed project is still `LifeGuide-QA`, in the existing organization after its display name is updated. Independent **projects** rather than independent organizations are the isolation boundary.
+- Supabase reported project cost `$0/month` for current Free org; do not create any project before verifying current Free active-project quota, original Finora/EasyFactor resources and explicit owner confirmation of exact charge. No new Supabase project or DB has been provisioned.
+
+## Supabase historical organization visibility issue — 2026-10-15 (RESOLVED)
+
+- Read-only Supabase connector reports `LifeGuide` Free and `get_cost(project)` **$0/month**.
+- **Identity mismatch blocks provisioning:** currently listed LifeGuide ID `kpbskbvjspggwzmgqyze` is precisely the ID previously seen as `Finora`. Both separate organizations are not visible to this connection. `list_projects` returns empty and direct access to previously listed unrelated projects returns permission denied; no assertion of deletion, reassignment or independent organization creation is supported.
+- Await owner's confirmation that **LifeGuide and Finora are two separate dashboard organizations**, and the new LifeGuide non-secret ID. Until then do **not** call project cost confirmation or create `LifeGuide-QA`.
+- No Supabase project, DB, schema, migration, credentials, app deploy, DNS change or real-data import executed. Earlier 0.7.1 branch and CI evidence stay unchanged.
+
 Updated: 2026-10-12. Backend **0.7.1**; Flutter **0.7.1+7**. Branch **fix/study-duration-display**, stacked on **feat/learning-content-operations** at `e4cbc8bd37ee8d1c580a3b8ac33c3abfe6e269a3`. Main remains `abdc9d9d032bc6746c8390b902a2e52d82991530`. Repository remains `davoodmehraban89/LifeMate`; Android identity remains `ir.lifeguide.app`.
 
 **نامزد آزمون با داده ساختگی؛ نسخه کامل عملیاتی یا انتشار عمومی نیست.** [ممیزی فاصله تا تکمیل](docs/audits/2026-10-11-completion-gap-analysis.md) مبنای این بسته است. جزئیات و خروجی‌های تاریخی0.6.0 در [checkpoint قبلی](docs/history/2026-10-11-project-state-0.6.0.md) حفظ شده‌اند؛ آن CI موفق، اجرای تازه این منبع نیست. [PR پیش‌نویس۱۲](https://github.com/davoodmehraban89/LifeMate/pull/12) روی۱۱ باز است؛و [PR13](https://github.com/davoodmehraban89/LifeMate/pull/13) اصلاح زمان روی۱۲ است؛۱۰،۱۱،۱۲ و۱۳ ادغام نشده‌اند.
