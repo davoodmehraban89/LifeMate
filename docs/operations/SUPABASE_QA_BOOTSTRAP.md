@@ -18,6 +18,14 @@ Proof of an **online synthetic-data-only** vertical slice for one child and two 
 - The prior hosting decision `docs/decisions/0009-provider-neutral-hosting.md` remains the production baseline. This investigation proposes only a **QA exception**; it does not approve any production migration.
 - No `service_role`, `secret`, Postgres password, JWT secret, API master key or signing key in Flutter, PWA, a public GitHub branch, comments, screenshots or chat. Supabase publishable/anon keys alone are not authorization.
 
+## Updated owner direction — DM Studio shared organization, 2026-10-15
+
+**This section supersedes the earlier requirement to create a second independent LifeGuide organization.** Owner confirmed the original Finora organization was renamed `LifeGuide`; the matching organization ID is expected and is not evidence of two organizations. Owner now authorizes renaming **only its display name** to the general-purpose **`DM Studio`**, with independent application projects (LifeGuide, Finora, EasyFactor, future projects). The connected Supabase tool **cannot rename an organization**, so this remains **PENDING** owner action in the dashboard.
+
+After the owner renames it, verify its name and original ID via `list_organizations`/`get_organization`. Do not treat this display-name change as new organization creation, do not rename org slug or modify existing projects, do not restore/delete unrelated resources. Note the Free tier's **two active projects across owned organizations** limit remains.
+
+The earlier Gate 0's independent-organization creation instructions and same-ID warning are now historical, not current action items. **Current Gate 0:** rename the existing organization's display name to DM Studio; verify the same ID. **Current Gate 1:** verify zero dollar recurring project cost, account-wide capacity and unrelated project state; ask for the required cost confirmation before creating `LifeGuide-QA`. All subsequent synthetic-data-only security/compatibility gates still apply.
+
 ## Provider re-check — 2026-10-15 (BLOCKED: organization identity ambiguity)
 
 Read-only Supabase checks completed:
