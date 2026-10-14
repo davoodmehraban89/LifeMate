@@ -1,5 +1,14 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## Public domain and owner SMS panel — 2026-10-15 (READ-ONLY CHECK)
+
+- **Official product name: LifeGuide** (not آرام). Repository `LifeMate` and package/protocol identifiers remain unchanged unless separately approved.
+- User reports an external **SMS provider panel is set up** for registration/login. **Provider name, API documentation, SMS template/pattern ID, permitted sender, delivery capability and available provider credentials are not yet verified or integrated.** Never request any API secrets in a chat/Git repository or issue a real OTP without explicit operational consent.
+- Existing v0.7.1 Node/Express backend includes `SmsProvider` and a generic HTTPS `webhook` adapter in `backend/src/auth_delivery.js`, `/v1/auth/phone/request-otp` and `/v1/auth/phone/verify-otp` in `backend/src/auth_router.js`, plus phone registration and OTP recovery. `.env.example` defaults to `SMS_PROVIDER=disabled`. No deployed provider integration confirmed.
+- The existing LifeGuide-QA Supabase project currently contains only a private synthetic `lifeguide_qa.setup_probe` table and JWT-protected health Edge Function; **it is not the complete LifeGuide API/DB**. No public `app.lifeguide.ir` origin/runtime-config/DNS change was performed by this workstream.
+- Attempts on this date to fetch `https://app.lifeguide.ir/`, `/config.json`, `/api/health`, `/ready` through public fetch tools produced inaccessible or empty content, so **live domain/API behavior is UNVERIFIED**, not established as either healthy or down. Historical probe of 2026-10-12 saw HTML fallback for API/config paths; this is not a current observation.
+- Next: obtain provider **name and public API documentation** from owner (never secret token); design and test a safe adapter in an isolated branch, preserve account-level OTP rate limits, 5-minute expiry, guardian privacy, and secrets confined to server configuration. Separately deploy/verify an authenticated QA API against Supabase PostgreSQL before switching domain/Android/PWA. Any public/domain change and real SMS sending need independent approval.
+
 ## Supabase QA verified checkpoint — 2026-10-15 (CURRENT)
 
 **LifeGuide-QA is provisioned on Supabase Free but the LifeGuide mobile/PWA app is NOT deployed or connected.**
