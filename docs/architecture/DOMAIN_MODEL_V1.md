@@ -1,4 +1,4 @@
-# LifeMate — Conceptual Domain Model v1
+# LifeGuide — Conceptual Domain Model v1
 
 ## Identity
 - **Account** — authentication identity; credentials/session are not family-shared.

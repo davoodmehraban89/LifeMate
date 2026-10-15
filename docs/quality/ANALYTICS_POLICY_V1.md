@@ -1,4 +1,4 @@
-# LifeMate — Analytics Policy v1
+# LifeGuide — Analytics Policy v1
 
 ## Principle
 Product analytics answers whether flows work; it does not become a shadow copy of private user content.

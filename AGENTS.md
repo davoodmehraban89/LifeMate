@@ -1,7 +1,7 @@
-# LifeMate — Operating Rules
+# LifeGuide / لایف‌گاید — Operating Rules
 
 ## Mission
-Build LifeMate as a maintainable, secure, attractive personal/family/learning companion. The product starts with a teen-and-family use case but must not be hard-coded to one family, one age, or one school year.
+Build LifeGuide as a maintainable, secure, attractive personal/family/learning companion. The product starts with a teen-and-family use case but must not be hard-coded to one family, one age, or one school year. The repository remains `davoodmehraban89/LifeMate`; repository paths, database identifiers and JWT issuer/audience are not product copy and must not be renamed by a branding sweep.
 
 ## Coordination model
 The coordinating project lead owns prioritization, dependencies, integration, conflict resolution, and final delivery. Five specialist ownership areas are active:
@@ -45,6 +45,9 @@ A tool or connector is not an agent. GitHub, Figma, Canva, Supabase, Context7, P
 - Run applicable tests, lint, static analysis and builds before declaring implementation complete.
 - Use staging before production.
 - Production deploys, destructive data operations, high-risk schema migrations, public release, paid actions, and sensitive access changes require explicit authorization relevant to that action.
+- Stop and report at the end of each owner-defined phase. Merge and deployment require explicit approval for that action; approval to start a phase does not authorize either.
+- Privacy, AI and infrastructure policy choices require an options/decision document and owner approval before implementation.
+- Report executed checks as VERIFIED with their command/output; label checks that were not run UNVERIFIED.
 - Secrets must not be committed to the repository or copied into documentation; use environment/secret management.
 - Keep authoritative security and permission rules on the backend; client logic may support UX/offline behavior but cannot be the security boundary.
 

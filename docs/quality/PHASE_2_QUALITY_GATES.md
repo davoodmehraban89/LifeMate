@@ -1,4 +1,4 @@
-# LifeMate — Phase 2 Quality Gates
+# LifeGuide — Phase 2 Quality Gates
 
 ## Pull request gates
 Once application code exists, every implementation PR must run:
@@ -11,7 +11,7 @@ Once application code exists, every implementation PR must run:
 7. secret scanning and backend dependency audit in CI.
 
 ## Security tests required for identity/family
-For each protected resource, test allowed and denied access for: owner profile, related guardian, unrelated family member, removed member, unauthenticated user and privileged server path where applicable. LifeMate's primary authorization boundary is the server/API layer; database constraints and helper-policy tests provide defense in depth. If RLS is enabled for a deployment, its SELECT/INSERT/UPDATE/DELETE policies must be tested as an additional gate.
+For each protected resource, test allowed and denied access for: owner profile, related guardian, unrelated family member, removed member, unauthenticated user and privileged server path where applicable. LifeGuide's primary authorization boundary is the server/API layer; database constraints and helper-policy tests provide defense in depth. If RLS is enabled for a deployment, its SELECT/INSERT/UPDATE/DELETE policies must be tested as an additional gate.
 
 ## Staging rule
 All deployable changes land in staging before production. Staging uses separate environment/secrets/data from production. No production deploy, destructive migration or sensitive access change is implied by merge alone.

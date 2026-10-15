@@ -1,7 +1,7 @@
-# LifeMate — Safety, Privacy & Risk Baseline v1
+# LifeGuide — Safety, Privacy & Risk Baseline v1
 
 ## Product safety boundary
-LifeMate may provide general wellbeing reflection, coping ideas, communication prompts and educational support. It must not claim diagnosis, treatment, professional licensure or certainty about a user's mental state. The AI must not encourage emotional dependency or represent itself as a replacement for trusted people/professional care.
+LifeGuide may provide general wellbeing reflection, coping ideas, communication prompts and educational support. It must not claim diagnosis, treatment, professional licensure or certainty about a user's mental state. The AI must not encourage emotional dependency or represent itself as a replacement for trusted people/professional care.
 
 ## Privacy model
 Raw private wellbeing conversations are not routine parent-report content. Parent support uses authorized structured signals/trends and actionable guidance. Safety escalation is a separate, narrowly governed path; it is not a blanket permission to inspect private history.

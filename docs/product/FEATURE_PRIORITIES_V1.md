@@ -1,4 +1,4 @@
-# LifeMate — Feature Priorities v1
+# LifeGuide — Feature Priorities v1
 
 ## MUST — first useful product
 - Independent accounts, verified email, sign-in/out, forgot/reset/change password.
@@ -31,4 +31,4 @@
 A family can securely join one workspace; each member can plan independently; a teen can manage a real school week; parents can see the authorized information needed to support the teen; shared family items work; reminders are useful; the product remains usable without AI.
 
 ## Non-goals
-LifeMate V1 is not a surveillance product, clinical diagnosis/treatment system, location tracker, social network, school ERP, or autonomous decision-maker.
+LifeGuide V1 is not a surveillance product, clinical diagnosis/treatment system, location tracker, social network, school ERP, or autonomous decision-maker.

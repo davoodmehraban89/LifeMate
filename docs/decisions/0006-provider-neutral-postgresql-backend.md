@@ -8,9 +8,9 @@
 Phase 2 originally treated Supabase as the likely combined database/auth/backend provider. Creation of an isolated LifeMate staging project was blocked by account-level project limits. More importantly, tying identity, authorization, storage, realtime and database behavior to one BaaS creates unnecessary platform coupling for a long-lived family product.
 
 ## Decision
-LifeMate will use PostgreSQL as its durable relational source of truth while exposing infrastructure through explicit application ports/adapters.
+LifeGuide uses PostgreSQL as its durable relational source of truth while exposing infrastructure through explicit application ports/adapters.
 
-The managed PostgreSQL host is replaceable. Neon is the preferred current target when available, but no domain entity, authorization rule, migration or client contract may require Neon-specific semantics.
+The PostgreSQL host is replaceable. Neon was the preferred candidate when this ADR was written on 2026-10-05; that is historical context, not the current deployment target. The 2026-10-15 audit observed the existing Supabase QA database. No domain entity, authorization rule, migration or client contract may require provider-specific semantics. Future infrastructure choices need a separate owner-approved decision; this annotation does not choose one.
 
 Required ports:
 - `IdentityProvider`: registration, email verification, login/session, password recovery/change.

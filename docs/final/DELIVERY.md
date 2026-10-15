@@ -1,4 +1,6 @@
-# LifeMate Feature 1 — Final Delivery
+# LifeGuide Feature 1 — Historical Delivery Checklist
+
+**Status as of 2026-10-15:** historical checklist, not current release acceptance. Artifact labels below match the old CI configuration. Phase 0 identified authorization, sensitive-data and device acceptance blockers; cycle tracking is not an approved MVP capability. Follow [PROJECT_STATE](../../PROJECT_STATE.md) before using this checklist. No fresh APK, release signature or device test is verified by this document.
 
 ## Installable outputs
 Every green CI run retains:
