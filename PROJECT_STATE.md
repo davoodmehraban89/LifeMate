@@ -3,6 +3,8 @@
 
 ## GitHub Pages QA deployment hardening — 2026-10-15 (CURRENT; UNMERGED)
 
+**Subsequent CI finding and fix:** [CI 38690358457](https://github.com/davoodmehraban89/LifeMate/actions/runs/38690358457) reported **Security PASS, Backend FAIL** in the synthetic runtime-role HTTP acceptance: `learning_assessment.test.js` teardown could not delete an ephemeral unit due to `learning_content_feedback_unit_id_fkey`. Independent source review found `learning_feedback.test.js` selected the global minimum learning-unit UUID from a database concurrently populated by the assessment test, and linked feedback to another suite's temporary unit. Changed its selection to the deterministic imported primary-catalogue book code `101` with the catalog importer's canonical `https://chap.sch.ir/` URL (no changes to production data or server permission model). Latest corrective commit `c1476763b0e8886f2d3d9acdc84c69e5eb673b01`; [new CI 38690905230](https://github.com/davoodmehraban89/LifeMate/actions/runs/38690905230) **PENDING** at this checkpoint. New test result must be independently checked, not assumed passed.
+
 **Owner:** engineering/release. **Scope:** code-only reversible changes on isolated branch; no real user data, DNS, account settings, publishing, paid SMS, merging or unrelated repositories changed.
 
 - **Verified remote HEADs:** `main=abdc9d9d032bc6746c8390b902a2e52d82991530`, `infra/lifeguide-github-pages-qa=ebb1d697043f019486c3823d673b7edb95bf570e` unchanged. [Draft PR16](https://github.com/davoodmehraban89/LifeMate/pull/16) and [draft PR17](https://github.com/davoodmehraban89/LifeMate/pull/17) remain unmerged.
