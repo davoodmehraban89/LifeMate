@@ -1,5 +1,34 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## GitHub Pages FactorEasy-compatible Iran delivery experiment — 2026-10-15 (LATEST)
+
+**Owner requested comparing working `https://factoreasy.ir/index.html` with LifeGuide and applying the same accessible hosting pattern. FactorEasy uses GitHub Pages (NOT Cloudflare Pages).** This is a **new, reversible QA trial**, not permission to change the live `app.lifeguide.ir`, and it does not complete the auth/API.
+
+### Provider-origin and external network evidence
+
+- Direct read from owner's connected Cloudflare DNS zone `factoreasy.ir`: four **DNS-only, proxy disabled** A records to GitHub Pages `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`; `www.factoreasy.ir` DNS-only CNAME to `davoodmehraban89.github.io`. Its nameservers are Cloudflare `tegan`/`josh`, but Cloudflare's HTTP reverse proxy is **off** for those records.
+- Six independent Iran data-center probes across Tehran×3, Shiraz×2 and Qom×1, plus two outside-Iran controls: `https://factoreasy.ir/index.html` **HTTP 200 on all eight** (Iran ~0.26–0.40s); DNS correct in all eight. Evidence: [Iran FactorEasy HTTPS](https://check-host.net/check-report/5112767akcfa), [DNS](https://check-host.net/check-report/5112766akbe9).
+- In contrast `pages.dev` domain remains DNS-interfered in these six Iran probes. `davoodmehraban89.github.io` itself returns **HTTP 404** because no index there, but HTTPS connects from six Iran nodes and DNS gives valid GitHub Pages IPs; this does NOT indicate blocked Github Pages.
+- LifeGuide domain `lifeguide.ir` authoritative DNS remains **Arvan**, and current `app.lifeguide.ir` returns Arvan proxy A records `185.143.233.132`/`185.143.234.132`. Original Railway origin path/504 still unresolved; leave untouched until cutover approval.
+- Public DNS queries show `qa.lifeguide.ir` **NXDOMAIN**, meaning no old record to overwrite; an independent staging subdomain is the proper first candidate.
+
+### Concrete GitHub implementation, source of truth
+
+- Branched `infra/lifeguide-github-pages-qa` from existing Cloudflare QA code; [Draft PR16](https://github.com/davoodmehraban89/LifeMate/pull/16) opened targeting the original Cloudflare QA branch, without merging `main`.
+- Added build script `scripts/build-github-pages-qa.sh`, reusing proven Flutter 3.47.6 static build, removing Cloudflare `_headers`, adding `.nojekyll` and public `site-check.txt` for network acceptance. `config.json` still points only to `/api` with **zero fallback URLs**, and all browser credentials stay absent. Under GitHub Pages this API currently fails (not implemented), which is safer than relying on Railway.
+- Added GitHub Actions workflow `.github/workflows/lifeguide-github-pages-qa.yml` to upload/deploy compiled PWA to GitHub Pages; added backend source regressions `backend/tests/github_pages_qa.test.js`.
+- **GitHub `LifeMate` is public, but provider-reported `has_pages=false` as of this checkpoint. The owner must enable repository Settings → Pages → Source: GitHub Actions before this publication can be considered operational.** Actual initial workflow run is in progress / deployment NOT YET VERIFIED. Github Pages on public Github Free requires no card per official docs.
+- Manual runbook and checks: [GitHub Pages Iran QA](docs/operations/GITHUB_PAGES_IRAN_QA.md). **Do not make an Arvan `qa` CNAME until GitHub Pages custom domain `qa.lifeguide.ir` is configured first** to avoid subdomain takeover risk. After owner acceptance, only `qa` CNAME to `davoodmehraban89.github.io`, **Arvan proxy/CDN disabled**, no apex A copy, no nameserver movement, no production app domain change. Custom-domain ownership, DNS, and HTTPS issuance still NOT DONE.
+
+### Independent incomplete application gates
+
+- Supabase QA PG17.11 private app schema (20 original migrations/59 tables and rollback-only guardian tests) remains unchanged and denies all direct client access.
+- Native Node/Express + Argon2 + custom JWT guardian auth are NOT being run by static GitHub Pages; real backend/API, request-level negative roles, offline family sync, paid SMS provider integration and Iran mobile validation still unverified.
+- Owner's Kavenegar `lifeguideotp` template was REJECTED while `app.lifeguide.ir` was inaccessible; no paid SMS or provider secret was used.
+- New GitHub Pages QA URL, GitHub Actions success, TLS, Iran iPhone access: **PENDING**; do not claim an operational hosted LifeGuide site yet.
+
+Older Cloudflare-only and Supabase notes remain historic underneath; this checkpoint is the current verified direction for Iran-deliverable frontend access.
+
 ## IRAN CONNECTIVITY BLOCKER — 2026-10-15 (NEWEST VERIFIED)
 
 **`lifeguide-qa.pages.dev` is deployed and works from outside Iran, but it is NOT reachable via the owner's Iran mobile LTE without VPN.** Independent public measurements from six different Iranian probe datacenters show **DNS rewriting of both the LifeGuide Pages hostname and the `pages.dev` apex**:
