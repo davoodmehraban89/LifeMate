@@ -1,5 +1,13 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## Durable ChatGPT / Codex bootstrap — 2026-10-15 (LATEST, VERIFIED)
+
+- **DONE:** Created the permanent new-chat starter prompt [`docs/START_HERE_FA.md`](docs/START_HERE_FA.md) on QA branch `infra/lifeguide-github-pages-qa`. The file specifies: retrieve live GitHub `AGENTS.md` and `PROJECT_STATE.md` first, verify actual PR/CI/provider state, keep product name **LifeGuide**, preserve Supabase data/guardian privacy, Kavenegar approval gate, and Iran reachability, avoid Railway deployment and secrets, and update this state after important steps. It replaces the misleading old `Aram` bootstrap file as a LifeGuide project entry point, **without** changing other repositories.
+- **DONE:** Linked the canonical starter file from root `AGENTS.md`. This snapshot is not a live monitoring service or proof of a functional production application.
+- **Latest independently fetched CI:** GitHub Actions `38684353644` completed **SUCCESS** for Backend, Flutter and Security. Separate Pages deploy run `38684352038` **FAILED only at `actions/configure-pages@v5`**: GitHub reports repository Pages not enabled; deploy skipped. Owner can enable `Settings → Pages → Source: GitHub Actions` in repository. `main` and domain DNS were not modified.
+- **Still open:** complete GitHub Pages test deployment, owner-approved `qa.lifeguide.ir` DNS/HTTPS after custom-domain association, real authenticated Supabase API, mobile LTE no-VPN validation, rejected Kavenegar template re-review. Never treat the static HTML build as complete user login or parent/child sync.
+- **Source-of-truth convention:** `AGENTS.md` for stable rules; `PROJECT_STATE.md` for latest verified operational status and next steps; `docs/START_HERE_FA.md` as the copyable **living bootstrap pointer**, not a substitute for rechecking these sources.
+
 ## GitHub Pages FactorEasy-compatible Iran delivery experiment — 2026-10-15 (LATEST)
 
 **Owner requested comparing working `https://factoreasy.ir/index.html` with LifeGuide and applying the same accessible hosting pattern. FactorEasy uses GitHub Pages (NOT Cloudflare Pages).** This is a **new, reversible QA trial**, not permission to change the live `app.lifeguide.ir`, and it does not complete the auth/API.
