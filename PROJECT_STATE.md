@@ -1,5 +1,20 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## Cloudflare Pages QA public gateway verified — 2026-10-15 (MOST RECENT)
+
+**LifeGuide Flutter PWA static staging is now deployed on `https://lifeguide-qa.pages.dev/` using GitHub → Cloudflare Pages, independent of Railway.** This is **not a working family API**; user login, registration, SMS and cross-device persistence remain unavailable via this new hostname.
+
+- Project `lifeguide-qa` created in connected Cloudflare account, production GitHub branch `infra/lifeguide-cloudflare-qa`, build command `bash scripts/build-cloudflare-pages-qa.sh`, Flutter pinned 3.47.6. Actual Cloudflare Pages deployments `9bfb30df-8ad0-4f4e-ade2-9ec77350543b` and `1a64a095-c1da-40b5-98ec-3d662d379e92` **SUCCESS** (latest verified SHA `3291d0cddaa92c4d88f0e8b945beb79956cf7f4f` before documentation commits).
+- Independent public fetch: `/` served correct LifeGuide HTML; `/config.json` served `{"apiBaseUrl":"/api","apiFallbackUrls":[]}`; `/health` returned explicit gateway-only JSON; `/ready` and `/api/health` **HTTP 503**, fail-closed intentionally until real API readiness.
+- Existing Cloudflare Pages `lifemate-staging.pages.dev` linked to `deployment-static` and its prior production build were **not changed**. Supabase `LifeGuide-QA` PG17.11 separate private schema with all 20 application migrations preserved; Finora ERP unaffected.
+- Source and notes: [Cloudflare deployment verification](docs/audits/2026-10-15-cloudflare-pages-live-qa.md), [ADR 0013](docs/decisions/0013-cloudflare-supabase-kavenegar-stack.md), [Draft PR15](https://github.com/davoodmehraban89/LifeMate/pull/15).
+- Site `app.lifeguide.ir` still behind Arvan and was **not** moved; Kavenegar template `lifeguideotp` now **REJECTED** because that domain returned 504. No DNS, live data, real OTP, provider secret or payment changed.
+- The key remaining work is a secure Edge authenticated family API with exact guardian permissions plus Flutter integration. **Supabase data model exists but clients have no DB access by design.** Need real device connectivity in Iran no VPN before recommending any hostname cutover. Kavenegar review can be re-requested after the publicly registered application link truly works.
+- Latest CI `38680750623`: Backend and Security jobs passed; Flutter was running at the checkpoint. A clean full CI, physical-device UI, and functional auth/PWA cannot be claimed yet.
+- Next: implement/review Supabase server-side auth/API and QA-only client integration, measure free limits; when complete obtain separate approval to register `app.lifeguide.ir` as Pages custom domain and change only `app` CNAME in Arvan. Avoid moving the entire DNS zone/NS.
+
+Earlier checkpoints retained below may say "first build started"; those are historical and superseded by this verified checkpoint.
+
 ## Cloudflare + Supabase + Kavenegar active QA track — 2026-10-15 (CURRENT)
 
 Owner explicitly replaced the **Railway** online execution path due to real Iran LTE **HTTP 504** at `app.lifeguide.ir`. Target: **GitHub source/CI → Cloudflare Pages (PWA) + Supabase Edge secure API/PostgreSQL + Kavenegar OTP**. This *does not* retroactively approve a production DNS cutover, real-user registration, paid SMS, or a change in existing client credentials.
