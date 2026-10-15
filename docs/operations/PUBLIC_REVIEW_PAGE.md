@@ -15,7 +15,7 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory site/review
 
 ## انتشار GitHub Pages
 
-Settings → Pages باید Source=`GitHub Actions` و Custom domain=`app.lifeguide.ir` داشته باشد؛ read-only API فعلی هر دو را تأیید کرده است. Workflow `.github/workflows/publish-static.yml` جایگزین مسیر قدیمی انتشار Railway/APK می‌شود؛ tag/release/force-push یا credential ارائه‌دهنده نمی‌سازد. push شاخه feature فقط validate/build/upload می‌کند؛ deploy فقط روی main و در محیط موجود github-pages انجام می‌شود. مجوز محیط فعلی فقط main است و تغییر نکرده است.
+Settings → Pages باید Source=`GitHub Actions` و Custom domain=`app.lifeguide.ir` داشته باشد؛ read-only API فعلی هر دو را تأیید کرده است. Workflow `.github/workflows/publish-static.yml` جایگزین مسیر قدیمی انتشار Railway/APK می‌شود؛ tag/release/force-push یا credential ارائه‌دهنده نمی‌سازد. PR فقط validate/build/upload می‌کند؛ deploy فقط روی main و در محیط موجود github-pages انجام می‌شود. مجوز محیط فعلی فقط main است و تغییر نکرده است.
 
 پس از آزمون و تأیید نهایی مالک برای ادغام PR همین صفحه، push main انتشار را آغاز می‌کند. در run واقعی باید build و deploy موفق شوند؛ فقط سبزشدن build به معنی انتشار نیست. در دامنه، title، متن LifeGuide، لینک‌های حریم خصوصی و build-info باید مستقل خوانده شوند. main قبلی همچنان workflow تاریخی خود را دارد؛ تا ادغام این PR، نباید با dispatch آن مسیر قدیمی را به‌عنوان صفحه جدید منتشر کرد.
 

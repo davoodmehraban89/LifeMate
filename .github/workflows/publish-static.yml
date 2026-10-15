@@ -2,7 +2,12 @@ name: Publish LifeGuide public review website
 
 on:
   push:
-    branches: [main, feat/public-review-page]
+    branches: [main]
+    paths:
+      - 'site/review/**'
+      - 'scripts/check-review-site.py'
+      - '.github/workflows/publish-static.yml'
+  pull_request:
     paths:
       - 'site/review/**'
       - 'scripts/check-review-site.py'
@@ -46,7 +51,7 @@ jobs:
         with:
           path: site/review
   deploy:
-    # Keep the existing main-only deployment policy; feature pushes validate only.
+    # Keep the existing main-only deployment policy; pull requests validate only.
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest

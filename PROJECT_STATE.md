@@ -1,6 +1,6 @@
 # LifeGuide / لایف‌گاید — وضعیت انتشار صفحه معرفی
 
-Updated: 2026-10-15. مخزن `davoodmehraban89/LifeMate` حفظ می‌شود. این شاخه `feat/public-review-page` بر مبنای main در `abdc9d9d032bc6746c8390b902a2e52d82991530` است؛ تغییرات Backend و Flutter از PRهای دیگر وارد این انتشار نمی‌شوند.
+Updated: 2026-10-15. مخزن `davoodmehraban89/LifeMate` حفظ می‌شود. این شاخه `feat/public-review-page` بر مبنای main در `abdc9d9d032bc6746c8390b902a2e52d82991530` است؛ تغییرات Backend و Flutter از PRهای دیگر وارد این انتشار نمی‌شوند؛ دو اصلاح کوچک برای رفع خطاهای پایه CI انجام شد: حذف import استفاده‌نشده تست و نمایش راهنمای حداقل۱۰کاراکتر در فرم ثبت‌نام؛ Backend/DB/OTP تغییر نمی‌کنند.
 
 ## هدف جاری
 
