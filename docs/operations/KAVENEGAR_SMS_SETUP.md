@@ -39,6 +39,8 @@ Official API documentation:
 - `backend/src/auth_delivery.js` retains the original disabled/default and HTTPS webhook behavior; it is **not** switched on by default.
 - Example environment keys:
   - `SMS_PROVIDER=kavenegar`
+  - `SMS_LIVE_ENABLED=true` only after explicit owner authorization for live sending.
+  - `KAVENEGAR_TEMPLATE_APPROVED=true` only after the provider approves this exact template.
   - `KAVENEGAR_TEMPLATE=lifeguideotp`
   - `KAVENEGAR_API_KEY=<secret value in server/secret manager ONLY>`
 - Adapter restricts to Iranian mobile numbers normalized by existing LifeGuide `normalizePhone()` as `+989XXXXXXXXX`; Kavenegar receives `09XXXXXXXXX`.

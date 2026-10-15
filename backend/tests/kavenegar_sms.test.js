@@ -5,7 +5,8 @@ import { createSmsProvider } from '../src/auth_delivery.js';
 
 const apiKey = 'SyntheticKavenegarApiKey123456789';
 const template = 'lifeguideotp';
-const env = { SMS_PROVIDER: 'kavenegar', KAVENEGAR_API_KEY: apiKey, KAVENEGAR_TEMPLATE: template };
+// Fixture approval only: fetch is always injected; these are not live settings.
+const env = { SMS_PROVIDER: 'kavenegar', SMS_LIVE_ENABLED: 'true', KAVENEGAR_TEMPLATE_APPROVED: 'true', KAVENEGAR_API_KEY: apiKey, KAVENEGAR_TEMPLATE: template };
 const request = { phone: '+989121234567', code: '082735', expiresIn: 300,
   idempotencyKey: '11111111-2222-4333-8444-555555555555' };
 const ok = () => new Response(JSON.stringify({

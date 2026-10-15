@@ -51,8 +51,17 @@ class WebhookSmsProvider extends SmsProvider {
 export function createSmsProvider({ env = process.env, fetchImpl = fetch, timeoutMs = 10000 } = {}) {
   const selection = String(env.SMS_PROVIDER ?? '').trim().toLowerCase();
   if (['', 'none', 'disabled'].includes(selection)) return new SmsProvider();
+  if (!['kavenegar', 'webhook'].includes(selection)) throw new Error('sms_provider_unsupported');
+  // Credentials are configuration, not permission to send a paid real message.
+  // Development tests inject a local capturing adapter; no OTP is logged or
+  // returned by a production debug hook. These flags are never set by the app.
+  if (env.SMS_LIVE_ENABLED !== 'true' ||
+      (selection === 'kavenegar' && env.KAVENEGAR_TEMPLATE_APPROVED !== 'true')) {
+    const disabled = new SmsProvider();
+    disabled.status = 'APPROVAL_REQUIRED';
+    return disabled;
+  }
   if (selection === 'kavenegar') return createKavenegarSmsProvider({ env, fetchImpl, timeoutMs });
-  if (selection !== 'webhook') throw new Error('sms_provider_unsupported');
   let url;
   try { url = new URL(env.SMS_PROVIDER_URL); } catch { throw new Error('sms_provider_url_invalid'); }
   if (url.protocol !== 'https:' || !url.hostname || url.username || url.password || url.hash) throw new Error('sms_provider_url_invalid');
