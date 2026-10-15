@@ -1,4 +1,5 @@
-// Build a one-time, QA-only copy of the existing 20 LifeGuide PostgreSQL migrations.
+// Build a one-time, QA-only copy of the 20 baseline migrations plus auth metadata.
+// Existing provider-applied 0001..0020 bundles remain historical and unchanged.
 // This script outputs SQL, does NOT connect to a DB and cannot deploy by itself.
 // Crucially, original migration files / Compose role-provisioning stay unchanged.
 import { readdir, readFile } from 'node:fs/promises';
@@ -32,6 +33,14 @@ function normalizeMigration(filename, source) {
   if (n !== (filename.startsWith('0019_') ? 5 : 0)) throw new Error(`unexpected_function_search_path:${filename}`);
   sql = sql.replace(oldFunctionPath, `set search_path=${targetSchema},pg_catalog`);
 
+  // The additive auth migration removes PUBLIC access to its one metadata
+  // table. The QA wrapper below already revokes ALL tables for every client
+  // role. Allow only this exact restriction; arbitrary GRANT/REVOKE still fails.
+  if (filename === '0023_auth_ip_rate_limit.sql') {
+    sql = sql.replace(/^revoke all on auth_ip_rate_limit from public;$/m,
+      '-- Auth metadata is included in the QA wrapper table-wide lockdown.');
+  }
+
   // Fail closed if a future source migration changes its privilege/schema rules.
   if (/\b(?:public|auth|storage|realtime)\s*\./i.test(sql) ||
       /\b(?:create|alter|drop)\s+(?:role|database|schema|extension)\b/i.test(sql) ||
@@ -44,9 +53,11 @@ function normalizeMigration(filename, source) {
 
 export async function buildSupabaseQaSql({ migrationsDir = sourceRoot } = {}) {
   const entries = (await readdir(migrationsDir)).filter(name => /^\d{4}_[a-z0-9_]+\.sql$/.test(name)).sort();
-  if (entries.length !== 20 || entries[0].slice(0,4) !== '0001' || entries.at(-1).slice(0,4) !== '0020' ||
-      entries.some((name, i) => name.slice(0,4) !== String(i+1).padStart(4, '0'))) {
-    throw new Error('expected_exactly_20_original_migrations_in_order');
+  const expected = [...Array.from({length:20}, (_,i) => String(i+1).padStart(4,'0')), '0023'];
+  if (entries.length !== expected.length ||
+      entries.some((name, i) => name.slice(0,4) !== expected[i]) ||
+      entries.at(-1) !== '0023_auth_ip_rate_limit.sql') {
+    throw new Error('expected_baseline_and_auth_migrations_in_order');
   }
 
   const parts = [`begin;

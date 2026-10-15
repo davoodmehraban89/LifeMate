@@ -489,10 +489,11 @@ app.use('/v1', createStudySessionsRouter({ pool, auth }));
 
 app.use(operationalErrorHandler);
 
-const port = Number(process.env.PORT ?? 8080);
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (!testMode && invokedDirectly) {
-  app.listen(port, () => console.log(`LifeGuide API listening on ${port}`));
+  // Production must include the shared request/security/IP-quota middleware.
+  // Tests may import app; a second production listener would bypass those guards.
+  throw new Error('production_entrypoint_required: use npm start (src/entrypoint.js)');
 }
 
 export { app, pool };

@@ -61,7 +61,7 @@ export function configureTrustedProxy(app, value = process.env.TRUSTED_PROXY_CID
   app.set('trust proxy', entries.length ? entries : false);
 }
 
-function profileFor(req) {
+export function rateLimitProfile(req, env = process.env) {
   const path = req.path;
   const discovery = req.method === 'GET' && path === '/v1/auth/capabilities';
   // Express accepts case variants and trailing slashes. Only these literal
@@ -70,27 +70,27 @@ function profileFor(req) {
     if (req.method === 'POST' && (path === '/v1/auth/refresh' || path === '/v1/auth/logout')) {
       return {
         name: 'session',
-        limit: positiveInt(process.env.RATE_LIMIT_SESSION_MAX, 60),
-        windowSeconds: positiveInt(process.env.RATE_LIMIT_SESSION_WINDOW_SECONDS, 10 * 60),
+        limit: positiveInt(env.RATE_LIMIT_SESSION_MAX, 60),
+        windowSeconds: positiveInt(env.RATE_LIMIT_SESSION_WINDOW_SECONDS, 10 * 60),
       };
     }
     return {
       name: 'auth',
-      limit: positiveInt(process.env.RATE_LIMIT_AUTH_MAX, 10),
-      windowSeconds: positiveInt(process.env.RATE_LIMIT_AUTH_WINDOW_SECONDS, 10 * 60),
+      limit: positiveInt(env.RATE_LIMIT_AUTH_MAX, 10),
+      windowSeconds: positiveInt(env.RATE_LIMIT_AUTH_WINDOW_SECONDS, 10 * 60),
     };
   }
   if (/^\/v1\/ai\//.test(path) || /\/family-guidance$/.test(path)) {
     return {
       name: 'ai',
-      limit: positiveInt(process.env.RATE_LIMIT_AI_MAX, 30),
-      windowSeconds: positiveInt(process.env.RATE_LIMIT_AI_WINDOW_SECONDS, 10 * 60),
+      limit: positiveInt(env.RATE_LIMIT_AI_MAX, 30),
+      windowSeconds: positiveInt(env.RATE_LIMIT_AI_WINDOW_SECONDS, 10 * 60),
     };
   }
   return {
     name: 'general',
-    limit: positiveInt(process.env.RATE_LIMIT_GENERAL_MAX, 120),
-    windowSeconds: positiveInt(process.env.RATE_LIMIT_GENERAL_WINDOW_SECONDS, 60),
+    limit: positiveInt(env.RATE_LIMIT_GENERAL_MAX, 120),
+    windowSeconds: positiveInt(env.RATE_LIMIT_GENERAL_WINDOW_SECONDS, 60),
   };
 }
 
@@ -98,7 +98,8 @@ export function rateLimit(req, res, next) {
   if (process.env.NODE_ENV === 'test' || req.method === 'OPTIONS' || req.path === '/live' || req.path === '/ready' || req.path === '/health') {
     return next();
   }
-  const profile = profileFor(req);
+  const profile = rateLimitProfile(req);
+  if (req.authRateLimitCharged && ['auth', 'session'].includes(profile.name)) return next();
   const now = nowSeconds();
   const windowStart = Math.floor(now / profile.windowSeconds) * profile.windowSeconds;
   const key = `${profile.name}:${clientKey(req)}:${windowStart}`;

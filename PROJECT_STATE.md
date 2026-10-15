@@ -1,6 +1,12 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
-## Supabase LifeGuide-QA full private schema — 2026-10-15 (LATEST VERIFIED)
+## فاز۱ — اصلاح هویت در PR وابسته؛ بدون انتشار
+
+مالک پس از گزارش فاز۰ شروع فاز۱ را تأیید کرد. شاخه `fix/auth-abuse-expiry-safety` از PR14 در `5da6c4290e422162c13c3fe5260345770dde7ffa` منشعب است؛ به main یا سرویس زنده منتقل نشده است. محدودیت IP مشترک PostgreSQL، بررسی تازه انقضا پس از قفل و gate تأیید ارسال SMS پیاده شد. **VERIFIED محلی:** `npm test -- --test-concurrency=1` →271pass/0fail/0skip؛ migration و import تکراری، چهار SQL matrix و syntax موفق. [گزارش و محدودیت‌ها](docs/audits/2026-10-15-phase1-auth-hardening.md).
+
+Migration0023 فقط محلی آزموده شد؛۲۰ فایل اصلی و۳bundle تاریخی تغییر نکرده‌اند و Supabase زنده همان baseline20 است. manifest جدید generator شامل21فایل، گواه اعمال روی QA نیست. AI/guardian/cycle policy، سرور آنلاین، دستگاه/Safari، SMS واقعی و امضای release هنوز تأیید/تکمیل نشده‌اند؛ **فاز۱ کامل نیست**. پاکسازی مخزن و اسناد گزینه‌های سیاستی در PRهای مستقل آماده می‌شوند. هیچ merge،deploy،DNS،داده یا schema زنده تغییر نکرده و این PR اجازه آن‌ها نیست.
+
+## Supabase LifeGuide-QA full private schema — 2026-10-15 (HISTORICAL CHECKPOINT)
 
 **20/20 original PostgreSQL migrations copied to the isolated QA database, SQL family/privacy assertions PASS, client-access remains DENY ALL.** This is a **database integration milestone**, not a publicly operational LifeGuide Android/PWA.
 

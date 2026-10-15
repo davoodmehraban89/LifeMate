@@ -1,5 +1,13 @@
 # LifeGuide Changelog
 
+## Unreleased — Phase 1 auth hardening
+
+- Share auth/session IP quotas in PostgreSQL across processes and restart, storing domain-separated HMAC metadata rather than raw addresses; retain separate contact cooldowns.
+- Recheck one-time token, refresh and OTP expiry after database lock waits with fresh wall time.
+- Require explicit live-SMS and Kavenegar template approval flags; defaults remain disabled.
+- Reject direct production server startup that bypasses shared security middleware. Preserve the existing 20 migration files and add local migration0023; no live schema or deployment changed.
+- Verification and remaining Phase1 policy gates: [auth audit](docs/audits/2026-10-15-phase1-auth-hardening.md). Backend package version remains0.7.1; this is not a release.
+
 ## 0.7.1 — 2026-10-12 — shared-network session recovery
 
 - Fix a real three-account PWA acceptance blocker: public auth capabilities no longer consume sensitive login/delivery attempts, and refresh/logout have a separate bounded session bucket.

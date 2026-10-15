@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 export const applicationTables = [
   'academic_term', 'academic_year', 'access_audit', 'activity_state_event',
   'ai_guide_message', 'ai_guide_session', 'ai_plan_proposal', 'app_user',
-  'auth_credential', 'auth_delivery_attempt', 'auth_phone_challenge', 'auth_session',
+  'auth_credential', 'auth_delivery_attempt', 'auth_ip_rate_limit', 'auth_phone_challenge', 'auth_session',
   'auth_token', 'class_session', 'curriculum_subject', 'education_profile',
   'family_invitation', 'family_membership', 'family_workspace', 'guardian_relationship',
   'iran_calendar_event', 'learning_checkin', 'learning_goal', 'life_context',
