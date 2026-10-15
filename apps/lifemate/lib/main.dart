@@ -234,7 +234,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           TextField(
               controller: password,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'رمز عبور')),
+              decoration: const InputDecoration(labelText: 'رمز عبور', helperText: 'حداقل ۱۰ کاراکتر')),
           TextField(
               controller: confirm,
               obscureText: true,

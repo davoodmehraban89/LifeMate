@@ -1,3 +1,9 @@
+# LifeGuide / لایف‌گاید — صفحه عمومی بررسی
+
+[راهنمای انتشار صفحه، DNS و کاوه‌نگار](docs/operations/PUBLIC_REVIEW_PAGE.md). منبع سایت `site/review` است. وضعیت انتشار و محدودیت‌ها در [PROJECT_STATE](PROJECT_STATE.md) ثبت می‌شوند. این صفحه معرفی، ورود پیامکی یا Backend را فعال معرفی نمی‌کند.
+
+## مستند تاریخی مخزن
+
 # LifeMate
 
 **Personal, Family & Learning Companion**

@@ -1,68 +1,67 @@
-name: Publish static PWA and APK
+name: Publish LifeGuide public review website
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'site/review/**'
+      - 'scripts/check-review-site.py'
+      - '.github/workflows/publish-static.yml'
+  pull_request:
+    paths:
+      - 'site/review/**'
+      - 'scripts/check-review-site.py'
+      - '.github/workflows/publish-static.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: lifeguide-public-pages
+  cancel-in-progress: false
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/lifemate
+    permissions:
+      contents: read
+      pages: read
     steps:
       - uses: actions/checkout@v4
-
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - run: flutter pub get
-
-      - name: Build PWA against staging API
-        run: >
-          flutter build web --release
-          --dart-define=LIFEMATE_API_URL=https://lifemate-api-fn-staging.up.railway.app
-
-      - name: Build Android APK against staging API
-        run: >
-          flutter build apk --release
-          --dart-define=LIFEMATE_API_URL=https://lifemate-api-fn-staging.up.railway.app
-
-      - name: Publish stable APK release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Validate public content and local assets
+        run: python3 scripts/check-review-site.py
+      - name: Configure existing GitHub Pages site
+        uses: actions/configure-pages@v5
+      - name: Record public product status without source identifiers
         run: |
-          TAG=feature1-test
-          git tag -f "$TAG" "$GITHUB_SHA"
-          git push origin "refs/tags/$TAG" --force
-          gh release view "$TAG" >/dev/null 2>&1 || \
-            gh release create "$TAG" \
-              --title "LifeMate Feature 1 Test" \
-              --notes "Latest installable Android test build connected to the LifeMate staging API." \
-              --prerelease \
-              --target "$GITHUB_SHA"
-          gh release upload "$TAG" \
-            build/app/outputs/flutter-apk/app-release.apk#LifeMate.apk \
-            --clobber
-
-      - name: Prepare static release directory
-        run: |
-          rm -rf ../../public-release
-          mkdir -p ../../public-release
-          cp -R build/web/. ../../public-release/
-          touch ../../public-release/.nojekyll
-
-      - name: Publish immutable static branch
-        uses: peaceiris/actions-gh-pages@v4
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          Path('site/review/build-info.json').write_text(json.dumps({
+            'product': 'LifeGuide',
+            'purpose': 'public-product-review',
+            'liveLogin': False,
+          }, indent=2) + '\n')
+          PY
+      - name: Validate complete public artifact
+        run: python3 scripts/check-review-site.py
+      - name: Upload review website only
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: deployment-static
-          publish_dir: ./public-release
-          force_orphan: true
-          commit_message: "publish: LifeMate PWA and APK ${{ github.sha }}"
+          path: site/review
+  deploy:
+    # Keep the existing main-only deployment policy; pull requests validate only.
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy owner-requested public product review
+        id: deployment
+        uses: actions/deploy-pages@v4
