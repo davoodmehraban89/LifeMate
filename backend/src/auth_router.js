@@ -45,8 +45,13 @@ export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
     if (!owner.rowCount) return null;
     const active = await client.query('select 1 from app_user where id=$1 and disabled_at is null for update', [owner.rows[0].user_id]);
     if (!active.rowCount) return null;
-    const token = await client.query('select user_id from auth_token where token_digest=$1 and kind=$2 and used_at is null and expires_at>now() for update', [tokenDigest, kind]);
-    return token.rows[0] ?? null;
+    const token = await client.query('select user_id from auth_token where token_digest=$1 and kind=$2 and used_at is null for update', [tokenDigest, kind]);
+    if (!token.rowCount) return null;
+    // now() is the transaction start, and predicates in FOR UPDATE can be
+    // evaluated before a row-lock wait. Check wall time in a NEW statement
+    // after both account and token locks have actually been acquired.
+    const fresh = await client.query('select 1 from auth_token where token_digest=$1 and kind=$2 and used_at is null and expires_at>clock_timestamp()', [tokenDigest, kind]);
+    return fresh.rowCount ? token.rows[0] : null;
   }
 
   async function session(client, userId) {
@@ -67,16 +72,16 @@ export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
     await client.query('select pg_advisory_xact_lock(hashtextextended($1,0))', [recipientDigest + ':' + purpose]);
     const recent = await client.query(
       `select count(*)::int as n,
-         ceil(extract(epoch from (max(requested_at)+interval '60 seconds'-now()))) as cooldown,
-         ceil(extract(epoch from (min(requested_at)+interval '1 hour'-now()))) as window_wait
+         ceil(extract(epoch from (max(requested_at)+interval '60 seconds'-statement_timestamp()))) as cooldown,
+         ceil(extract(epoch from (min(requested_at)+interval '1 hour'-statement_timestamp()))) as window_wait
        from auth_delivery_attempt where recipient_digest=$1 and purpose=$2
-         and requested_at>now()-interval '1 hour'`, [recipientDigest, purpose],
+         and requested_at>statement_timestamp()-interval '1 hour'`, [recipientDigest, purpose],
     );
     const row = recent.rows[0];
     const wait = row.n >= 3 ? Number(row.window_wait) : Number(row.cooldown);
     if (wait > 0) return { retryAfter: Math.max(1, wait) };
     const inserted = await client.query(
-      'insert into auth_delivery_attempt(recipient_digest,purpose,user_id) values($1,$2,$3) returning id',
+      'insert into auth_delivery_attempt(recipient_digest,purpose,user_id,requested_at) values($1,$2,$3,clock_timestamp()) returning id',
       [recipientDigest, purpose, userId],
     );
     return { attemptId: inserted.rows[0].id };
@@ -207,8 +212,10 @@ export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
       // Account-first locking is shared with password/OTP recovery.
       const active = await client.query('select 1 from app_user where id=$1 and disabled_at is null for update', [preliminary.rows[0].user_id]);
       if (!active.rowCount) return null;
-      const current = await client.query('select id,user_id from auth_session where refresh_digest=$1 and revoked_at is null and expires_at>now() for update', [sha256(String(req.body?.refreshToken ?? ''))]);
+      const current = await client.query('select id,user_id from auth_session where refresh_digest=$1 and revoked_at is null for update', [sha256(String(req.body?.refreshToken ?? ''))]);
       if (!current.rowCount) return null;
+      const fresh = await client.query('select 1 from auth_session where id=$1 and revoked_at is null and expires_at>clock_timestamp()', [current.rows[0].id]);
+      if (!fresh.rowCount) return null;
       await client.query('update auth_session set revoked_at=now() where id=$1', [current.rows[0].id]);
       return session(client, current.rows[0].user_id);
     });
@@ -313,8 +320,10 @@ export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
         user = await client.query('select phone_verified_at from app_user where id=$1 and disabled_at is null for update', [owner.rows[0].user_id]);
         if (!user.rowCount) return null;
       }
-      const challenge = await client.query('select * from auth_phone_challenge where id=$1 and used_at is null and expires_at>now() and attempts<5 for update', [challengeId]);
+      const challenge = await client.query('select * from auth_phone_challenge where id=$1 and used_at is null and attempts<5 for update', [challengeId]);
       if (!challenge.rowCount) return null;
+      const fresh = await client.query('select 1 from auth_phone_challenge where id=$1 and used_at is null and attempts<5 and expires_at>clock_timestamp()', [challengeId]);
+      if (!fresh.rowCount) return null;
       const row = challenge.rows[0];
       await client.query('update auth_phone_challenge set attempts=attempts+1 where id=$1', [challengeId]);
       const provided = Buffer.from(digest(`otp:${challengeId}:${code}`), 'hex');
