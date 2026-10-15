@@ -1,37 +1,35 @@
-# LifeGuide / لایف‌گاید — صفحه عمومی بررسی
+# LifeGuide / لایف‌گاید
 
-[راهنمای انتشار صفحه، DNS و کاوه‌نگار](docs/operations/PUBLIC_REVIEW_PAGE.md). منبع سایت `site/review` است. وضعیت انتشار و محدودیت‌ها در [PROJECT_STATE](PROJECT_STATE.md) ثبت می‌شوند. این صفحه معرفی، ورود پیامکی یا Backend را فعال معرفی نمی‌کند.
+همراه شخصی، آموزشی و خانوادگی برای Android و وب/PWA فارسی راست‌به‌چپ. نام محصول **LifeGuide / لایف‌گاید** است؛ نام مخزن `davoodmehraban89/LifeMate` و شناسه‌های فنی سازگار حفظ می‌شوند.
 
-## مستند تاریخی مخزن
+## وضعیت واقعی
 
-# LifeMate
+**فاز۰ ممیزی پایان یافته و فاز۱ ایمنی و پاکسازی با تأیید مالک آغاز شده است. نسخه خانوادگی آنلاین آماده تحویل نیست.** اصلاحات شاخه‌های توسعه به معنی ادغام در `main` یا فعال‌بودن سرویس نیستند.
 
-**Personal, Family & Learning Companion**
+صفحه معرفی عمومی در `https://app.lifeguide.ir/` از `site/review` ساخته می‌شود. اجرای ثبت‌شده Pages شماره `38699023347` برای commit `64b938d`، build و deploy موفق دارد؛ این مشاهده اجرای قبلی است، نه انتشار تازه این تغییر. این صفحه ورود، API، پایگاه داده یا OTP عملیاتی ارائه نمی‌کند.
 
-LifeMate is a cross-platform personal and family companion designed to grow with its users across life stages. The first product focus is a teen-and-family experience combining planning, school organization, learning support, family coordination, and safe AI-assisted wellbeing guidance.
+Backend فعلی `main`، Node/Express و PostgreSQL با نسخه `0.4.0` و شش migration است. Supabase QA موجود، بیست migration دارد؛ اتصال کامل Android/PWA و SMS به آن **UNVERIFIED** است. [خلاصه مستند ممیزی فاز۰](docs/audits/2026-10-15-phase0-summary.md) وضعیت `main`، PRها و دیتابیس QA را جدا ثبت می‌کند.
 
-## Product principles
+## بسته کاری جاری
 
-- One identity, multiple life contexts: student, personal, family, and later work/university.
-- One Family Workspace with independent member accounts and role-based access.
-- Parents can access authorized planning, academic reports, and meaningful support signals without turning the product into continuous surveillance.
-- AI assists with planning, learning, reflection, and parent guidance; it does not impersonate a clinician or replace human professional care.
-- Android installable app + high-quality iPhone/iPad PWA + responsive web, sharing one backend and data model.
-- Persian/RTL quality and an attractive, age-appropriate visual experience are first-class requirements.
-- Security, privacy, safety, and auditability are architectural requirements, not post-release additions.
+فاز۱ به PRهای کوچک برای اصلاحات فنی و اسناد گزینه‌های تصمیم محدود است. سیاست سرپرستی/رضایت کودک، گزارش والد، AI، داده حساس و زیرساخت تا تأیید سند مربوط تغییر نمی‌کند. هیچ merge یا deploy با تأیید شروع فاز مجاز نمی‌شود.
 
-## Current phase
+هدف نسخه کوچک بعدی: ورود موبایلی، خانواده و پروفایل کودک، برنامه روزانه و نوبت مطالعه ۲۵/۵، یک درس اصیل پایه هفتم با آزمونک ده‌سؤالی و خلاصه محدود والد. این فهرست هدف است؛ اجرای کامل و پذیرش دستگاه آن **UNVERIFIED** است. Feature 1 موجود برای خانواده/آموزش ایران مبنای استفاده مجدد است؛ اسناد تاریخی آن اثبات ایمنی یا آمادگی انتشار نیستند.
 
-**Discovery / Foundation**
+## مستندات
 
-The repository is intentionally starting with product rules, architecture decisions, and project state before application scaffolding is locked in.
+- [قواعد کار و تأییدها](AGENTS.md)
+- [وضعیت جاری و محدودیت‌ها](PROJECT_STATE.md)
+- [تغییرات؛ نسخه مبنای Backend برابر 0.4.0](CHANGELOG.md)
+- [قرارداد Backend](backend/README.md)
+- [تصمیم‌های معماری](docs/decisions/)
+- [راهنمای صفحه معرفی و دامنه](docs/operations/PUBLIC_REVIEW_PAGE.md)
+- [طبقه‌بندی نام‌های قدیمی و پاکسازی مخزن](docs/audits/2026-10-15-repository-cleanup.md)
 
-## Repository operating documents
+## آزمون صفحه معرفی
 
-- [`AGENTS.md`](AGENTS.md) — operating rules and ownership model.
-- [`PROJECT_STATE.md`](PROJECT_STATE.md) — current checkpoint and change ledger.
-- [`docs/decisions/`](docs/decisions/) — architecture and product decision records.
+```bash
+python3 scripts/check-review-site.py
+```
 
-## Working name
-
-**LifeMate** is approved as the current product name. It may be revisited only through an explicit product decision.
+این فرمان فقط مرز فایل‌های صفحه معرفی را می‌سنجد. ساخت APK، ارسال SMS، ورود آنلاین و پذیرش واقعی Android/Safari بررسی‌های جدا هستند. Secrets و اطلاعات واقعی خانواده در مخزن، لاگ، مستندات یا fixture مجاز نیستند.

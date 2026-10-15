@@ -1,13 +1,13 @@
-# LifeMate — PWA Platform Constraints v1
+# LifeGuide — PWA Platform Constraints v1
 
 ## iPhone/iPad install model
-LifeMate must include a Web App Manifest and standalone display behavior plus explicit icons. On iOS/iPadOS, a Home Screen web app can open as its own app-like surface rather than a normal browser tab. `apple-touch-icon` is provided intentionally for icon quality.
+LifeGuide must include a Web App Manifest and standalone display behavior plus explicit icons. On iOS/iPadOS, a Home Screen web app can open as its own app-like surface rather than a normal browser tab. `apple-touch-icon` is provided intentionally for icon quality.
 
 ## Push
 Web Push is supported for Home Screen web apps on iOS/iPadOS 16.4+. Permission must be requested in response to user interaction. Therefore notification onboarding must feature-detect capability and explain installation/permission rather than assuming push exists in an ordinary Safari tab.
 
 ## Service worker / offline
-Current Flutter web does not provide a managed caching service worker by default. LifeMate must own its caching strategy. Phase 2 begins with conservative app-shell/static caching; offline data editing is added only per domain after conflict semantics are defined.
+Current Flutter web does not provide a managed caching service worker by default. LifeGuide must own its caching strategy. Phase 2 begins with conservative app-shell/static caching; offline data editing is added only per domain after conflict semantics are defined.
 
 ## Storage assumptions
 Browser storage is a cache, not the authoritative database. Critical user data must sync to the backend when connectivity exists. The UX must tolerate local cache eviction and rehydration.

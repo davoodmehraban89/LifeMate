@@ -1,4 +1,4 @@
-# LifeMate — Phase 2 Implementation Blueprint
+# LifeGuide — Phase 2 Implementation Blueprint
 
 ## Repository structure
 ```text
@@ -35,7 +35,7 @@ At minimum: **local**, **staging**, **production**. Staging and production use s
 7. CI and isolated PostgreSQL staging smoke.
 
 ## Student navigation baseline
-MyStudyLife is the primary information-architecture benchmark for the student surface. Direct destinations remain visible for Today, Schedule, Calendar, Tasks, Exams/Grades, Focus and AI; LifeMate Family/Wellbeing extensions are additive rather than hiding these core destinations behind a generic School layer.
+MyStudyLife is the primary information-architecture benchmark for the student surface. Direct destinations remain visible for Today, Schedule, Calendar, Tasks, Exams/Grades, Focus and AI; LifeGuide Family/Wellbeing extensions are additive rather than hiding these core destinations behind a generic School layer.
 
 ## PWA integration
 Own `manifest.json`, branded icons/apple-touch-icon, standalone metadata, install guidance and explicit service-worker strategy. Push is capability-detected and is not required for Phase 2 identity acceptance.

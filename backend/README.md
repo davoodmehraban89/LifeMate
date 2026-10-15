@@ -1,13 +1,13 @@
-# LifeMate backend contract
+# LifeGuide backend contract
 
-Phase 2 keeps infrastructure provider-neutral.
+This describes the existing backend contract, not online acceptance. The package remains `lifemate-backend`, version `0.4.0`; database identifiers and JWT issuer/audience remain unchanged. [Current project state](../PROJECT_STATE.md) records the Phase 0 findings and Phase 1 scope. Phase 2 keeps infrastructure provider-neutral.
 
 ## IdentityProvider
 Required operations: register(email,password), verifyEmail(token), signIn(email,password), requestPasswordReset(email), resetPassword(token,newPassword), changePassword(session,currentPassword,newPassword), revokeSession(session).
 
 Security requirements: normalized email; non-enumerating recovery response; single-use/time-limited verification and reset tokens stored as digests; modern password hashing in the identity adapter; session rotation/revocation; rate limiting; audit sensitive changes.
 
-## LifeMate API authorization
+## LifeGuide API authorization
 Every request resolves an authenticated `app_user`. Family operations evaluate active membership and explicit guardian relationships server-side. `owner_admin` is administrative authority and never grants blanket access to private teen content. Safety-controlled access is a separate audited policy path.
 
 ## Invitation

@@ -1,4 +1,4 @@
-# LifeMate — Permission & Visibility Matrix v0
+# LifeGuide — Permission & Visibility Matrix v0
 
 **Status:** Phase 1 working contract
 **Purpose:** establish a concrete baseline for UX and server-side authorization design. Detailed age/jurisdiction policy remains pending.

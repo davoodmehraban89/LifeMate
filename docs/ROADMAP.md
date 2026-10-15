@@ -1,6 +1,6 @@
-# LifeMate — Five-Phase Roadmap
+# LifeGuide — Historical Five-Phase Roadmap
 
-**Status:** Active
+**Status:** Historical planning baseline; superseded for execution by the owner-defined Phase 0–3 scope in [PROJECT_STATE](../PROJECT_STATE.md). The phase numbers and exit gates below are preserved as history, not current completion claims.
 **Started:** 2026-10-05
 
 ## Phase 1 — Foundation, Product Contract & UX Direction

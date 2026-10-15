@@ -1,10 +1,10 @@
-# LifeMate — Product Specification v1
+# LifeGuide — Product Specification v1
 
 **Status:** Phase 1 baseline
 **Date:** 2026-10-05
 
 ## 1. Product definition
-LifeMate is a personal, family and learning companion. It begins with a teen-and-family scenario but must grow with a person across school years and later life. It is not a surveillance app, not only a student planner, and not a clinical mental-health product.
+LifeGuide is a personal, family and learning companion. It begins with a teen-and-family scenario but must grow with a person across school years and later life. It is not a surveillance app, not only a student planner, and not a clinical mental-health product.
 
 ## 2. Primary V1 actors
 - **Family Owner/Admin:** manages family workspace, membership and allowed family policies.

@@ -1,4 +1,4 @@
-# LifeMate — Information Architecture & Primary Journeys v1
+# LifeGuide — Information Architecture & Primary Journeys v1
 
 ## Navigation model
 ### Teen / personal mobile
@@ -25,7 +25,7 @@ Create account → verify email → create Family Workspace → choose own role 
 Open invitation → create/attach independent account → verify email as applicable → see plain-language explanation of what parents can and cannot see → set school context → land on Teen Today. Privacy explanation is part of onboarding, not buried in legal text.
 
 ## Journey 3 — Build a school week
-Create academic year/term → add subjects → add repeating class schedule → add assignments/exams → LifeMate surfaces Today/Week workload → teen schedules study sessions → reminders follow schedule changes.
+Create academic year/term → add subjects → add repeating class schedule → add assignments/exams → LifeGuide surfaces Today/Week workload → teen schedules study sessions → reminders follow schedule changes.
 
 ## Journey 4 — Parent support review
 Parent opens Family → selects child → sees authorized upcoming workload, completion/progress and support summary → receives suggested conversation/support action → cannot silently open routine private wellbeing transcripts.

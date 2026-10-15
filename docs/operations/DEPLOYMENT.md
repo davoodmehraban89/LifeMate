@@ -1,6 +1,6 @@
 # Deployment Runbook
 
-LifeMate uses staging before production. Normal engineering changes deploy to staging first and are verified there before any production decision.
+LifeGuide uses staging before production. Normal engineering changes deploy to staging first and are verified there before any production decision.
 
 ## Staging
 1. Confirm branch CI is green: security, backend, backup/restore and Flutter jobs.
