@@ -4,7 +4,7 @@ import { createEmailProvider, createSmsProvider, safelyDeliver } from '../src/au
 
 const secret = 'SYNTHETIC_SMS_SECRET_MARKER_20261008';
 const endpoint = 'https://sms-gateway.example.test/otp';
-const env = { SMS_PROVIDER: 'webhook', SMS_PROVIDER_URL: endpoint, SMS_PROVIDER_TOKEN: secret };
+const env = { SMS_PROVIDER: 'webhook', SMS_LIVE_ENABLED: 'true', SMS_PROVIDER_URL: endpoint, SMS_PROVIDER_TOKEN: secret };
 const message = { phone: '+155500000001', code: '765432', expiresIn: 300, idempotencyKey: '11111111-1111-4111-8111-111111111111' };
 const sensitive = `${secret} ${message.phone} ${message.code}`;
 const safeError = (error, code) => {
