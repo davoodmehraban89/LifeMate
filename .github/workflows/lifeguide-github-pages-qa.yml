@@ -1,0 +1,52 @@
+name: LifeGuide GitHub Pages QA (static only)
+
+on:
+  push:
+    branches:
+      - infra/lifeguide-github-pages-qa
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lifeguide-github-pages-qa
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LifeGuide QA source
+        uses: actions/checkout@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fail early if the owner has not enabled GitHub Pages Actions
+        uses: actions/configure-pages@v5
+      - name: Build self-hosted LifeGuide PWA, with API intentionally disabled
+        env:
+          # Default GitHub project URL: https://davoodmehraban89.github.io/LifeMate/
+          # Set to / only after GitHub accepts qa.lifeguide.ir as a custom domain.
+          LIFEGUIDE_PAGES_BASE_HREF: /LifeMate/
+        run: bash scripts/build-github-pages-qa.sh
+      - name: Upload static Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: apps/lifemate/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish only LifeGuide QA static site
+        id: deployment
+        uses: actions/deploy-pages@v4

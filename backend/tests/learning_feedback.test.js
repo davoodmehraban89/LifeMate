@@ -154,8 +154,15 @@ describe('learning feedback authenticated real HTTP and synthetic PostgreSQL', {
 
   test('real submission stores only chosen text and an existing draft unit can be referenced', async () => {
     const user = await actor();
-    const units = await pool.query('select id from learning_unit order by id limit 1');
-    assert.equal(units.rowCount, 1, 'Library fixture must import a public catalogue unit');
+    // The assessment suite creates ephemeral units concurrently. Selecting any
+    // global minimum UUID may bind this feedback row to another suite's unit and
+    // make that suite's fixture teardown fail with a foreign-key violation.
+    // Use the deterministic checked public-catalogue row imported by CI.
+    const units = await pool.query(`select u.id from learning_unit u
+      join textbook_catalog t on t.id=u.textbook_id
+      where t.book_code='101' and t.source_url='https://chap.sch.ir/'
+      order by u.order_index,u.id limit 1`);
+    assert.equal(units.rowCount, 1, 'Seeded primary catalogue unit must exist');
     const body = submission({ unitId: units.rows[0].id, category: 'unclear', summary: '<b>SYNTHETIC-CHOSEN-FEEDBACK</b>' });
     const created = await post(user, body);
     assert.equal(created.status, 201);

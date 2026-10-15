@@ -15,7 +15,14 @@ cd apps/lifemate
 flutter pub get
 node tool/test_web_bootstrap.mjs
 node --test tool/test_offline_worker.mjs
-flutter build web --release --no-web-resources-cdn --pwa-strategy=none
+# Root is the existing Cloudflare behaviour. GitHub Pages QA may require
+# a repository subpath before the custom .ir hostname is configured.
+LIFEGUIDE_FLUTTER_BASE_HREF="${LIFEGUIDE_FLUTTER_BASE_HREF:-/}"
+case "$LIFEGUIDE_FLUTTER_BASE_HREF" in
+  /|/LifeMate/) ;;
+  *) echo "Unsupported LifeGuide QA base href" >&2; exit 2 ;;
+esac
+flutter build web --release --no-web-resources-cdn --pwa-strategy=none --base-href "$LIFEGUIDE_FLUTTER_BASE_HREF"
 node tool/self_host_web.mjs build/web
 node tool/test_web_bootstrap.mjs
 test -s build/web/index.html

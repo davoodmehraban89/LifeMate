@@ -15,6 +15,7 @@ The coordinating project lead owns prioritization, dependencies, integration, co
 A tool or connector is not an agent. GitHub, Figma, Canva, Supabase, Context7, PostHog, Notion and other services are capabilities used by the responsible owner.
 
 ## Source of truth
+- For a new ChatGPT/Codex session, the durable boot prompt is [`docs/START_HERE_FA.md`](docs/START_HERE_FA.md). It is a navigation guide; **the newest `PROJECT_STATE.md` checkpoint and direct provider checks always take precedence**.
 1. The repository is the technical source of truth.
 2. Read `AGENTS.md` and `PROJECT_STATE.md` before substantial work.
 3. Significant product/architecture decisions must be recorded under `docs/decisions/`.
