@@ -1,5 +1,25 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## IRAN CONNECTIVITY BLOCKER — 2026-10-15 (NEWEST VERIFIED)
+
+**`lifeguide-qa.pages.dev` is deployed and works from outside Iran, but it is NOT reachable via the owner's Iran mobile LTE without VPN.** Independent public measurements from six different Iranian probe datacenters show **DNS rewriting of both the LifeGuide Pages hostname and the `pages.dev` apex**:
+
+| Iran probe | DNS A for `lifeguide-qa.pages.dev` and `pages.dev` |
+| --- | --- |
+| Tehran: 3 separate nodes | `10.10.34.36` (private/sinkhole-like) |
+| Shiraz: 2 separate nodes | `10.10.34.36` |
+| Qom: 1 node | `10.10.34.35` |
+| Germany + Turkey independent control nodes | Real Cloudflare public IPv4 (`172.66.44.101` / `172.66.47.155` for LifeGuide; `104.18.20.135` / `104.18.21.135` for `pages.dev`) |
+
+- Iran probes use six distinct networks in Tehran/Shiraz/Qom; they are **NOT** the owner's mobile ISP. The owner itself reports LTE failure. This is strong evidence of **DNS interference with the `pages.dev` domain**, not a Cloudflare Pages failed build or Supabase SQL failure. We have NOT proven all Cloudflare IPs/SNI are reachable from all mobile networks.
+- HTTP GET `https://lifeguide-qa.pages.dev/health`: public successful HTTP 200 from Germany and Turkey. Cloudflare Pages project latest provider deployment is **SUCCESS**, source GitHub CI run `38681124039` is also **SUCCESS** (Backend/Flutter/Security). No re-deploy or cache purge needed to address poisoned DNS.
+- The SAME six Iranian probes returned the correct public IPv4 for the Supabase QA project `iqkrwxeprxvdiubdfcrb.supabase.co`, and unauthenticated HTTPS `/auth/v1/health` returned **HTTP 401** from all six nodes within roughly 0.25–0.46 seconds. This is a **transport reachability test only**, not valid login, session/API, or carrier LTE acceptance. Do not move database or expose service role.
+- Evidence: [LifeGuide Pages DNS six IR nodes](https://check-host.net/check-report/511223e9k3e8); [`pages.dev` apex six IR nodes](https://check-host.net/check-report/511232edkcbb); [Pages external HTTP check](https://check-host.net/check-report/51122db2kddd); [Supabase reachable (unauthenticated 401) from IR](https://check-host.net/check-report/511220b4kf24). Cloudflare notes shared IPs can be blocked by ISPs: https://developers.cloudflare.com/support/troubleshooting/general-troubleshooting/potential-isp-blocking/.
+- **NO PRODUCTION FIX YET.** Do not tell owner to change phone DNS, use VPN, change Cloudflare Pages code or point `app.lifeguide.ir` at `pages.dev` as though accessibility were confirmed. Simply using a CNAME may still expose a resolver to blocked `pages.dev` target; moving full domain nameservers is unnecessary and unapproved.
+- **Safest next trial:** with owner's explicit approval and verified **zero unapproved charge** in their Arvan account, create a **NEW** `qa.lifeguide.ir` subdomain only, associate it as custom domain with the existing `lifeguide-qa` Cloudflare Pages project, configure/verify Arvan DNS + CDN reverse proxy as needed so Iranian resolvers see reachable domain/Arvan edge IPs rather than poisoned `pages.dev`; confirm Cloudflare origin Host/TLS handshake, CDN caching, custom certificate and exact `/health`, `/config.json`, `/api/health` behaviors from Iran LTE and probes. Arvan proxy support, costs and origin reachability are UNVERIFIED; do not claim automatic success. Keep `app.lifeguide.ir` untouched until full backend and OTP acceptance, with rollback recorded before any DNS operation.
+- Plan B if Arvan→Cloudflare proxy fails: keep GitHub + Supabase infrastructure, select a client-facing static delivery route actually proven reachable in Iran, without changing application SQL or authorization model. `pages.dev` is staging usable outside Iran only.
+- Kavenegar `lifeguideotp` template remains **REJECTED** due inaccessible `app.lifeguide.ir` review URL, so no real paid SMS and no re-review until approved inspectable application URL. Phone registrations are NOT live.
+
 ## Release blocker: Iran LTE cannot open Cloudflare Pages — 2026-10-15 (MOST RECENT)
 
 **OWNER'S REAL IRAN-NO-VPN TEST FAILED:** `https://lifeguide-qa.pages.dev/` did not open on Iranian mobile carrier. Even though Cloudflare Pages provider deployment `a84ef939-0c20-47f0-90d6-e1989c9bf8ac` is **SUCCESS** and global external fetch of `/`, `/config.json`, `/main.dart.js`, and `/health` works, **Iran reachability is NOT ACCEPTED**. Successful build does not prove Iran connectivity. Cloudflare account Access feature is not enabled; no Pages custom domains attached.
