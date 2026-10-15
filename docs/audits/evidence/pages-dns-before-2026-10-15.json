@@ -1,0 +1,301 @@
+{
+  "checked_at_utc": "2026-10-15T06:41:32.345125+00:00",
+  "dns": [
+    {
+      "name": "app.lifeguide.ir",
+      "type": "CNAME",
+      "resolver": "dns.google",
+      "status": 0,
+      "answer": [],
+      "authority": [
+        {
+          "name": "lifeguide.ir.",
+          "type": 6,
+          "TTL": 300,
+          "data": "d.ns.arvancdn.ir. hostmaster.arvancloud.ir. 1791298415 86400 7200 604800 7200"
+        }
+      ],
+      "ad": false
+    },
+    {
+      "name": "app.lifeguide.ir",
+      "type": "A",
+      "resolver": "dns.google",
+      "status": 0,
+      "answer": [
+        {
+          "name": "app.lifeguide.ir.",
+          "type": 1,
+          "TTL": 180,
+          "data": "185.143.233.132"
+        },
+        {
+          "name": "app.lifeguide.ir.",
+          "type": 1,
+          "TTL": 180,
+          "data": "185.143.234.132"
+        }
+      ],
+      "authority": [],
+      "ad": false
+    },
+    {
+      "name": "app.lifeguide.ir",
+      "type": "AAAA",
+      "resolver": "dns.google",
+      "status": 0,
+      "answer": [],
+      "authority": [
+        {
+          "name": "lifeguide.ir.",
+          "type": 6,
+          "TTL": 300,
+          "data": "d.ns.arvancdn.ir. hostmaster.arvancloud.ir. 1791298415 86400 7200 604800 7200"
+        }
+      ],
+      "ad": false
+    },
+    {
+      "name": "lifeguide.ir",
+      "type": "NS",
+      "resolver": "dns.google",
+      "status": 0,
+      "answer": [
+        {
+          "name": "lifeguide.ir.",
+          "type": 2,
+          "TTL": 7200,
+          "data": "d.ns.arvancdn.ir."
+        },
+        {
+          "name": "lifeguide.ir.",
+          "type": 2,
+          "TTL": 7200,
+          "data": "s.ns.arvancdn.ir."
+        }
+      ],
+      "authority": [],
+      "ad": false
+    },
+    {
+      "name": "lifeguide.ir",
+      "type": "A",
+      "resolver": "dns.google",
+      "status": 0,
+      "answer": [],
+      "authority": [
+        {
+          "name": "lifeguide.ir.",
+          "type": 6,
+          "TTL": 300,
+          "data": "d.ns.arvancdn.ir. hostmaster.arvancloud.ir. 1791298415 86400 7200 604800 7200"
+        }
+      ],
+      "ad": false
+    },
+    {
+      "name": "lifeguide.ir",
+      "type": "TXT",
+      "resolver": "dns.google",
+      "status": 0,
+      "answer": [],
+      "authority": [
+        {
+          "name": "lifeguide.ir.",
+          "type": 6,
+          "TTL": 300,
+          "data": "d.ns.arvancdn.ir. hostmaster.arvancloud.ir. 1791298415 86400 7200 604800 7200"
+        }
+      ],
+      "ad": false
+    },
+    {
+      "name": "davoodmehraban89.github.io",
+      "type": "A",
+      "resolver": "dns.google",
+      "status": 0,
+      "answer": [
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 1,
+          "TTL": 3600,
+          "data": "185.199.108.153"
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 1,
+          "TTL": 3600,
+          "data": "185.199.109.153"
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 1,
+          "TTL": 3600,
+          "data": "185.199.111.153"
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 1,
+          "TTL": 3600,
+          "data": "185.199.110.153"
+        }
+      ],
+      "authority": [],
+      "ad": false
+    },
+    {
+      "name": "app.lifeguide.ir",
+      "type": "CNAME",
+      "resolver": "cloudflare-dns.com",
+      "status": 0,
+      "answer": [],
+      "authority": [
+        {
+          "name": "lifeguide.ir",
+          "type": 6,
+          "TTL": 300,
+          "data": "d.ns.arvancdn.ir. hostmaster.arvancloud.ir. 1791298415 86400 7200 604800 7200"
+        }
+      ]
+    },
+    {
+      "name": "app.lifeguide.ir",
+      "type": "A",
+      "resolver": "cloudflare-dns.com",
+      "status": 0,
+      "answer": [
+        {
+          "name": "app.lifeguide.ir",
+          "type": 1,
+          "TTL": 180,
+          "data": "185.143.233.132"
+        },
+        {
+          "name": "app.lifeguide.ir",
+          "type": 1,
+          "TTL": 180,
+          "data": "185.143.234.132"
+        }
+      ],
+      "authority": []
+    },
+    {
+      "name": "app.lifeguide.ir",
+      "type": "AAAA",
+      "resolver": "cloudflare-dns.com",
+      "status": 0,
+      "answer": [],
+      "authority": [
+        {
+          "name": "lifeguide.ir",
+          "type": 6,
+          "TTL": 300,
+          "data": "d.ns.arvancdn.ir. hostmaster.arvancloud.ir. 1791298415 86400 7200 604800 7200"
+        }
+      ]
+    }
+  ],
+  "http": [
+    {
+      "url": "https://app.lifeguide.ir/",
+      "final_url": "https://app.lifeguide.ir/",
+      "http_status": 200,
+      "title": "LifeMate",
+      "headers": {
+        "content-type": "text/html",
+        "server": "envoy"
+      },
+      "sampled_bytes": 956
+    },
+    {
+      "url": "http://app.lifeguide.ir/",
+      "final_url": "https://app.lifeguide.ir/",
+      "http_status": 200,
+      "title": "LifeMate",
+      "headers": {
+        "content-type": "text/html",
+        "server": "envoy"
+      },
+      "sampled_bytes": 956
+    },
+    {
+      "url": "https://davoodmehraban89.github.io/LifeMate/",
+      "final_url": "https://app.lifeguide.ir/",
+      "http_status": 200,
+      "title": "LifeMate",
+      "headers": {
+        "content-type": "text/html",
+        "server": "envoy"
+      },
+      "sampled_bytes": 956
+    }
+  ],
+  "public_page_structure": {
+    "script_src": [
+      "flutter_bootstrap.js"
+    ],
+    "visible_body_text": "برای استفاده از LifeMate جاوااسکریپت را فعال کنید.",
+    "has_flutter_bootstrap": true,
+    "has_lifeguide_text": false,
+    "has_lifemate_text": true,
+    "has_noscript": true,
+    "meta_description": [
+      "LifeMate — همراه شخصی، تحصیلی و خانوادگی"
+    ]
+  },
+  "pages_metadata": {
+    "checked_at_utc": "2026-10-15T06:42:07.381668+00:00",
+    "status": null,
+    "build_type": "workflow",
+    "cname": "app.lifeguide.ir",
+    "html_url": "http://app.lifeguide.ir/",
+    "https_enforced": false,
+    "https_certificate": null,
+    "source": {
+      "branch": "main",
+      "path": "/"
+    },
+    "public": true,
+    "health_endpoint": {
+      "status": 403,
+      "message": "Resource not accessible by integration"
+    }
+  },
+  "official_docs": {
+    "url": "https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site",
+    "verified": true,
+    "subdomain_rule": "CNAME points directly to user.github.io excluding repository name",
+    "pages_ipv4": [
+      "185.199.108.153",
+      "185.199.109.153",
+      "185.199.110.153",
+      "185.199.111.153"
+    ]
+  },
+  "assessment": {
+    "dns_cause": "Public app.lifeguide.ir A records are not GitHub Pages addresses; two independent resolvers agree. Arvan nameservers and non-Pages edge addresses suggest proxied DNS, but the current dashboard record/origin is unverified. This is consistent with reported InvalidARecordError.",
+    "reviewability_cause": "Public HTTPS returns HTTP 200 but serves a LifeMate Flutter bootstrap shell with no LifeGuide introduction/review text in initial HTML. It does not satisfy the requested public LifeGuide review page yet.",
+    "manual_dns_step": {
+      "zone": "lifeguide.ir",
+      "type": "CNAME",
+      "name": "app",
+      "target": "davoodmehraban89.github.io",
+      "proxy": "DNS-only; disable Arvan CDN/cloud proxy for this record",
+      "ttl": "300 seconds or provider default",
+      "conflict_handling": "If app has manual A/AAAA records, replace only those app records. If current app CNAME is proxied, edit the existing record and disable proxy. Do not change apex/root, nameservers, mail or TXT records."
+    },
+    "post_change_verification": [
+      "Both public DoH resolvers return app CNAME davoodmehraban89.github.io and GitHub Pages A addresses.",
+      "GitHub Pages Settings DNS check succeeds and HTTPS certificate becomes available.",
+      "Enable Enforce HTTPS only after certificate availability.",
+      "Public HTTPS initial HTML contains LifeGuide introduction, service purpose, OTP purpose and contact/review information."
+    ],
+    "not_verified": [
+      "Arvan DNS dashboard record type, origin, proxy toggle and access",
+      "Reachability from Iran or Kavenegar review network",
+      "GitHub DNS health endpoint blocked by integration permission 403",
+      "Kavenegar template approval/review",
+      "Direct origin TLS certificate independent of managed HTTPS proxy"
+    ]
+  }
+}

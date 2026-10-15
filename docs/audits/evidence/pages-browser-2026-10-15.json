@@ -1,0 +1,107 @@
+{
+  "date": "2026-10-15T06:48:32.608Z",
+  "status": "PASS",
+  "scope": "Real local HTTP static browser checks; public HTTPS/deploy/Iran/Safari/OTP are UNVERIFIED",
+  "checks": [
+    {
+      "width": 320,
+      "page": "index.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 320,
+      "page": "privacy.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 320,
+      "page": "terms.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 320,
+      "page": "support.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 390,
+      "page": "index.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 390,
+      "page": "privacy.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 390,
+      "page": "terms.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 390,
+      "page": "support.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 1280,
+      "page": "index.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 1280,
+      "page": "privacy.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 1280,
+      "page": "terms.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    },
+    {
+      "width": 1280,
+      "page": "support.html",
+      "status": "PASS",
+      "localPersianFont": true,
+      "noOverflow": true,
+      "noCollectionOrScripts": true
+    }
+  ],
+  "requestCount": 75,
+  "externalRequestCount": 0,
+  "failures": [],
+  "errors": []
+}
