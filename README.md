@@ -1,5 +1,7 @@
 # LifeGuide / لایف‌گاید — صفحه عمومی بررسی
 
+صفحه معرفی در https://app.lifeguide.ir/ منتشر و با HTTPS عمومی بررسی شد؛ [شواهد تحویل و محدودیت‌ها](docs/audits/2026-10-15-public-review-live.md). ورود OTP و نسخه آنلاین کامل هنوز فعال معرفی نمی‌شوند.
+
 [راهنمای انتشار صفحه، DNS و کاوه‌نگار](docs/operations/PUBLIC_REVIEW_PAGE.md). منبع سایت `site/review` است. وضعیت انتشار و محدودیت‌ها در [PROJECT_STATE](PROJECT_STATE.md) ثبت می‌شوند. این صفحه معرفی، ورود پیامکی یا Backend را فعال معرفی نمی‌کند.
 
 ## مستند تاریخی مخزن

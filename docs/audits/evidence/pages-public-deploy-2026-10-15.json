@@ -1,0 +1,287 @@
+{
+  "checked_at_utc": "2026-10-15T07:31:46.509746+00:00",
+  "merge_commit": "64b938dc9b0c3bb3620a7a12c22c690313d75bd7",
+  "dns": [
+    {
+      "provider": "Cloudflare",
+      "name": "app.lifeguide.ir",
+      "type": "A",
+      "status": 0,
+      "answers": [
+        {
+          "name": "app.lifeguide.ir",
+          "type": 5,
+          "ttl": 120,
+          "data": "davoodmehraban89.github.io."
+        },
+        {
+          "name": "davoodmehraban89.github.io",
+          "type": 1,
+          "ttl": 3600,
+          "data": "185.199.110.153"
+        },
+        {
+          "name": "davoodmehraban89.github.io",
+          "type": 1,
+          "ttl": 3600,
+          "data": "185.199.111.153"
+        },
+        {
+          "name": "davoodmehraban89.github.io",
+          "type": 1,
+          "ttl": 3600,
+          "data": "185.199.109.153"
+        },
+        {
+          "name": "davoodmehraban89.github.io",
+          "type": 1,
+          "ttl": 3600,
+          "data": "185.199.108.153"
+        }
+      ]
+    },
+    {
+      "provider": "Cloudflare",
+      "name": "app.lifeguide.ir",
+      "type": "AAAA",
+      "status": 0,
+      "answers": [
+        {
+          "name": "app.lifeguide.ir",
+          "type": 5,
+          "ttl": 120,
+          "data": "davoodmehraban89.github.io."
+        },
+        {
+          "name": "davoodmehraban89.github.io",
+          "type": 28,
+          "ttl": 3600,
+          "data": "2606:50c0:8000::153"
+        },
+        {
+          "name": "davoodmehraban89.github.io",
+          "type": 28,
+          "ttl": 3600,
+          "data": "2606:50c0:8001::153"
+        },
+        {
+          "name": "davoodmehraban89.github.io",
+          "type": 28,
+          "ttl": 3600,
+          "data": "2606:50c0:8002::153"
+        },
+        {
+          "name": "davoodmehraban89.github.io",
+          "type": 28,
+          "ttl": 3600,
+          "data": "2606:50c0:8003::153"
+        }
+      ]
+    },
+    {
+      "provider": "Cloudflare",
+      "name": "app.lifeguide.ir",
+      "type": "CNAME",
+      "status": 0,
+      "answers": [
+        {
+          "name": "app.lifeguide.ir",
+          "type": 5,
+          "ttl": 120,
+          "data": "davoodmehraban89.github.io."
+        }
+      ]
+    },
+    {
+      "provider": "Google",
+      "name": "app.lifeguide.ir",
+      "type": "A",
+      "status": 0,
+      "answers": [
+        {
+          "name": "app.lifeguide.ir.",
+          "type": 5,
+          "ttl": 120,
+          "data": "davoodmehraban89.github.io."
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 1,
+          "ttl": 3250,
+          "data": "185.199.111.153"
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 1,
+          "ttl": 3250,
+          "data": "185.199.108.153"
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 1,
+          "ttl": 3250,
+          "data": "185.199.110.153"
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 1,
+          "ttl": 3250,
+          "data": "185.199.109.153"
+        }
+      ]
+    },
+    {
+      "provider": "Google",
+      "name": "app.lifeguide.ir",
+      "type": "AAAA",
+      "status": 0,
+      "answers": [
+        {
+          "name": "app.lifeguide.ir.",
+          "type": 5,
+          "ttl": 120,
+          "data": "davoodmehraban89.github.io."
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 28,
+          "ttl": 3600,
+          "data": "2606:50c0:8003::153"
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 28,
+          "ttl": 3600,
+          "data": "2606:50c0:8002::153"
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 28,
+          "ttl": 3600,
+          "data": "2606:50c0:8000::153"
+        },
+        {
+          "name": "davoodmehraban89.github.io.",
+          "type": 28,
+          "ttl": 3600,
+          "data": "2606:50c0:8001::153"
+        }
+      ]
+    },
+    {
+      "provider": "Google",
+      "name": "app.lifeguide.ir",
+      "type": "CNAME",
+      "status": 0,
+      "answers": [
+        {
+          "name": "app.lifeguide.ir.",
+          "type": 5,
+          "ttl": 120,
+          "data": "davoodmehraban89.github.io."
+        }
+      ]
+    }
+  ],
+  "https": [
+    {
+      "url": "https://app.lifeguide.ir/",
+      "tls_verification": "default-required",
+      "status": 200,
+      "final_url": "https://app.lifeguide.ir/",
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 16922,
+      "sha256": "bc6d46105e6e5a321c7a2e7b6a2afceb87057424bfb1f67408fbca7e8693d365",
+      "local_sha256": "bc6d46105e6e5a321c7a2e7b6a2afceb87057424bfb1f67408fbca7e8693d365",
+      "matches_local_source": true,
+      "title": "لایف‌گاید | همراه برنامه‌ریزی، یادگیری و خانواده",
+      "repo_or_github_reference": false,
+      "is_fa_rtl": true
+    },
+    {
+      "url": "https://app.lifeguide.ir/assets/LifeGuidePersian.ttf",
+      "tls_verification": "default-required",
+      "status": 200,
+      "final_url": "https://app.lifeguide.ir/assets/LifeGuidePersian.ttf",
+      "content_type": "font/ttf",
+      "bytes": 255280,
+      "sha256": "6b999662f669b2c9b00c10ce4a110b6f5179c20f3f77e5ccb897e3ab965cf9f5",
+      "local_sha256": "6b999662f669b2c9b00c10ce4a110b6f5179c20f3f77e5ccb897e3ab965cf9f5",
+      "matches_local_source": true
+    },
+    {
+      "url": "https://app.lifeguide.ir/assets/styles.css",
+      "tls_verification": "default-required",
+      "status": 200,
+      "final_url": "https://app.lifeguide.ir/assets/styles.css",
+      "content_type": "text/css; charset=utf-8",
+      "bytes": 15238,
+      "sha256": "fa1d93480adcefb2001bc5feed0750ae1e375351e66f77b8ec1cf94026bc1983",
+      "local_sha256": "fa1d93480adcefb2001bc5feed0750ae1e375351e66f77b8ec1cf94026bc1983",
+      "matches_local_source": true
+    },
+    {
+      "url": "https://app.lifeguide.ir/build-info.json",
+      "tls_verification": "default-required",
+      "status": 200,
+      "final_url": "https://app.lifeguide.ir/build-info.json",
+      "content_type": "application/json; charset=utf-8",
+      "bytes": 89,
+      "sha256": "f917916ea7ced8fafbaf93f952871cbe1673abc0f5a94bba0528ca5f00bf0a0c",
+      "public_metadata": {
+        "product": "LifeGuide",
+        "purpose": "public-product-review",
+        "liveLogin": false
+      },
+      "exact_expected_metadata": true,
+      "contains_source_identifiers": false
+    },
+    {
+      "url": "https://app.lifeguide.ir/privacy.html",
+      "tls_verification": "default-required",
+      "status": 200,
+      "final_url": "https://app.lifeguide.ir/privacy.html",
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 6654,
+      "sha256": "e8ed2a40327c86f55aaf93a4bd50b4591a3388411af5218b7d51ed6fc6fe3fdb",
+      "local_sha256": "e8ed2a40327c86f55aaf93a4bd50b4591a3388411af5218b7d51ed6fc6fe3fdb",
+      "matches_local_source": true,
+      "title": "حریم خصوصی | لایف‌گاید",
+      "repo_or_github_reference": false,
+      "is_fa_rtl": true
+    },
+    {
+      "url": "https://app.lifeguide.ir/support.html",
+      "tls_verification": "default-required",
+      "status": 200,
+      "final_url": "https://app.lifeguide.ir/support.html",
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 4848,
+      "sha256": "0933bedf4cca790f2d56b60800c78d0a163c9cbcd20f581f20e758a102e605ac",
+      "local_sha256": "0933bedf4cca790f2d56b60800c78d0a163c9cbcd20f581f20e758a102e605ac",
+      "matches_local_source": true,
+      "title": "ارتباط با ما | لایف‌گاید",
+      "repo_or_github_reference": false,
+      "is_fa_rtl": true
+    },
+    {
+      "url": "https://app.lifeguide.ir/terms.html",
+      "tls_verification": "default-required",
+      "status": 200,
+      "final_url": "https://app.lifeguide.ir/terms.html",
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 6287,
+      "sha256": "1db5d44f722f11dd33016dd3a47d439b5e35959c7ebcad80ceb85a938dda9198",
+      "local_sha256": "1db5d44f722f11dd33016dd3a47d439b5e35959c7ebcad80ceb85a938dda9198",
+      "matches_local_source": true,
+      "title": "شرایط استفاده | لایف‌گاید",
+      "repo_or_github_reference": false,
+      "is_fa_rtl": true
+    }
+  ],
+  "limitations": [
+    "Originated from execution environment, not from an Iran tester.",
+    "Default TLS certificate verification required; no bypass; host HTTPS enforcement setting not changed."
+  ],
+  "all_https_checks_pass": true
+}

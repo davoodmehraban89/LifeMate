@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-10-15T07:31:49.315Z",
+  "status": "PASS",
+  "scope": "Public HTTPS Chromium, TLS verification enabled; Iran and real Safari unverified; no login/API/SMS exercised",
+  "origin": "https://app.lifeguide.ir",
+  "checks": [
+    {
+      "path": "/",
+      "status": "PASS"
+    },
+    {
+      "path": "privacy.html",
+      "status": "PASS"
+    },
+    {
+      "path": "terms.html",
+      "status": "PASS"
+    },
+    {
+      "path": "support.html",
+      "status": "PASS"
+    }
+  ],
+  "requestCount": 21,
+  "externalRequestCount": 0,
+  "errors": [],
+  "failure": null
+}
