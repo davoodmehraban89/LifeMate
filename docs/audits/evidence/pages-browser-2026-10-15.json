@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-15T06:48:32.608Z",
+  "date": "2026-10-15T07:14:16.561Z",
   "status": "PASS",
   "scope": "Real local HTTP static browser checks; public HTTPS/deploy/Iran/Safari/OTP are UNVERIFIED",
   "checks": [
@@ -9,7 +9,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 320,
@@ -17,7 +19,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 320,
@@ -25,7 +29,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 320,
@@ -33,7 +39,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 390,
@@ -41,7 +49,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 390,
@@ -49,7 +59,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 390,
@@ -57,7 +69,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 390,
@@ -65,7 +79,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 1280,
@@ -73,7 +89,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 1280,
@@ -81,7 +99,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 1280,
@@ -89,7 +109,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     },
     {
       "width": 1280,
@@ -97,7 +119,9 @@
       "status": "PASS",
       "localPersianFont": true,
       "noOverflow": true,
-      "noCollectionOrScripts": true
+      "noCollectionOrScripts": true,
+      "noRepositoryReferences": true,
+      "noExternalLinks": true
     }
   ],
   "requestCount": 75,

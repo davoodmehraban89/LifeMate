@@ -30,14 +30,12 @@ for path in pages:
     assert p.html.get('lang') == 'fa' and p.html.get('dir') == 'rtl', path.name
     assert p.title and p.h1 == 1, f'Single accessible page title and H1: {path.name}'
     assert 'LifeGuide' in source and 'لایف‌گاید' in source, f'Product identity: {path.name}'
-    branding = source.replace('https://github.com/davoodmehraban89/LifeMate', '')
-    assert not any(x.lower() in branding.lower() for x in ['LifeMate', 'up.railway.app', 'googleapis.com', 'gstatic.com']), path.name
+    assert not any(x.lower() in source.lower() for x in ['LifeMate', 'up.railway.app', 'googleapis.com', 'gstatic.com']), path.name
+    assert not any(x in source.lower() for x in ['github', 'گیت‌هاب', 'گیتهاب', 'گیتاب', 'مخزن']), f'No repository references on public pages: {path.name}'
     for tag, key, ref, attrs in p.refs:
         u = urlsplit(ref)
         if u.scheme or u.netloc:
-            assert tag == 'a' and key == 'href' and u.scheme == 'https' and u.hostname == 'github.com', f'External runtime dependency or invented contact: {path.name}'
-            if attrs.get('target') == '_blank': assert 'noopener' in attrs.get('rel', '').split()
-            continue
+            raise AssertionError(f'Public links and assets must stay within this website: {path.name}')
         if not u.path: continue
         target = (path.parent / u.path.lstrip('/')).resolve()
         if target.is_dir(): target = target / 'index.html'
@@ -45,8 +43,12 @@ for path in pages:
 for path in root.rglob('*'):
     assert not path.is_symlink(), 'Only owned static files in public artifact'
     if path.is_file():
+        public_bytes = path.read_bytes().lower()
+        assert b'davoodmehraban89' not in public_bytes and b'lifemate' not in public_bytes, f'No product source identifiers in public artifacts: {path.name}'
         assert path.suffix not in {'.jks', '.keystore', '.dump', '.env', '.pem', '.key'}, 'No private artifacts'
         assert path.stat().st_size < 5_000_000, 'Keep public review fast and bounded'
+        if path.name == 'build-info.json':
+            assert json.loads(path.read_text()) == {'product': 'LifeGuide', 'purpose': 'public-product-review', 'liveLogin': False}, 'Public status must not expose source identifiers'
         if path.suffix == '.css':
             css=path.read_text().lower()
             assert 'http:' not in css and 'https:' not in css and '@import' not in css, 'Local CSS/fonts only'

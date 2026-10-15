@@ -4,14 +4,14 @@
 
 ## محتوای قابل بازبینی و آزمون
 
-منبع: `site/review/`. فایل‌های HTML/CSS/فونت/نشان همگی محلی‌اند. این سایت JavaScript، API، فرم دریافت شماره، iframe و analytics ندارد. تماس عمومی به issue گیت‌هاب معرفی می‌شود و ایمیل/شماره/هویت حقوقی ساختگی ندارد.
+منبع: `site/review/`. فایل‌های HTML/CSS/فونت/نشان همگی محلی‌اند. این سایت JavaScript، API، فرم دریافت شماره، iframe و analytics ندارد. صفحه‌های عمومی هیچ ارجاعی به گیت‌هاب، مخزن یا سورس محصول ندارند و همه پیوندها داخلی‌اند. راه ارتباطی پشتیبانی در انتظار فعال‌سازی است؛ ایمیل، شماره یا فرم ساختگی معرفی نمی‌شود.
 
 ```bash
 python3 scripts/check-review-site.py
 python3 -m http.server 8765 --bind 127.0.0.1 --directory site/review
 ```
 
-این HTTP محلی فقط مشاهده developer است، پذیرش HTTPS عمومی یا Safari نیست. خروجی CI فقط `site/review` را بسته‌بندی می‌کند؛ keystore، env، APK، کد Backend و داده خصوصی وارد Pages نمی‌شوند. `build-info.json` در CI شناسه commit/run و `liveLogin:false` را ثبت می‌کند.
+این HTTP محلی فقط مشاهده developer است، پذیرش HTTPS عمومی یا Safari نیست. خروجی CI فقط `site/review` را بسته‌بندی می‌کند؛ keystore، env، APK، کد Backend و داده خصوصی وارد Pages نمی‌شوند. `build-info.json` فقط نام محصول، هدف صفحه و `liveLogin:false` را ثبت می‌کند؛ شناسه commit/run و مسیر مخزن در خروجی عمومی قرار نمی‌گیرند. شواهد منبع ساخت در اجرای Actions باقی می‌مانند.
 
 ## انتشار GitHub Pages
 

@@ -33,19 +33,19 @@ jobs:
         run: python3 scripts/check-review-site.py
       - name: Configure existing GitHub Pages site
         uses: actions/configure-pages@v5
-      - name: Record exact published source
+      - name: Record public product status without source identifiers
         run: |
           python3 - <<'PY'
-          import json, os
+          import json
           from pathlib import Path
           Path('site/review/build-info.json').write_text(json.dumps({
             'product': 'LifeGuide',
             'purpose': 'public-product-review',
-            'commit': os.environ['GITHUB_SHA'],
-            'run': os.environ['GITHUB_RUN_ID'],
             'liveLogin': False,
           }, indent=2) + '\n')
           PY
+      - name: Validate complete public artifact
+        run: python3 scripts/check-review-site.py
       - name: Upload review website only
         uses: actions/upload-pages-artifact@v3
         with:
