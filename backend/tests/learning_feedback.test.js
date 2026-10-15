@@ -160,7 +160,7 @@ describe('learning feedback authenticated real HTTP and synthetic PostgreSQL', {
     // Use the deterministic checked public-catalogue row imported by CI.
     const units = await pool.query(`select u.id from learning_unit u
       join textbook_catalog t on t.id=u.textbook_id
-      where t.book_code='101' and t.source_url='http://www.chap.sch.ir/books/14142'
+      where t.book_code='101' and t.source_url='https://chap.sch.ir/'
       order by u.order_index,u.id limit 1`);
     assert.equal(units.rowCount, 1, 'Seeded primary catalogue unit must exist');
     const body = submission({ unitId: units.rows[0].id, category: 'unclear', summary: '<b>SYNTHETIC-CHOSEN-FEEDBACK</b>' });
