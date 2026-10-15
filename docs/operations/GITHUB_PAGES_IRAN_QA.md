@@ -41,6 +41,12 @@ Independent live public DNS+HTTP checks from **six Iranian probe networks (Tehra
 - GitHub Pages is static hosting. It does NOT run the Node/Express+Argon2 backend, Kavenegar OTP, Pages Functions or Supabase SQL. On GitHub Pages, `/api/*` should stay absent (**HTTP 404**, not successful user operations). **Do NOT** add a SPA 200 fallback for `/api/*`. A browser UI may render but sign-in/family sync still fails until server-side API is built.
 - Don't put `DATABASE_URL`, DB admin role, `SUPABASE_SERVICE_ROLE_KEY`, JWT secret or Kavenegar API key into repository secrets used in a static front-end bundle.
 
+## QA environment protection gate (2026-10-15)
+
+- After Pages Source was enabled, [workflow run 38692159396](https://github.com/davoodmehraban89/LifeMate/actions/runs/38692159396) compiled and uploaded the 19 MB Pages artifact **PASS**, but `deploy` **FAILED before runner steps**. [GitHub check annotations](https://github.com/davoodmehraban89/LifeMate/actions/runs/38692159396/job/116281074602) report: `Branch "infra/lifeguide-github-pages-qa" is not allowed to deploy to github-pages due to environment protection rules.`
+- Keep existing `github-pages` environment protection untouched. The QA-only workflow now targets a distinct `lifeguide-pages-qa` environment, with a separate `push`/exact `refs/heads/infra/lifeguide-github-pages-qa` guard on its deploy job and no fallback to `main`. This is a **hypothesis until a new deploy run succeeds**. If a repository administrator configures environment-level deployment branch restrictions in future, allow **only** `infra/lifeguide-github-pages-qa` for `lifeguide-pages-qa` (not production/main or broad wildcard); existing GitHub Pages environment restrictions must not be bypassed for production.
+- GitHub Pages is a single published site per repository, not an independent fully isolated preview per environment. QA has no live API; keep no real user/child data on `github.io`. Inspect provider job, final URL, artifact requests and independent Iran HTTPS before claiming success.
+
 ## Safe manual owner handoff; PHASE ONE only
 
 1. Open `https://github.com/davoodmehraban89/LifeMate/settings/pages`, under **Build and deployment** set **Source: GitHub Actions**. No new GitHub plan or payment card; GitHub Docs support public repositories on GitHub Free.

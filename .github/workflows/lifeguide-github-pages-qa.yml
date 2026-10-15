@@ -38,13 +38,16 @@ jobs:
 
   deploy:
     needs: build
+    # GitHub automatically protects the default github-pages environment for
+    # its default branch. Keep that protection untouched and use isolated QA.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/infra/lifeguide-github-pages-qa'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pages: write
       id-token: write
     environment:
-      name: github-pages
+      name: lifeguide-pages-qa
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Publish only LifeGuide QA static site

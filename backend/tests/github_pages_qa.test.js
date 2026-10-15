@@ -43,7 +43,10 @@ test('GitHub Pages QA fails before an expensive Flutter build when Pages is off'
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(workflow, /pages: write/);
   assert.match(workflow, /id-token: write/);
-  assert.match(workflow, /github-pages/);
+  assert.match(workflow, /name: lifeguide-pages-qa/);
+  assert.match(workflow, /if: github.event_name == 'push' && github.ref == 'refs\/heads\/infra\/lifeguide-github-pages-qa'/);
+  assert.doesNotMatch(workflow, /^\s+name: github-pages\s*$/m,
+    'Do not weaken the existing protected main-only Pages environment');
   assert(workflow.indexOf('actions/configure-pages@v5') <
     workflow.indexOf('scripts/build-github-pages-qa.sh'),
     'Configure-pages must fail before Flutter fetch/build when disabled.');
