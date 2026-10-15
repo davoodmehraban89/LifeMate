@@ -1,5 +1,21 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## Cloudflare + Supabase + Kavenegar active QA track — 2026-10-15 (CURRENT)
+
+Owner explicitly replaced the **Railway** online execution path due to real Iran LTE **HTTP 504** at `app.lifeguide.ir`. Target: **GitHub source/CI → Cloudflare Pages (PWA) + Supabase Edge secure API/PostgreSQL + Kavenegar OTP**. This *does not* retroactively approve a production DNS cutover, real-user registration, paid SMS, or a change in existing client credentials.
+
+**Provider facts read directly:**
+- Current **authoritative DNS remains Arvan**; Google DNS returned `d.ns.arvancdn.ir` and Arvan proxy A answers for `app.lifeguide.ir`. Cloudflare account `ace6f7219be1e7d9ac5bacd59c05fbe2` has **no `lifeguide.ir` zone**.
+- Existing Cloudflare Pages project `lifemate-staging.pages.dev`, linked to `davoodmehraban89/LifeMate`, uses production branch `deployment-static`; last successful production deploy **2026-10-06**. Historical static PWA **is not** a verified functional v0.7.1 connected to Supabase. Do not overwrite/repurpose until approved.
+- NEW isolated Cloudflare Pages project **`lifeguide-qa`** (name and reserved subdomain `lifeguide-qa.pages.dev`), GitHub source same repo but production branch **`infra/lifeguide-cloudflare-qa`**, build from `bash scripts/build-cloudflare-pages-qa.sh` into `apps/lifemate/build/web`, preview deployments disabled. **First build started** (ID `9bfb30df-8ad0-4f4e-ade2-9ec77350543b`) but success and browser access NOT YET VERIFIED at checkpoint.
+- QA branch has explicit fail-closed Pages Functions `/api` and `/api/*` returning **503 JSON** (no stale HTML index fallback), `/ready` 503, `/health` public gateway-only check. This is a static PWA stage; real family API / OTP have **not** been deployed.
+- Supabase `DM Studio` project `LifeGuide-QA` `iqkrwxeprxvdiubdfcrb` has PG17.11, 20 migrations and isolated/closed `lifeguide_qa` schema; real SQL family authorization fixture PASS. Existing `Finora ERP – Production` remains unmodified. No direct browser access to DB roles.
+- Kavenegar template `lifeguideotp` is **REJECTED** (تأیید نشده) as verified by owner's screenshots and support ticket, because `https://app.lifeguide.ir/` is not publicly accessible. Prior under-review state is outdated. Existing provider adapter source and simulated tests remain but **no real API key in code**, no real paid SMS, no live OTP.
+- Cloudflare official Pages custom-domain documentation allows an external-DNS **subdomain**: associate `app.lifeguide.ir` in Pages first, then owner updates **only `app` CNAME in Arvan** to `<project>.pages.dev`, after QA is functionally ready and explicitly approved. **Do not change apex domain nameservers**; current app domain remains unchanged/unhealthy. DNS change plus Arvan proxy/cache/certificate must be tested/rollback-ready; do not prematurely redirect to PWA whose API still returns 503.
+- Superseding architecture decision: [ADR 0013](docs/decisions/0013-cloudflare-supabase-kavenegar-stack.md). New isolated source: `infra/lifeguide-cloudflare-qa`. Earlier Netlify candidacy and managed provider exclusions are **superseded for this test**, original standalone Compose work preserved.
+
+**Next real acceptance gates:** (1) Pages first build SUCCESS with correct static assets and JSON API failure semantics; (2) trustworthy server-side Edge Auth/API integrating `lifeguide_qa` without exposing privileged DB credentials, with guardian negative tests; (3) real no-VPN device/LTE checks; (4) submit renewed Kavenegar review after URL working; (5) explicit owner-approved DNS-only cutover after full QA. No production, DNS, third-party secrets or paid sends touched.
+
 ## Supabase LifeGuide-QA full private schema — 2026-10-15 (LATEST VERIFIED)
 
 **20/20 original PostgreSQL migrations copied to the isolated QA database, SQL family/privacy assertions PASS, client-access remains DENY ALL.** This is a **database integration milestone**, not a publicly operational LifeGuide Android/PWA.
