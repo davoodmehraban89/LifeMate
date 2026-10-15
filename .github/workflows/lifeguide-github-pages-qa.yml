@@ -23,10 +23,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Build self-hosted LifeGuide PWA, with API intentionally disabled
-        run: bash scripts/build-github-pages-qa.sh
-      - name: Validate GitHub Pages is enabled
+      - name: Fail early if the owner has not enabled GitHub Pages Actions
         uses: actions/configure-pages@v5
+      - name: Build self-hosted LifeGuide PWA, with API intentionally disabled
+        env:
+          # Default GitHub project URL: https://davoodmehraban89.github.io/LifeMate/
+          # Set to / only after GitHub accepts qa.lifeguide.ir as a custom domain.
+          LIFEGUIDE_PAGES_BASE_HREF: /LifeMate/
+        run: bash scripts/build-github-pages-qa.sh
       - name: Upload static Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
