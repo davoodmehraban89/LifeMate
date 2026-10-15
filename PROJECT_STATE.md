@@ -1,5 +1,15 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## Release blocker: Iran LTE cannot open Cloudflare Pages — 2026-10-15 (MOST RECENT)
+
+**OWNER'S REAL IRAN-NO-VPN TEST FAILED:** `https://lifeguide-qa.pages.dev/` did not open on Iranian mobile carrier. Even though Cloudflare Pages provider deployment `a84ef939-0c20-47f0-90d6-e1989c9bf8ac` is **SUCCESS** and global external fetch of `/`, `/config.json`, `/main.dart.js`, and `/health` works, **Iran reachability is NOT ACCEPTED**. Successful build does not prove Iran connectivity. Cloudflare account Access feature is not enabled; no Pages custom domains attached.
+
+Root cause **NOT DIAGNOSED** (possible DNS, Cloudflare shared IP/SNI filtering, TCP/TLS transport, or Flutter/Safari loading). To distinguish, ask owner on the same Iran LTE, VPN off, to open tiny static-independent `https://lifeguide-qa.pages.dev/health`, compare `https://lifemate-staging.pages.dev/`, and share Safari's exact error screenshot/text. Test `https://iqkrwxeprxvdiubdfcrb.supabase.co/functions/v1/lifeguide-qa-health`: **HTTP 401** would be the expected successfully-reached protected endpoint, not login failure. Do not include real phone, API key, OTP or IP in screenshots.
+
+**NO domain cutover, Arvan DNS edits, false promise that .ir alias will cure filtering, or Kavenegar template re-review until a user-inspectable application URL works on Iran LTE and backend readiness is proven.** Cloudflare's own docs say shared Cloudflare IPs can be blocked by an ISP and cannot be requested to change on the Free plan.
+
+Full independent check and mitigation matrix: [Iran LTE Cloudflare incident](docs/audits/2026-10-15-iran-lte-cloudflare-pages-reachability.md).
+
 ## Cloudflare Pages QA public gateway verified — 2026-10-15 (MOST RECENT)
 
 **LifeGuide Flutter PWA static staging is now deployed on `https://lifeguide-qa.pages.dev/` using GitHub → Cloudflare Pages, independent of Railway.** This is **not a working family API**; user login, registration, SMS and cross-device persistence remain unavailable via this new hostname.
