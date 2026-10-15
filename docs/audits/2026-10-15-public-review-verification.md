@@ -6,7 +6,7 @@
 
 - `python3 scripts/check-review-site.py`: PASS؛ چهار HTML فارسی RTL، نام LifeGuide، لینک‌ها/دارایی‌های محلی، CNAME صحیح، عدم فرم/اسکریپت/API و مرز artifact عمومی بررسی شدند. checker لینک واقعی مخزن LifeMate و مسیر `./` به index را از خطای کاذب مستثنی می‌کند؛ نام محصول روی صفحه LifeGuide است.
 - مرورگر واقعی Chromium با Playwright روی HTTP محلی: **۱۲/۱۲**، چهار صفحه در عرض‌های۳۲۰/۳۹۰/۱۲۸۰. فونت محلی واقعاً بارگیری شد، overflow افقی نداشت، دکمه OTP غیرفعال بود، لینک حریم خصوصی باز شد، ورودی/فرم/اسکریپت/iframe/کوکی/localStorage/sessionStorage وجود نداشت. **۷۵ درخواست محلی، صفر درخواست خارجی، صفر خطای کنسول/شبکه**. [receipt](evidence/pages-browser-2026-10-15.json). این اجرا HTTPS عمومی، Safari واقعی یا اتصال Backend را آزموده معرفی نمی‌کند.
-- YAML با PyYAML parse شد و شرط main-only، permissions جداگانه و مرز `site/review` بررسی شد. `git diff --check` موفق بود. بازبینی مستقل، مانع اجرایی در محتوا/Workflow پیدا نکرد؛ بازبینی به معنی اجرای deploy نیست.
+- YAML با PyYAML parse شد و شرط main-only، permissions جداگانه و مرز `site/review` بررسی شد. `git diff --check` روی فایل‌های tracked اولیه موفق بود؛ بررسی staged سپس یک فاصله انتهایی در کپی مجوز فونت یافت. فقط همان whitespace اصلاح و بررسی staged دوباره اجرا شد. بازبینی مستقل، مانع اجرایی در محتوا/Workflow پیدا نکرد؛ بازبینی به معنی اجرای deploy نیست.
 
 [تصویر موبایل۳۹۰](evidence/pages-browser-2026-10-15-390.png)، [موبایل۳۲۰](evidence/pages-browser-2026-10-15-320.png)، [دسکتاپ۱۲۸۰](evidence/pages-browser-2026-10-15-1280.png). مسئول هماهنگی تصویر موبایل را مشاهده کرد.
 
