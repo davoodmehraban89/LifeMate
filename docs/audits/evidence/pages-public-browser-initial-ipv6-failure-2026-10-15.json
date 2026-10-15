@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-10-15T07:30:55.269Z",
+  "status": "FAIL",
+  "scope": "Public HTTPS Chromium, TLS verification enabled; Iran and real Safari unverified; no login/API/SMS exercised",
+  "origin": "https://app.lifeguide.ir",
+  "checks": [
+    {
+      "path": "/",
+      "status": "PASS"
+    },
+    {
+      "path": "privacy.html",
+      "status": "PASS"
+    },
+    {
+      "path": "terms.html",
+      "status": "PASS"
+    },
+    {
+      "path": "support.html",
+      "status": "PASS"
+    }
+  ],
+  "requestCount": 20,
+  "externalRequestCount": 0,
+  "errors": [],
+  "failure": "apiRequestContext.get: connect ENETUNREACH 2606:50c0:8002::153:443 - Local (:::0)\nCall log:\n\u001b[2m  - → GET https://app.lifeguide.ir/build-info.json\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n"
+}
