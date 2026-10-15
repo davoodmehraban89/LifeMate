@@ -6,10 +6,12 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildSupabaseQaSql } from '../scripts/build-supabase-qa-sql.js';
 
-test('QA bundle retains 20 original checksums, creates private schema objects and corrects school guard paths', async () => {
+test('QA bundle retains 20 original checksums plus additive auth metadata and keeps private lockdown', async () => {
   const { sql, manifest } = await buildSupabaseQaSql();
-  assert.equal(manifest.length, 20);
-  assert.ok(manifest.every((x,i) => x.filename.startsWith(String(i+1).padStart(4,'0')+'_')));
+  assert.equal(manifest.length, 21);
+  assert.ok(manifest.slice(0,20).every((x,i) => x.filename.startsWith(String(i+1).padStart(4,'0')+'_')));
+  assert.equal(manifest[20].filename, '0023_auth_ip_rate_limit.sql');
+  assert.match(sql, /create table auth_ip_rate_limit/);
   assert.ok(manifest.every(x => /^[a-f0-9]{64}$/.test(x.sha256)));
   assert.match(sql, /set local search_path=lifeguide_qa,extensions,pg_catalog/);
   assert.equal((sql.match(/set search_path=lifeguide_qa,pg_catalog/gi) ?? []).length, 5);
@@ -29,7 +31,7 @@ test('QA bundle generation fails closed if source migration count is incomplete'
   const dir = await mkdtemp(join(tmpdir(),'lifeguide-qa-missing-'));
   try {
     await writeFile(join(dir,'0001_identity_family.sql'),'select 1;');
-    await assert.rejects(buildSupabaseQaSql({ migrationsDir:pathToFileURL(dir+'/') }),/expected_exactly_20_original_migrations_in_order/);
+    await assert.rejects(buildSupabaseQaSql({ migrationsDir:pathToFileURL(dir+'/') }),/expected_baseline_and_auth_migrations_in_order/);
   } finally { await rm(dir,{recursive:true,force:true}); }
 });
 
@@ -43,6 +45,7 @@ test('QA bundle generation rejects drift adding production schema privileges', a
         'select 1;';
       await writeFile(join(dir,`${id}_test.sql`),sql);
     }
+    await writeFile(join(dir,'0023_auth_ip_rate_limit.sql'), 'select 1;');
     await writeFile(join(dir,'0004_test.sql'),'create table public.account(id int);');
     await assert.rejects(buildSupabaseQaSql({ migrationsDir:pathToFileURL(dir+'/') }),/source_migration_outside_private_qa:0004_test.sql/);
   } finally { await rm(dir,{recursive:true,force:true}); }

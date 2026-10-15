@@ -8,6 +8,7 @@ import {
   requestContext,
   requestTelemetry,
 } from './operations.js';
+import { createAuthIpRateLimit } from './auth_rate_limit.js';
 
 const { app, pool } = await import('./server.js');
 
@@ -16,6 +17,7 @@ outer.disable('x-powered-by');
 configureTrustedProxy(outer);
 outer.use(requestContext);
 outer.use(requestTelemetry);
+outer.use(createAuthIpRateLimit({ pool, jwtSecret: process.env.JWT_SECRET }));
 outer.use(rateLimit);
 
 outer.get('/live', (_req, res) => {

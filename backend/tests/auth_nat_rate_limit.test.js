@@ -18,9 +18,14 @@ const pool = new pg.Pool({ connectionString: fixtureUrl });
 const users = [];
 const password = `SyntheticNat-${crypto.randomUUID()}!`;
 const secret = 'synthetic-nat-rate-limit-signing-secret-32-characters';
+const fixtureIpDigest = crypto.createHmac('sha256', secret)
+  .update('lifeguide:auth-ip:v1\0').update('127.0.0.1').digest('hex');
 let child, base;
 
 before(async () => {
+  // This fixture deliberately uses a stable key to assert shipping defaults.
+  // Remove only its own prior-run quota, never another API/test's buckets.
+  await pool.query("delete from auth_ip_rate_limit where client_digest=$1 and quota_profile in ('auth','session')", [fixtureIpDigest]);
   const hash = await argon2.hash(password, { type: argon2.argon2id });
   for (let index = 0; index < 3; index++) {
     const id = crypto.randomUUID(), email = `nat-${id}@example.test`;
@@ -65,7 +70,10 @@ after(async () => {
   if (child && child.exitCode === null && child.signalCode === null) {
     const closed = once(child, 'close'); child.kill('SIGTERM'); await closed;
   }
-  try { await pool.query('delete from app_user where id=any($1::uuid[])', [users.map(user => user.id)]); }
+  try {
+    await pool.query('delete from app_user where id=any($1::uuid[])', [users.map(user => user.id)]);
+    await pool.query("delete from auth_ip_rate_limit where client_digest=$1 and quota_profile in ('auth','session')", [fixtureIpDigest]);
+  }
   finally { await pool.end(); }
 });
 async function request(method, path, body, headers = {}) {
