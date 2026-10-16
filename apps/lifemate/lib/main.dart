@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'api.dart';
+import 'mobile_home.dart';
+import 'study_ui.dart';
+import 'dashboard_ui.dart';
 import 'iran_hub.dart';
 import 'education_ui.dart';
 import 'content_review_sync.dart';
@@ -132,8 +135,8 @@ class _LifeMateAppState extends State<LifeMateApp> {
       theme: ThemeData(
         fontFamily: 'LifeGuidePersian',
         fontFamilyFallback: const ['LifeGuideLatin', 'LifeGuideEmoji'],
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4D86E8)),
-        scaffoldBackgroundColor: const Color(0xFFF8FAFD),
+        colorScheme: ColorScheme.fromSeed(seedColor: MobileHomeMenu.accent),
+        scaffoldBackgroundColor: MobileHomeMenu.paper,
         inputDecorationTheme:
             const InputDecorationTheme(border: OutlineInputBorder()),
         useMaterial3: true,
@@ -1029,7 +1032,9 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
-  int index = 0;
+  String page = 'خانه';
+  String displayName = '';
+  bool contextLoaded = false;
   String themePreference = 'adult_blue';
   bool adultShell = false;
   String? contextError;
@@ -1041,22 +1046,21 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       widget.api is HttpIdentityApi ? widget.api as HttpIdentityApi : null;
 
   static const studentPages = [
-    'امروز',
-    'برنامه هفتگی',
-    'تقویم',
-    'تکالیف و کارها',
-    'امتحان‌ها و نمرات',
+    'خانه',
+    'برنامه من',
+    'درس‌ها',
     'تمرکز',
+    'خانواده',
+    'امتحان‌ها و نمرات',
     'همراه هوشمند',
-    'مدرسه من',
   ];
-
   static const adultPages = [
-    'امروز',
+    'خانه',
     'برنامه‌ریز',
     'خانواده',
-    'راهنما',
+    'گزارش‌ها',
     'من',
+    'راهنما',
     'مدرسه من',
   ];
 
@@ -1146,244 +1150,283 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           adultShell = category == 'adult' ||
               (!['girl_minor', 'boy_minor'].contains(category) &&
                   !['girl_pink', 'boy_blue'].contains(themePreference));
+          displayName = profile['display_name']?.toString() ?? 'همراه';
+          contextLoaded = true;
           contextError = null;
-          if (index >= pages.length) index = pages.length - 1;
+          if (!pages.contains(page)) page = 'خانه';
         });
       }
     } catch (error) {
-      if (mounted) setState(() => contextError = errorText(error));
+      if (mounted) {
+        setState(() {
+          contextError = errorText(error);
+          contextLoaded = false;
+        });
+      }
     }
   }
 
   List<String> get pages => adultShell ? adultPages : studentPages;
 
-  Color get accent => themePreference == 'girl_pink'
-      ? const Color(0xFFE58FB0)
-      : const Color(0xFF4D86E8);
+  List<String> get primaryPages => adultShell
+      ? ['خانه', 'برنامه‌ریز', 'خانواده', 'گزارش‌ها', 'من']
+      : ['خانه', 'برنامه من', 'درس‌ها', 'تمرکز', 'خانواده'];
 
   List<NavigationDestination> get destinations => adultShell
       ? const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'خانه'),
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            label: 'امروز',
-          ),
+              icon: Icon(Icons.event_note_outlined), label: 'برنامه‌ریز'),
           NavigationDestination(
-            icon: Icon(Icons.event_note_outlined),
-            label: 'برنامه‌ریز',
-          ),
+              icon: Icon(Icons.people_outline), label: 'خانواده'),
           NavigationDestination(
-            icon: Icon(Icons.family_restroom_outlined),
-            label: 'خانواده',
-          ),
+              icon: Icon(Icons.bar_chart_outlined), label: 'گزارش‌ها'),
           NavigationDestination(
-            icon: Icon(Icons.assistant_outlined),
-            label: 'راهنما',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            label: 'من',
-          ),
+              icon: Icon(Icons.person_outline), label: 'بیشتر'),
         ]
       : const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'خانه'),
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            label: 'امروز',
-          ),
+              icon: Icon(Icons.event_note_outlined), label: 'برنامه'),
           NavigationDestination(
-            icon: Icon(Icons.schedule_outlined),
-            label: 'برنامه',
-          ),
+              icon: Icon(Icons.menu_book_outlined), label: 'درس‌ها'),
           NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            label: 'تقویم',
-          ),
+              icon: Icon(Icons.timelapse_outlined), label: 'تمرکز'),
           NavigationDestination(
-            icon: Icon(Icons.task_alt_outlined),
-            label: 'کارها',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.school_outlined),
-            label: 'امتحان‌ها',
-          ),
+              icon: Icon(Icons.people_outline), label: 'خانواده'),
         ];
 
-  void selectPage(int next) {
-    setState(() => index = next);
+  void selectPage(String next) {
+    final refreshProfile = ['من', 'خانواده'].contains(page) && next == 'خانه';
+    setState(() => page = next);
+    if (refreshProfile) loadContext();
+  }
+
+  void openHomeMenu(String destination) => selectPage(switch (destination) {
+        'plan' => adultShell ? 'برنامه‌ریز' : 'برنامه من',
+        'courses' => 'درس‌ها',
+        'focus' => 'تمرکز',
+        'family' => 'خانواده',
+        'report' => adultShell ? 'گزارش‌ها' : 'گزارش من',
+        'reminders' => 'یادآوری‌ها',
+        _ => 'خانه',
+      });
+
+  Widget pageContent() {
+    if (!contextLoaded) {
+      return contextError == null
+          ? const Center(child: CircularProgressIndicator())
+          : LoadError(
+              error: const ApiException(503, 'profile_unavailable'),
+              retry: loadContext);
+    }
+    if (page == 'خانه') {
+      return MobileHomeMenu(
+          displayName: displayName, adult: adultShell, onOpen: openHomeMenu);
+    }
+    if (['درس‌ها', 'مدرسه من'].contains(page)) {
+      return EducationLibraryPage(api: widget.api);
+    }
+    if (page == 'برنامه من') {
+      return PlannerPage(api: widget.api);
+    }
+    if (page == 'تمرکز') {
+      return StudyHub(api: widget.api);
+    }
+    if (page == 'گزارش‌ها') {
+      return ParentFamilyDashboard(api: widget.api);
+    }
+    if (page == 'گزارش من') {
+      return httpApi == null
+          ? const CoreNotice(
+              title: 'گزارش یادگیری',
+              subtitle: 'برای دریافت گزارش، اتصال به حساب معتبر لازم است.')
+          : LearningReviewsPage(
+              api: httpApi!, onOpenLesson: openReviewedLesson);
+    }
+    if (page == 'یادآوری‌ها') {
+      return NotificationInboxPage(api: widget.api, embedded: true);
+    }
+    if (page == 'خانواده' || page == 'من') {
+      return ProfileFamilyPage(api: widget.api, embedded: true);
+    }
+    if (page == 'همراه هوشمند' || page == 'راهنما') {
+      return const CoreNotice(
+          title: 'همراه هوشمند',
+          subtitle:
+              'در این مرحله فعال نیست؛ داده سلامت و گفت‌وگو به سرویس هوشمند ارسال نمی‌شود.');
+    }
+    return Phase3HomeContent(
+        api: widget.api, page: page, adultShell: adultShell);
   }
 
   @override
   Widget build(BuildContext context) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.fromSeed(seedColor: accent),
-          scaffoldBackgroundColor: Colors.white,
+          colorScheme: ColorScheme.fromSeed(seedColor: MobileHomeMenu.accent),
+          scaffoldBackgroundColor: MobileHomeMenu.paper,
+          appBarTheme: const AppBarTheme(
+              backgroundColor: MobileHomeMenu.paper,
+              foregroundColor: MobileHomeMenu.ink,
+              elevation: 0,
+              surfaceTintColor: Colors.transparent),
         ),
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text(pages[index]),
-            actions: [
-              IconButton(
-                tooltip: 'مدرسه من',
-                icon: const Icon(Icons.menu_book_outlined),
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => Scaffold(
-                        appBar: AppBar(title: const Text('مدرسه من')),
-                        body: EducationLibraryPage(api: widget.api)))),
-              ),
-              IconButton(
-                onPressed: () async {
-                  await Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => ProfileFamilyPage(api: widget.api)));
-                  if (mounted) await loadContext();
-                },
-                icon: const Icon(Icons.person_outline),
-              ),
-            ],
-          ),
-          body: Column(children: [
-            if (contextError != null)
-              MaterialBanner(content: Text(contextError!), actions: [
-                TextButton(
-                    onPressed: loadContext, child: const Text('تلاش دوباره'))
-              ]),
-            Expanded(
-                child: pages[index] == 'مدرسه من'
-                    ? EducationLibraryPage(api: widget.api)
-                    : pages[index] == 'من'
-                        ? ProfileFamilyPage(api: widget.api)
-                        : (pages[index] == 'همراه هوشمند' ||
-                                pages[index] == 'راهنما')
-                            ? const CoreNotice(
-                                title: 'همراه هوشمند',
-                                subtitle:
-                                    'در این مرحله فعال نیست؛ داده سلامت و گفت‌وگو به سرویس هوشمند ارسال نمی‌شود.')
-                            : Phase3HomeContent(
-                                api: widget.api,
-                                page: pages[index],
-                                adultShell: adultShell,
-                              ))
-          ]),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: index > 4 ? 0 : index,
-            onDestinationSelected: selectPage,
-            destinations: destinations,
-          ),
-          drawer: Drawer(
-            child: SafeArea(
-              child: ListView(
-                children: [
-                  const ListTile(
-                    title: Text('LifeGuide'),
-                    subtitle: Text('منوی اصلی'),
-                  ),
-                  ...pages.asMap().entries.map(
-                        (entry) => ListTile(
-                          title: Text(entry.value),
-                          onTap: () {
-                            selectPage(entry.key);
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                  ListTile(
-                      leading: const Icon(Icons.notifications_outlined),
-                      title: const Text('اعلان‌های درون برنامه'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (_) =>
-                                NotificationInboxPage(api: widget.api)));
-                      }),
-                  ListTile(
-                      leading: const Icon(Icons.sync_problem_outlined),
-                      title: const Text('تغییرهای معلق و تعارض‌ها'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (_) => SyncChangesPage(api: widget.api)));
-                      }),
-                  if (httpApi != null)
-                    ListTile(
-                        leading: const Icon(Icons.flag_outlined),
-                        title: const Text('اهداف یادگیری'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (_) =>
-                                  LearningGoalsPage(api: httpApi!)));
-                        }),
-                  if (httpApi != null)
-                    ListTile(
-                        leading: const Icon(Icons.history_edu_outlined),
-                        title: const Text('مرور و تاریخچه یادگیری'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (_) => LearningReviewsPage(
-                                  api: httpApi!,
-                                  onOpenLesson: openReviewedLesson)));
-                        }),
-                  if (httpApi != null &&
-                      contentPermissions.contains('feedback.read'))
-                    ListTile(
-                        leading: const Icon(Icons.fact_check_outlined),
-                        title: const Text('بررسی محتوای آموزشی'),
-                        onTap: () async {
-                          Navigator.pop(context);
-                          await Navigator.of(context).push(MaterialPageRoute(
-                              builder: (_) =>
-                                  ContentReviewPage(api: httpApi!)));
-                          if (mounted) await loadCapabilities();
-                        }),
-                  if (widget.onEndpointSettings != null && !kIsWeb)
-                    ListTile(
-                        leading: const Icon(Icons.settings_ethernet),
-                        title: const Text('تنظیم اتصال'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          widget.onEndpointSettings!();
-                        }),
-                  if (widget.onSignOut != null)
-                    ListTile(
-                        leading: const Icon(Icons.logout),
-                        title: const Text('خروج از حساب'),
-                        onTap: () async {
-                          Navigator.pop(context);
-                          try {
-                            if (!await confirmScopeDiscard(
-                                context, widget.api)) {
-                              return;
-                            }
-                            await widget.onSignOut!();
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(errorText(e))));
-                            }
-                          }
-                        }),
-                  if (!adultShell) ...[
-                    const Divider(),
-                    ListTile(
-                      leading: const Icon(Icons.family_restroom),
-                      title: const Text('خانواده'),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ProfileFamilyPage(api: widget.api),
-                        ),
-                      ),
-                    ),
-                  ],
+        child: PopScope(
+            canPop: page == 'خانه',
+            onPopInvokedWithResult: (didPop, _) {
+              if (!didPop) selectPage('خانه');
+            },
+            child: Scaffold(
+              appBar: AppBar(
+                leading: page == 'خانه'
+                    ? null
+                    : IconButton(
+                        tooltip: 'برگشت به خانه',
+                        onPressed: () => selectPage('خانه'),
+                        icon: const Icon(Icons.arrow_back)),
+                title: Text(page == 'خانه' ? 'لایف‌گاید' : page),
+                actions: [
+                  IconButton(
+                      tooltip: 'یادآوری‌ها',
+                      icon: const Icon(Icons.notifications_none),
+                      onPressed: () => selectPage('یادآوری‌ها')),
+                  IconButton(
+                      tooltip: 'حساب و تنظیمات',
+                      icon: const Icon(Icons.person_outline),
+                      onPressed: () => selectPage('من')),
                 ],
               ),
-            ),
-          ),
-        ),
+              body: pageContent(),
+              bottomNavigationBar: NavigationBar(
+                selectedIndex: primaryPages.contains(page)
+                    ? primaryPages.indexOf(page)
+                    : 0,
+                onDestinationSelected: (index) =>
+                    selectPage(primaryPages[index]),
+                destinations: destinations,
+              ),
+              drawer: Drawer(
+                child: SafeArea(
+                  child: ListView(
+                    children: [
+                      const ListTile(
+                        title: Text('LifeGuide'),
+                        subtitle: Text('منوی اصلی'),
+                      ),
+                      ...pages.asMap().entries.map(
+                            (entry) => ListTile(
+                              title: Text(entry.value),
+                              onTap: () {
+                                selectPage(entry.value);
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ),
+                      ListTile(
+                          leading: const Icon(Icons.notifications_outlined),
+                          title: const Text('اعلان‌های درون برنامه'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) =>
+                                    NotificationInboxPage(api: widget.api)));
+                          }),
+                      ListTile(
+                          leading: const Icon(Icons.sync_problem_outlined),
+                          title: const Text('تغییرهای معلق و تعارض‌ها'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) =>
+                                    SyncChangesPage(api: widget.api)));
+                          }),
+                      if (httpApi != null)
+                        ListTile(
+                            leading: const Icon(Icons.flag_outlined),
+                            title: const Text('اهداف یادگیری'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) =>
+                                      LearningGoalsPage(api: httpApi!)));
+                            }),
+                      if (httpApi != null)
+                        ListTile(
+                            leading: const Icon(Icons.history_edu_outlined),
+                            title: const Text('مرور و تاریخچه یادگیری'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) => LearningReviewsPage(
+                                      api: httpApi!,
+                                      onOpenLesson: openReviewedLesson)));
+                            }),
+                      if (httpApi != null &&
+                          contentPermissions.contains('feedback.read'))
+                        ListTile(
+                            leading: const Icon(Icons.fact_check_outlined),
+                            title: const Text('بررسی محتوای آموزشی'),
+                            onTap: () async {
+                              Navigator.pop(context);
+                              await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          ContentReviewPage(api: httpApi!)));
+                              if (mounted) await loadCapabilities();
+                            }),
+                      if (widget.onEndpointSettings != null && !kIsWeb)
+                        ListTile(
+                            leading: const Icon(Icons.settings_ethernet),
+                            title: const Text('تنظیم اتصال'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              widget.onEndpointSettings!();
+                            }),
+                      if (widget.onSignOut != null)
+                        ListTile(
+                            leading: const Icon(Icons.logout),
+                            title: const Text('خروج از حساب'),
+                            onTap: () async {
+                              Navigator.pop(context);
+                              try {
+                                if (!await confirmScopeDiscard(
+                                    context, widget.api)) {
+                                  return;
+                                }
+                                await widget.onSignOut!();
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(errorText(e))));
+                                }
+                              }
+                            }),
+                      if (!adultShell) ...[
+                        const Divider(),
+                        ListTile(
+                          leading: const Icon(Icons.family_restroom),
+                          title: const Text('خانواده'),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ProfileFamilyPage(api: widget.api),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            )),
       );
 }
 
 class ProfileFamilyPage extends StatefulWidget {
-  const ProfileFamilyPage({super.key, required this.api});
+  const ProfileFamilyPage(
+      {super.key, required this.api, this.embedded = false});
   final IdentityApi api;
+  final bool embedded;
   @override
   State<ProfileFamilyPage> createState() => _ProfileFamilyPageState();
 }
@@ -1436,7 +1479,9 @@ class _ProfileFamilyPageState extends State<ProfileFamilyPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('پروفایل و خانواده')),
+        appBar: widget.embedded
+            ? null
+            : AppBar(title: const Text('پروفایل و خانواده')),
         body: FutureBuilder<List<dynamic>>(
           future: data,
           builder: (context, snapshot) {
