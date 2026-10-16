@@ -470,7 +470,9 @@ test('login cannot issue a session using a stale password after concurrent recov
     await barrier.query('begin');
     await barrier.query('select id from app_user where id=$1 for update', [account.id]);
     const blocked = async (count) => (await pool.query(
-      "select count(*)::int as n from pg_stat_activity where application_name=$1 and wait_event_type='Lock' and query='select 1 from app_user where id=$1 and disabled_at is null for update'", [applicationName],
+      // Recovery now also excludes managed children. Still observe actual
+      // account-row waits for this fixture, without freezing optional filters.
+      "select count(*)::int as n from pg_stat_activity where application_name=$1 and wait_event_type='Lock' and query like 'select 1 from app_user where id=$1 and disabled_at is null%for update'", [applicationName],
     )).rows[0].n >= count;
     // Queue real recovery first, then let real login verify the old hash before it blocks.
     recovery = providerRequest('/v1/auth/reset-password', { token: reset, newPassword: replacement });

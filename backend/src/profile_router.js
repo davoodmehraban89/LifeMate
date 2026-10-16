@@ -21,6 +21,13 @@ export function createProfileRouter({ pool, auth }) {
       [req.identity.sub],
     );
     if (!result.rowCount) return res.status(404).json({ error: 'profile_not_found' });
+    if (req.identity.managedChild) {
+      res.setHeader('Cache-Control', 'no-store');
+      const row = result.rows[0];
+      return res.json({ user_id: row.user_id, display_name: row.display_name,
+        profile_category: row.profile_category, theme_preference: row.theme_preference,
+        accessScope: 'child_education' });
+    }
     res.json(result.rows[0]);
   });
 
@@ -30,6 +37,9 @@ export function createProfileRouter({ pool, auth }) {
     const theme = body.themePreference == null ? null : String(body.themePreference);
     const category = body.profileCategory;
     const birthDate = body.birthDate;
+    if (Object.hasOwn(body, 'birthDate') && (await pool.query('select 1 from managed_child where user_id=$1', [req.identity.sub])).rowCount) {
+      return res.status(403).json({ error: 'managed_child_age_locked' });
+    }
     if (name != null && (!name || name.length > 100)) return res.status(400).json({ error: 'invalid_display_name' });
     if (theme != null && !themes.has(theme)) return res.status(400).json({ error: 'invalid_theme' });
     if (Object.hasOwn(body, 'profileCategory') && !categories.has(category)) return res.status(400).json({ error: 'invalid_profile_category' });

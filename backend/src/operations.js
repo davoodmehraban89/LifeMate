@@ -66,7 +66,7 @@ export function rateLimitProfile(req, env = process.env) {
   const discovery = req.method === 'GET' && path === '/v1/auth/capabilities';
   // Express accepts case variants and trailing slashes. Only these literal
   // method/path pairs receive the session quota; near matches remain strict.
-  if (!discovery && /^\/v1\/auth(?:\/|$)/i.test(path)) {
+  if ((!discovery && /^\/v1\/auth(?:\/|$)/i.test(path)) || /^\/v1\/child-devices\/accept\/?$/i.test(path)) {
     if (req.method === 'POST' && (path === '/v1/auth/refresh' || path === '/v1/auth/logout')) {
       return {
         name: 'session',
