@@ -4,6 +4,7 @@ import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import { normalizeEmail, normalizePhone, isEmail, validPassword } from './auth_contacts.js';
 import { createEmailProvider, createSmsProvider, safelyDeliver } from './auth_delivery.js';
+import { managedChildAccessActive } from './child_session_policy.js';
 
 const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
 const randomToken = () => crypto.randomBytes(32).toString('base64url');
@@ -25,6 +26,7 @@ async function transaction(pool, operation) {
 export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
   emailProvider = createEmailProvider({ env }), smsProvider = createSmsProvider() }) {
   const router = express.Router();
+  router.use((_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
   const testMode = env.NODE_ENV === 'test';
   const publicApp = env.PUBLIC_APP_URL ?? 'https://app.lifeguide.invalid';
   const dummyHash = argon2.hash(randomToken(), { type: argon2.argon2id });
@@ -43,7 +45,7 @@ export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
     const tokenDigest = sha256(raw);
     const owner = await client.query('select user_id from auth_token where token_digest=$1 and kind=$2', [tokenDigest, kind]);
     if (!owner.rowCount) return null;
-    const active = await client.query('select 1 from app_user where id=$1 and disabled_at is null for update', [owner.rows[0].user_id]);
+    const active = await client.query('select 1 from app_user where id=$1 and disabled_at is null and not is_managed_child for update', [owner.rows[0].user_id]);
     if (!active.rowCount) return null;
     const token = await client.query('select user_id from auth_token where token_digest=$1 and kind=$2 and used_at is null for update', [tokenDigest, kind]);
     if (!token.rowCount) return null;
@@ -54,15 +56,24 @@ export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
     return fresh.rowCount ? token.rows[0] : null;
   }
 
-  async function session(client, userId) {
+  async function session(client, userId, { priorScope = 'standard', issuerId = null } = {}) {
+    const account = await client.query('select is_managed_child from app_user where id=$1 and disabled_at is null', [userId]);
+    if (!account.rowCount) return null;
+    let scope = 'standard';
+    if (account.rows[0].is_managed_child) {
+      if (priorScope !== 'child_education' || !await managedChildAccessActive(client, userId, issuerId, env)) return null;
+      scope = 'child_education';
+    } else if (priorScope !== 'standard') return null;
     const refreshToken = randomToken();
     const result = await client.query(
-      "insert into auth_session(user_id,refresh_digest,expires_at) values($1,$2,now()+interval '30 days') returning id",
-      [userId, sha256(refreshToken)],
+      "insert into auth_session(user_id,refresh_digest,expires_at,access_scope,child_issuer_user_id) values($1,$2,clock_timestamp()+interval '30 days',$3,$4) returning id",
+      [userId, sha256(refreshToken), scope, scope === 'child_education' ? issuerId : null],
     );
     return {
-      accessToken: jwt.sign({ sub: userId, sid: result.rows[0].id, aud: 'lifemate-api' }, jwtSecret, { expiresIn: '15m', issuer: 'lifemate' }),
+      accessToken: jwt.sign({ sub: userId, sid: result.rows[0].id, aud: 'lifemate-api',
+        ...(scope === 'child_education' ? { scope } : {}) }, jwtSecret, { expiresIn: '15m', issuer: 'lifemate' }),
       refreshToken,
+      ...(scope === 'child_education' ? { accessScope: scope } : {}),
     };
   }
 
@@ -183,7 +194,7 @@ export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
     const phone = email ? null : normalizePhone(identifier);
     const result = await pool.query(
       `select u.id,u.email_verified_at,u.phone_verified_at,c.password_hash from app_user u
-       join auth_credential c on c.user_id=u.id where u.disabled_at is null
+       join auth_credential c on c.user_id=u.id where u.disabled_at is null and not u.is_managed_child
          and (($1::text is not null and u.email_normalized=$1) or ($2::text is not null and u.phone_normalized=$2))`, [email, phone],
     );
     const password = String(req.body?.password ?? '');
@@ -207,17 +218,26 @@ export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
 
   router.post('/refresh', async (req, res) => {
     const tokens = await transaction(pool, async (client) => {
-      const preliminary = await client.query('select user_id from auth_session where refresh_digest=$1', [sha256(String(req.body?.refreshToken ?? ''))]);
+      const preliminary = await client.query(`select s.user_id,u.is_managed_child,mc.family_id
+        from auth_session s join app_user u on u.id=s.user_id
+        left join managed_child mc on mc.user_id=s.user_id where s.refresh_digest=$1`, [sha256(String(req.body?.refreshToken ?? ''))]);
       if (!preliminary.rowCount) return null;
+      // Child recovery/consent operations lock family before accounts. Match
+      // that order rather than deadlocking with a concurrent device recovery.
+      if (preliminary.rows[0].is_managed_child) {
+        if (!(await client.query('select id from family_workspace where id=$1 and archived_at is null for update',
+          [preliminary.rows[0].family_id])).rowCount) return null;
+      }
       // Account-first locking is shared with password/OTP recovery.
       const active = await client.query('select 1 from app_user where id=$1 and disabled_at is null for update', [preliminary.rows[0].user_id]);
       if (!active.rowCount) return null;
-      const current = await client.query('select id,user_id from auth_session where refresh_digest=$1 and revoked_at is null for update', [sha256(String(req.body?.refreshToken ?? ''))]);
+      const current = await client.query('select id,user_id,access_scope,child_issuer_user_id from auth_session where refresh_digest=$1 and revoked_at is null for update', [sha256(String(req.body?.refreshToken ?? ''))]);
       if (!current.rowCount) return null;
       const fresh = await client.query('select 1 from auth_session where id=$1 and revoked_at is null and expires_at>clock_timestamp()', [current.rows[0].id]);
       if (!fresh.rowCount) return null;
       await client.query('update auth_session set revoked_at=now() where id=$1', [current.rows[0].id]);
-      return session(client, current.rows[0].user_id);
+      return session(client, current.rows[0].user_id, { priorScope: current.rows[0].access_scope,
+        issuerId: current.rows[0].child_issuer_user_id });
     });
     if (!tokens) return res.status(401).json({ error: 'invalid_refresh_token' });
     res.json(tokens);
@@ -294,7 +314,7 @@ export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
     const result = await transaction(pool, async (client) => {
       const rate = await claimDelivery(client, phone, 'phone_otp');
       if (rate.retryAfter) return rate;
-      const user = await client.query('select id from app_user where phone_normalized=$1 and disabled_at is null', [phone]);
+      const user = await client.query('select id from app_user where phone_normalized=$1 and disabled_at is null and not is_managed_child', [phone]);
       const challengeId = crypto.randomUUID();
       const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
       await client.query("insert into auth_phone_challenge(id,user_id,purpose,code_digest,expires_at) values($1,$2,$3,$4,now()+interval '5 minutes')", [challengeId, user.rows[0]?.id ?? null, purpose, digest(`otp:${challengeId}:${code}`)]);
@@ -317,7 +337,7 @@ export function createAuthRouter({ pool, jwtSecret, auth, env = process.env,
       // Account-first locking also serializes two different challenges for one account.
       let user;
       if (owner.rows[0]?.user_id) {
-        user = await client.query('select phone_verified_at from app_user where id=$1 and disabled_at is null for update', [owner.rows[0].user_id]);
+        user = await client.query('select phone_verified_at from app_user where id=$1 and disabled_at is null and not is_managed_child for update', [owner.rows[0].user_id]);
         if (!user.rowCount) return null;
       }
       const challenge = await client.query('select * from auth_phone_challenge where id=$1 and used_at is null and attempts<5 for update', [challengeId]);

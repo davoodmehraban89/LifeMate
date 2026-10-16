@@ -150,6 +150,7 @@ export function createFamilyLifecycleRouter({pool,auth}){
       if(previous&&previous.request_hash!==digest)return error(409,'mutation_id_reused');
       if(!previous&&!admin(actor))return error(403,'forbidden');
       const target=await targetMember(client,familyId,id);if(!target)return error(404,'membership_not_found');
+      if((await client.query('select 1 from managed_child where user_id=$1',[id])).rowCount)return error(403,'managed_child_membership_locked');
       if(previous)return {status:200,body:{members:[memberBody(target)],acknowledgement:acknowledgement(body,familyId,id,'role',true)}};
       if(target.ended_at||target.disabled_at)return error(409,'member_not_active');
       if(target.version!==body.expectedVersion)return error(409,'membership_version_conflict');
@@ -174,6 +175,7 @@ export function createFamilyLifecycleRouter({pool,auth}){
       if(previous&&previous.request_hash!==digest)return error(409,'mutation_id_reused');
       if(!previous&&!admin(actor))return error(403,'forbidden');
       const target=await targetMember(client,familyId,body.targetUserId);if(!target)return error(404,'membership_not_found');
+      if((await client.query('select 1 from managed_child where user_id=$1',[body.targetUserId])).rowCount)return error(403,'managed_child_membership_locked');
       if(previous)return {status:200,body:{members:[memberBody(actor),memberBody(target)],
         acknowledgement:acknowledgement(body,familyId,body.targetUserId,'admin_transfer',true)}};
       if(target.user_id===actor.user_id)return error(409,'admin_target_invalid');
