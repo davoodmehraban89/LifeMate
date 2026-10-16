@@ -1,0 +1,79 @@
+{
+  "status": "VERIFIED_PROTOTYPE_ONLY",
+  "browser": "151.0.7922.173",
+  "checks": [
+    {
+      "check": "six menu destinations, back, fixed navigation, no horizontal overflow",
+      "width": 390,
+      "height": 844,
+      "result": "PASS"
+    },
+    {
+      "check": "six menu destinations, back, fixed navigation, no horizontal overflow",
+      "width": 320,
+      "height": 740,
+      "result": "PASS"
+    },
+    {
+      "check": "Persian task opens its own details rather than the mathematics task",
+      "result": "PASS"
+    },
+    {
+      "check": "add and edit a temporary design task with visible result",
+      "result": "PASS"
+    },
+    {
+      "check": "player frame expands and closes inside same design; no external media loaded",
+      "result": "PASS"
+    },
+    {
+      "check": "ten-question draft quiz with explanatory feedback and result",
+      "result": "PASS"
+    },
+    {
+      "check": "foreground timer starts, pauses and switches to five-minute break",
+      "result": "PASS"
+    },
+    {
+      "check": "reminder switch toggles its explicit state; no device alarm",
+      "result": "PASS"
+    },
+    {
+      "check": "separate parent home and explicitly non-live sample report",
+      "result": "PASS"
+    },
+    {
+      "check": "all twelve board panels show their full initial content",
+      "overflow": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "result": "PASS"
+    },
+    {
+      "check": "loaded self-contained design remains navigable while browser network is offline",
+      "result": "PASS"
+    }
+  ],
+  "passed": 11,
+  "javascriptErrors": [],
+  "externalRequests": [],
+  "localFileOpen": "UNVERIFIED: file:// opening blocked by execution environment policy",
+  "unverified": [
+    "Safari/iPhone device",
+    "actual backend data and permissions",
+    "real video playback",
+    "system alarms and widgets",
+    "production deployment"
+  ]
+}

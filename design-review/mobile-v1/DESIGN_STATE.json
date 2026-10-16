@@ -1,0 +1,32 @@
+{
+  "product": "LifeGuide",
+  "status": "AWAITING_OWNER_DESIGN_REVIEW",
+  "date": "2026-10-16",
+  "scope": "Design prototype only. Existing Flutter/API/PostgreSQL runtime unchanged.",
+  "branch": "design/mobile-navigation-review",
+  "base": "e35ebed94fa326b59e13f5cea34e14064c4cf419",
+  "privateMagicPathProjectId": "461741253118287872",
+  "componentId": "461741326858338304",
+  "revisionId": "461748832737320960",
+  "previewUrl": "https://designs.magicpath.ai/v1/readily-space-4710",
+  "mainNavigation": [
+    "خانه",
+    "برنامه من",
+    "درس‌ها",
+    "تمرکز",
+    "خانواده"
+  ],
+  "screens": 12,
+  "sampleDataOnly": true,
+  "backendConnected": false,
+  "productionDeploy": false,
+  "merge": false,
+  "nextAction": "Owner reviews layout and navigation; implement in existing Flutter only after approval.",
+  "doNotAssume": [
+    "Real lesson review or video playback",
+    "OTP/login or real permissions from role toggle",
+    "Server persistence or sync",
+    "Real alarms, background timer, widgets",
+    "Safari/Android device acceptance"
+  ]
+}

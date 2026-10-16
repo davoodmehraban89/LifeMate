@@ -1,0 +1,16 @@
+{
+  "status": "VERIFIED_DESIGN_PREVIEW",
+  "url": "https://designs.magicpath.ai/v1/readily-space-4710",
+  "https": 200,
+  "mainMenuAndBack": "PASS",
+  "parentReport": "PASS",
+  "homeFit": {
+    "overflow": 0,
+    "viewport": [
+      390,
+      787
+    ]
+  },
+  "javascriptErrors": [],
+  "realIPhoneSafari": "UNVERIFIED"
+}
