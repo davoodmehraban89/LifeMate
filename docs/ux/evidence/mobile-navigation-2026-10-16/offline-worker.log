@@ -1,0 +1,12 @@
+✔ installation caches only a credential-free public offline notice and retry script (30.581385ms)
+✔ cold offline navigation receives public notice; online navigation prefers network (2.341875ms)
+✔ API, runtime configuration, auth paths and authenticated requests never receive fallback (1.864739ms)
+✔ uncached private content is never created by offline navigation (1.647007ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 101.52771

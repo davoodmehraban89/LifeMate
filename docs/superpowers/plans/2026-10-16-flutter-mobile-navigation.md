@@ -26,25 +26,25 @@
 **Files:** lib/main.dart; new lib/mobile_home.dart; test/mobile_navigation_test.dart; existing online_ui_test.dart as needed for intentional menu labels.
 **Consumes:** IdentityApi.getProfile(), existing pages and HomeShell callbacks.
 **Produces:** compact HomeMenu (profile name, child/adult layout, selection callback); HomeShell routes every main menu to its existing API-backed page, root back returns home.
-- [ ] Write tests against existing HomeShell for six menus and back at320/390, profile name, adult presentation independent from family membership, profile failure retry.
-- [ ] Run focused Flutter tests; expect missing home/menu assertions (RED).
-- [ ] Implement approved palette/layout and reuse existing destinations; preserve drawer capabilities/scope/logout.
-- [ ] Run focused tests and full suite; expect all PASS. Commit.
+- [x] Write tests against existing HomeShell for six menus and back at320/390, profile name, adult presentation independent from family membership, profile failure retry.
+- [x] Run focused Flutter tests; expect missing home/menu assertions (RED).
+- [x] Implement approved palette/layout and reuse existing destinations; preserve drawer capabilities/scope/logout.
+- [x] Run focused tests and full suite; expect all PASS. Commit.
 
 ### Task2 — Selected task detail
 **Files:** lib/phase3_ui.dart; new lib/plan_details_ui.dart; test/mobile_navigation_test.dart.
 **Consumes:** selected plan map, PlanItemDialog and PlanSync mutation outcomes; task kind/status/visibility/owner/version.
 **Produces:** PlanDetailsPage with correct selected content, edit/complete/archive via existing caller, server-ACK/pending states; approved presentation without fake data.
-- [ ] Tests: selecting second item opens its own detail; edit and completion show ACK/queued state; archive confirmation; shared non-owner view is read-only; pending cannot start study.
-- [ ] Run focused tests before implementation; expect absent detail route (RED).
-- [ ] Delegate actions to existing planner logic; retain existing popup actions for compatibility and scope guards.
-- [ ] Run focused tests and full suite, formatting/analyze; expect all PASS. Commit.
+- [x] Tests: selecting second item opens its own detail; edit and completion show ACK/queued state; archive confirmation; shared non-owner view is read-only; pending cannot start study.
+- [x] Run focused tests before implementation; expect absent detail route (RED).
+- [x] Delegate actions to existing planner logic; retain existing popup actions for compatibility and scope guards.
+- [x] Run focused tests and full suite, formatting/analyze; expect all PASS. Commit.
 
 ### Task3 — Evidence and delivery
 **Files:** docs/ux/mobile-navigation implementation receipt; PROJECT_STATE.md; design status.
 **Consumes:** final Flutter source, local synthetic Node+PostgreSQL API and compiled web build if available.
 **Produces:** real build and interaction receipts/screenshot, draft PR; explicit UNVERIFIED physical devices, signing, hosting and managed-child legacy API gates.
-- [ ] Run flutter analyze/test; build web --release --no-web-resources-cdn --pwa-strategy=none and bundle local resources.
-- [ ] Exercise compiled client through local synthetic API/PostgreSQL; independent read-after-write if fixture setup available. Never reuse live or real-data hosts.
-- [ ] Independent wholebranch review; fix important findings with regression checks.
-- [ ] Record commands/results/limits, commit and open draft PR. No merge/deploy. Stop and report this delivery.
+- [x] Run flutter analyze/test; build web --release --no-web-resources-cdn --pwa-strategy=none and bundle local resources.
+- [x] Exercise compiled client through local synthetic API/PostgreSQL; independent read-after-write if fixture setup available. Never reuse live or real-data hosts.
+- [x] Independent wholebranch review; fix important findings with regression checks.
+- [x] Record commands/results/limits, commit and open draft PR. No merge/deploy. Stop and report this delivery.
