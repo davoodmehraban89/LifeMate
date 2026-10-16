@@ -8,6 +8,7 @@ export const applicationTables = [
   'ai_guide_message', 'ai_guide_session', 'ai_plan_proposal', 'app_user',
   'auth_credential', 'auth_delivery_attempt', 'auth_ip_rate_limit', 'auth_phone_challenge', 'auth_session',
   'auth_token', 'class_session', 'curriculum_subject', 'education_profile',
+  'managed_child', 'child_consent', 'child_device_invitation', 'guardian_invitation',
   'family_invitation', 'family_membership', 'family_workspace', 'guardian_relationship',
   'iran_calendar_event', 'learning_checkin', 'learning_goal', 'life_context',
   'learning_goal_mutation', 'family_lifecycle_mutation', 'school_lifecycle_mutation',
