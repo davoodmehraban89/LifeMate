@@ -1160,13 +1160,20 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       if (mounted) {
         setState(() {
           contextError = errorText(error);
-          contextLoaded = false;
+          if (!isOfflineFailure(error)) contextLoaded = false;
         });
       }
     }
   }
 
   List<String> get pages => adultShell ? adultPages : studentPages;
+
+  // Keep the account's saved accent choice; category never grants permissions.
+  Color get accountAccent => switch (themePreference) {
+        'girl_pink' => const Color(0xFFB66D88),
+        'boy_blue' || 'adult_blue' => const Color(0xFF4B7995),
+        _ => MobileHomeMenu.accent,
+      };
 
   List<String> get primaryPages => adultShell
       ? ['خانه', 'برنامه‌ریز', 'خانواده', 'گزارش‌ها', 'من']
@@ -1263,7 +1270,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.fromSeed(seedColor: MobileHomeMenu.accent),
+          colorScheme: ColorScheme.fromSeed(seedColor: accountAccent),
           scaffoldBackgroundColor: MobileHomeMenu.paper,
           appBarTheme: const AppBarTheme(
               backgroundColor: MobileHomeMenu.paper,
@@ -1296,7 +1303,18 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                       onPressed: () => selectPage('من')),
                 ],
               ),
-              body: pageContent(),
+              body: Column(children: [
+                if (contextLoaded && contextError != null)
+                  MaterialBanner(
+                      content: const Text(
+                          'اطلاعات حساب از آخرین دریافت است؛ تازه‌سازی اتصال انجام نشد.'),
+                      actions: [
+                        TextButton(
+                            onPressed: loadContext,
+                            child: const Text('تلاش دوباره'))
+                      ]),
+                Expanded(child: pageContent()),
+              ]),
               bottomNavigationBar: NavigationBar(
                 selectedIndex: primaryPages.contains(page)
                     ? primaryPages.indexOf(page)

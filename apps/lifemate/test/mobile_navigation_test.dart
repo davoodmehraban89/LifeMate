@@ -17,8 +17,10 @@ class MenuApi extends FakeApi {
   MenuApi({this.category = 'girl_minor'});
   final String category;
   bool failProfile = false;
+  bool offlineProfile = false;
   @override
   Future<Map<String, dynamic>> getProfile() async {
+    if (offlineProfile) throw const ApiException(0, 'network_unavailable');
     if (failProfile) throw const ApiException(503, 'profile_unavailable');
     return {
       'user_id': 'synthetic-menu-user',
@@ -143,6 +145,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ParentFamilyDashboard), findsOneWidget);
     expect(find.byType(LearningReportPage), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets(
+      'same-account offline profile refresh preserves cached planner access',
+      (tester) async {
+    final api = MenuApi();
+    await shell(tester, api);
+    await tester.tap(find.byKey(const ValueKey('home-family')));
+    await tester.pumpAndSettle();
+    api.offlineProfile = true;
+    await tester.tap(find.byTooltip('برگشت به خانه'));
+    await tester.pumpAndSettle();
+    expect(
+        find.byKey(const ValueKey('home-plan')).hitTestable(), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('home-plan')));
+    await tester.pumpAndSettle();
+    expect(find.byType(PlannerPage), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
   testWidgets(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'offline_store.dart';
 import 'plan_sync.dart';
+import 'plan_details_ui.dart';
 import 'study_ui.dart';
 import 'dashboard_ui.dart';
 import 'school_management_ui.dart';
@@ -202,6 +203,9 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
   bool loading = false;
   String? busyId;
   String? operationError;
+  Set<String> ownedCreates = {};
+  ValueNotifier<Map<String, dynamic>?>? sharedDetail;
+  String? sharedDetailId;
   @override
   void initState() {
     super.initState();
@@ -263,11 +267,26 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
         offline = true;
         items = await ownedPlanFallback(widget.api, store, today: widget.today);
       }
+      if (sharedDetailId != null) {
+        sharedDetail?.value = offline
+            ? null
+            : items.where((row) => row['id'] == sharedDetailId).firstOrNull;
+      }
+      ownedCreates = (await store.readQueue())
+          .where((m) =>
+              m['entityType'] == 'plan_item' &&
+              m['operation'] == 'create' &&
+              m['queueStatus'] != 'rejected')
+          .map((m) => m['entityId'].toString())
+          .toSet();
       return LoadResult(
           items.where((i) => i['status'] != 'cancelled').toList(), offline,
           pending: await store.pendingCount(),
           syncedAt: await store.readLastSync(),
           reminders: reminders);
+    } catch (_) {
+      sharedDetail?.value = null;
+      rethrow;
     } finally {
       loading = false;
     }
@@ -283,40 +302,91 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
     } catch (_) {/* FutureBuilder renders the error. */}
   }
 
-  Future<void> edit([Map<String, dynamic>? item]) async {
+  Future<MutationOutcome?> edit(
+      [Map<String, dynamic>? item, bool notify = true]) async {
     final outcome = await showDialog<MutationOutcome>(
         context: context,
         builder: (_) => PlanItemDialog(api: widget.api, item: item));
     if (outcome != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(outcome.queued
-              ? 'تغییر روی دستگاه ثبت شد؛ در انتظار تأیید سرور.'
-              : 'تغییر توسط سرور تأیید شد.')));
+      if (notify) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(outcome.queued
+                ? 'تغییر روی دستگاه ثبت شد؛ در انتظار تأیید سرور.'
+                : 'تغییر توسط سرور تأیید شد.')));
+      }
       await reload();
     }
+    return outcome;
   }
 
-  Future<void> action(Map<String, dynamic> item, String action) async {
-    if (busyId != null) return;
+  bool owns(Map<String, dynamic> item) {
+    final api = widget.api;
+    if (api is! HttpIdentityApi) return true;
+    final owner = item['owner_user_id'] ?? item['ownerUserId'];
+    return api.currentUserId != null &&
+        (owner == api.currentUserId ||
+            (owner == null && ownedCreates.contains(item['id'])));
+  }
+
+  Future<void> openDetails(Map<String, dynamic> item, bool offline) async {
+    final canEdit = owns(item);
+    final updates = canEdit ? null : ValueNotifier<Map<String, dynamic>?>(item);
+    sharedDetail = updates;
+    sharedDetailId = canEdit ? null : item['id'].toString();
+    await Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => PlanDetailsPage(
+            item: item,
+            sharedUpdates: updates,
+            canEdit: canEdit,
+            offline: offline,
+            canStudy: canEdit &&
+                widget.api is HttpIdentityApi &&
+                ['assignment', 'task', 'study_session'].contains(item['kind']),
+            onAction: (current, action) =>
+                this.action(current, action, rethrowFailure: true),
+            kindLabel: faKind,
+            dateLabel: shortDate,
+            errorLabel: uiErrorText)));
+    if (identical(sharedDetail, updates)) {
+      sharedDetail = null;
+      sharedDetailId = null;
+    }
+    updates?.dispose();
+    if (mounted) await reload();
+  }
+
+  Future<MutationOutcome?> action(Map<String, dynamic> item, String action,
+      {bool rethrowFailure = false}) async {
+    if (busyId != null) return null;
+    if (!owns(item)) {
+      if (rethrowFailure) throw const ApiException(403, 'forbidden');
+      return null;
+    }
     if (action == 'edit') {
-      await edit(item);
-      return;
+      return edit(item, !rethrowFailure);
     }
     if (action == 'study') {
       if (item['pending_sync'] == true) {
         setState(() => operationError =
             'تکلیف هنوز در سرور تأیید نشده است؛ تایمر پس از همگام‌سازی فعال می‌شود.');
-        return;
+        return null;
       }
       if (widget.api is! HttpIdentityApi) {
         setState(() => operationError = 'اتصال مطالعه در دسترس نیست.');
-        return;
+        return null;
       }
       await Navigator.of(context).push(MaterialPageRoute(
           builder: (_) =>
               StudyTimerPage(api: widget.api as HttpIdentityApi, item: item)));
-      if (mounted) await reload();
-      return;
+      if (!mounted) return null;
+      await reload();
+      final fresh = await future;
+      if (fresh.offline) throw const ApiException(0, 'network_unavailable');
+      final current =
+          fresh.items.where((row) => row['id'] == item['id']).firstOrNull;
+      if (current == null) throw const ApiException(404, 'not_found');
+      return MutationOutcome(
+          queued: current['pending_sync'] == true, item: current);
     }
     if (action == 'archive') {
       final confirmed = await showDialog<bool>(
@@ -332,7 +402,7 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
                         onPressed: () => Navigator.pop(c, true),
                         child: const Text('بایگانی'))
                   ]));
-      if (confirmed != true || !mounted) return;
+      if (confirmed != true || !mounted) return null;
     }
     setState(() {
       busyId = item['id'].toString();
@@ -344,17 +414,23 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
           ? await sync.archive(item)
           : await sync.complete(item);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(outcome.queued
-                ? 'تغییر در انتظار تأیید سرور است.'
-                : 'سرور تغییر را تأیید کرد.')));
+        // Detail has an inline receipt; avoid covering its action controls.
+        if (!rethrowFailure || action == 'archive') {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(outcome.queued
+                  ? 'تغییر در انتظار تأیید سرور است.'
+                  : 'سرور تغییر را تأیید کرد.')));
+        }
         await reload();
       }
+      return outcome;
     } catch (error) {
       if (mounted) setState(() => operationError = uiErrorText(error));
+      if (rethrowFailure) rethrow;
     } finally {
       if (mounted) setState(() => busyId = null);
     }
+    return null;
   }
 
   @override
@@ -404,6 +480,9 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
                     leading: Icon(item['status'] == 'completed'
                         ? Icons.check_circle_outline
                         : Icons.radio_button_unchecked),
+                    onTap: busyId == null
+                        ? () => openDetails(item, data.offline)
+                        : null,
                     title: Text(item['title']?.toString() ?? ''),
                     subtitle: Text(
                         '${faKind(item['kind']?.toString() ?? 'task')} · ${shortDate(item['startsAt'] ?? item['starts_at'] ?? item['dueAt'] ?? item['due_at'])}${item['pending_sync'] == true ? '\nدر انتظار تأیید سرور' : ''}'),
@@ -412,24 +491,30 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator())
-                        : PopupMenuButton<String>(
-                            onSelected: (v) => action(item, v),
-                            itemBuilder: (_) => [
-                                  const PopupMenuItem(
-                                      value: 'edit', child: Text('ویرایش')),
-                                  const PopupMenuItem(
-                                      value: 'complete',
-                                      child: Text('انجام شد')),
-                                  if (item['pending_sync'] != true &&
-                                      widget.api is HttpIdentityApi &&
-                                      ['assignment', 'task', 'study_session']
-                                          .contains(item['kind']))
-                                    const PopupMenuItem(
-                                        value: 'study',
-                                        child: Text('تایمر مطالعه')),
-                                  const PopupMenuItem(
-                                      value: 'archive', child: Text('بایگانی')),
-                                ]),
+                        : !owns(item)
+                            ? const Icon(Icons.visibility_outlined)
+                            : PopupMenuButton<String>(
+                                onSelected: (v) => action(item, v),
+                                itemBuilder: (_) => [
+                                      const PopupMenuItem(
+                                          value: 'edit', child: Text('ویرایش')),
+                                      const PopupMenuItem(
+                                          value: 'complete',
+                                          child: Text('انجام شد')),
+                                      if (item['pending_sync'] != true &&
+                                          widget.api is HttpIdentityApi &&
+                                          [
+                                            'assignment',
+                                            'task',
+                                            'study_session'
+                                          ].contains(item['kind']))
+                                        const PopupMenuItem(
+                                            value: 'study',
+                                            child: Text('تایمر مطالعه')),
+                                      const PopupMenuItem(
+                                          value: 'archive',
+                                          child: Text('بایگانی')),
+                                    ]),
                   ))),
             ]));
       });
