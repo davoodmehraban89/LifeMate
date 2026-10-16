@@ -1,0 +1,19 @@
+{
+  "mode": "Synthetic HTTPS origin; intercepted compiled artifact responses; real TLS and service worker acceptance unverified",
+  "requests": 14,
+  "fontRequests": [
+    "/assets/fonts/MaterialIcons-Regular.otf",
+    "/assets/assets/fonts/LifeGuidePersian.ttf",
+    "/assets/assets/fonts/LifeGuideLatin.ttf",
+    "/assets/assets/fonts/LifeGuideLatin.ttf",
+    "/assets/assets/fonts/LifeGuideEmoji.ttf",
+    "/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf"
+  ],
+  "canvasKitRequests": [
+    "/canvaskit/chromium/canvaskit.wasm",
+    "/canvaskit/chromium/canvaskit.js"
+  ],
+  "externalRequests": [],
+  "missingAssets": [],
+  "errors": []
+}

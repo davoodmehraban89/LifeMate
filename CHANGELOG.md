@@ -1,5 +1,12 @@
 # LifeGuide Changelog
 
+## Unreleased — approved Flutter mobile navigation
+
+- Implement the owner-approved compact RTL home, separate child/adult menus and back navigation in the existing Flutter client; reuse real API-backed education/family/study/notification views.
+- Open the selected task in a detail route; edit/complete/archive through existing durable PlanSync and distinguish pending data from server acknowledgement. Shared nonowner records remain read-only and are hidden on revocation/background.
+- Preserve cached planner access during same-scope transport failures and refresh task versions after returning from study. No backend version/schema, domain or deployment changes; package remains0.7.1.
+- [Verification and limitations](docs/ux/2026-10-16-flutter-navigation-implementation.md).
+
 ## Unreleased — synthetic child identity sandbox
 
 - Add local-only managed child creation with required date of birth, explicit synthetic consent and creator/recipient guardian approval; no real-data or legal-consent approval.

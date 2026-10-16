@@ -1,6 +1,6 @@
 {
   "product": "LifeGuide",
-  "status": "AWAITING_OWNER_DESIGN_REVIEW",
+  "status": "OWNER_APPROVED_DESIGN",
   "date": "2026-10-16",
   "scope": "Design prototype only. Existing Flutter/API/PostgreSQL runtime unchanged.",
   "branch": "design/mobile-navigation-review",
@@ -21,12 +21,14 @@
   "backendConnected": false,
   "productionDeploy": false,
   "merge": false,
-  "nextAction": "Owner reviews layout and navigation; implement in existing Flutter only after approval.",
+  "nextAction": "Review first Flutter implementation PR; real hosting, managed-child policy and device acceptance remain separate gates.",
   "doNotAssume": [
     "Real lesson review or video playback",
     "OTP/login or real permissions from role toggle",
     "Server persistence or sync",
     "Real alarms, background timer, widgets",
     "Safari/Android device acceptance"
-  ]
+  ],
+  "ownerApprovedOn": "2026-10-16",
+  "implementationBranch": "feat/flutter-mobile-navigation"
 }

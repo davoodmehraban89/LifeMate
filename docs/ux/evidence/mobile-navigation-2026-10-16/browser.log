@@ -1,0 +1,6 @@
+PASS HTTPS login and approved compact Flutter home
+PASS UI homework create independently confirmed by API and PostgreSQL
+PASS page restart restores session and server-backed record
+PASS selected detail edit persists with server acknowledgement
+PASS real study start/pause/resume/stop then task completion uses refreshed version
+PASS confirmed archive persists in PostgreSQL

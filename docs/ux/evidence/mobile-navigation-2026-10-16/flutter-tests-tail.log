@@ -1,0 +1,8 @@
+00:58 +223: /tmp/lifeguide-flutter-navigation/apps/lifemate/test/aparat_player_test.dart: unsupported desktop explains the in-page limitation (variant: TargetPlatform.linux)
+00:58 +223: /tmp/lifeguide-flutter-navigation/apps/lifemate/test/aparat_player_test.dart: fullscreen Back returns the native view once
+00:58 +224: /tmp/lifeguide-flutter-navigation/apps/lifemate/test/aparat_player_test.dart: fullscreen Back returns the native view once
+00:58 +224: /tmp/lifeguide-flutter-navigation/apps/lifemate/test/aparat_player_test.dart: native fullscreen hide removes its route without popping others
+00:58 +225: /tmp/lifeguide-flutter-navigation/apps/lifemate/test/aparat_player_test.dart: native fullscreen hide removes its route without popping others
+00:58 +225: /tmp/lifeguide-flutter-navigation/apps/lifemate/test/aparat_player_test.dart: fullscreen close and disposal notify native only once
+00:58 +226: /tmp/lifeguide-flutter-navigation/apps/lifemate/test/aparat_player_test.dart: fullscreen close and disposal notify native only once
+00:58 +226: All tests passed!

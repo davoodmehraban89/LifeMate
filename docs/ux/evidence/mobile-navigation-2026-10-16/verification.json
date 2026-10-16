@@ -1,0 +1,43 @@
+{
+  "status": "VERIFIED_LOCAL_SYNTHETIC_ONLY",
+  "browser": "151.0.7922.173",
+  "tlsVerified": true,
+  "backend": "real local Node/PostgreSQL16; no intercepted API responses",
+  "checks": [
+    {
+      "name": "HTTPS login and approved compact Flutter home",
+      "result": "PASS"
+    },
+    {
+      "name": "UI homework create independently confirmed by API and PostgreSQL",
+      "result": "PASS"
+    },
+    {
+      "name": "page restart restores session and server-backed record",
+      "result": "PASS"
+    },
+    {
+      "name": "selected detail edit persists with server acknowledgement",
+      "result": "PASS"
+    },
+    {
+      "name": "real study start/pause/resume/stop then task completion uses refreshed version",
+      "result": "PASS"
+    },
+    {
+      "name": "confirmed archive persists in PostgreSQL",
+      "result": "PASS"
+    }
+  ],
+  "javascriptErrors": [],
+  "externalRuntimeOrigins": [],
+  "studySource": "timer",
+  "recordedSeconds": 2,
+  "unverified": [
+    "physical Android/iPhone/Safari",
+    "production hosting/deployment",
+    "managed-child legacy planner access",
+    "real OTP/video/alarms",
+    "multi-parent acceptance"
+  ]
+}

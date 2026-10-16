@@ -4,8 +4,10 @@ import 'api.dart';
 import 'notification_delivery.dart';
 
 class NotificationInboxPage extends StatefulWidget {
-  const NotificationInboxPage({super.key, required this.api, this.delivery});
+  const NotificationInboxPage(
+      {super.key, required this.api, this.delivery, this.embedded = false});
   final IdentityApi api;
+  final bool embedded;
   final NotificationDeliveryPort? delivery;
   @override
   State<NotificationInboxPage> createState() => _NotificationInboxPageState();
@@ -70,11 +72,13 @@ class _NotificationInboxPageState extends State<NotificationInboxPage>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('یادآوری‌های لایف‌گاید'), actions: [
-          IconButton(
-              onPressed: loading ? null : reload,
-              icon: const Icon(Icons.refresh))
-        ]),
+        appBar: widget.embedded
+            ? null
+            : AppBar(title: const Text('یادآوری‌های لایف‌گاید'), actions: [
+                IconButton(
+                    onPressed: loading ? null : reload,
+                    icon: const Icon(Icons.refresh))
+              ]),
         body: ListView(padding: const EdgeInsets.all(16), children: [
           const Text(
               'این یادآوری‌ها هنگام باز بودن برنامه تازه می‌شوند. اعلان پس‌زمینه فعال نیست.'),
