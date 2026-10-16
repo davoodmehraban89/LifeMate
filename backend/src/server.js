@@ -20,6 +20,7 @@ import { createSchoolCrudRouter } from './school_crud_router.js';
 import { createSchoolLifecycleRouter } from './school_lifecycle.js';
 import { normalizeEmail, normalizePhone, isEmail } from './auth_contacts.js';
 import { createEmailProvider, safelyDeliver } from './auth_delivery.js';
+import { createChildIdentityRouter } from './child_identity.js';
 
 const { Pool } = pg;
 const app = express();
@@ -115,6 +116,7 @@ app.get('/health', async (_req, res) => {
 app.use('/v1/auth', createAuthRouter({ pool, jwtSecret, auth, emailProvider }));
 
 app.use('/v1/profile', createProfileRouter({ pool, auth }));
+app.use('/v1', createChildIdentityRouter({ pool, auth, jwtSecret }));
 
 app.get('/v1/families', auth, async (req, res) => {
   const r = await pool.query(
@@ -338,6 +340,10 @@ app.post('/v1/invitations/accept', auth, async (req, res) => {
       return res.status(400).json({ error: 'invalid_or_expired_invitation' });
     }
     await client.query('select id from app_user where id=$1 for update', [req.identity.sub]);
+    if ((await client.query('select 1 from managed_child where user_id=$1', [req.identity.sub])).rowCount) {
+      await client.query('rollback');
+      return res.status(403).json({ error: 'managed_child_membership_locked' });
+    }
     const invitation = await client.query(
       `select i.id,i.family_id,i.intended_role,i.intended_theme,
               i.invited_email_normalized,i.invited_phone_normalized,
@@ -450,6 +456,9 @@ app.post('/v1/families/:familyId/guardians', auth, async (req, res) => {
   const minorUserId = String(req.body?.minorUserId ?? '');
   if (!uuid(guardianUserId) || !uuid(minorUserId)) return res.status(400).json({ error: 'invalid_guardian_relationship' });
   const result = await familyAdminTransaction(req.params.familyId, req.identity, async (client) => {
+    if ((await client.query('select 1 from managed_child where user_id=$1', [minorUserId])).rowCount) {
+      return { status: 403, body: { error: 'managed_guardian_invitation_required' } };
+    }
     const roles = await client.query(`select m.user_id,m.role from family_membership m
       join app_user u on u.id=m.user_id where m.family_id=$1 and m.user_id in ($2,$3)
         and m.ended_at is null and u.disabled_at is null for update of m`, [req.params.familyId, guardianUserId, minorUserId]);
@@ -468,6 +477,9 @@ app.delete('/v1/families/:familyId/guardians', auth, async (req, res) => {
   const minorUserId = String(req.body?.minorUserId ?? '');
   if (!uuid(guardianUserId) || !uuid(minorUserId)) return res.status(400).json({ error: 'invalid_guardian_relationship' });
   const result = await familyAdminTransaction(req.params.familyId, req.identity, async (client) => {
+    if ((await client.query('select 1 from managed_child where user_id=$1', [minorUserId])).rowCount) {
+      return { status: 403, body: { error: 'managed_guardian_flow_required' } };
+    }
     await client.query('update guardian_relationship set active=false where family_id=$1 and guardian_user_id=$2 and minor_user_id=$3', [req.params.familyId, guardianUserId, minorUserId]);
     await familyAudit(client, req.params.familyId, req.identity.sub, 'guardian.deactivate', 'guardian_relationship', guardianUserId);
     return { status: 204 };
