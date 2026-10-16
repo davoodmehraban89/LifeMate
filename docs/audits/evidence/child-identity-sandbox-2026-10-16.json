@@ -1,0 +1,225 @@
+{
+  "status": "VERIFIED_LOCAL_SYNTHETIC_ONLY",
+  "date": "2026-10-16",
+  "base": "ef1205417b6523e199ace4ac3d3667a8aaf9cab5",
+  "schemaCommit": "6050a422598c3a575bf5a1f8a49fbfe262de843d",
+  "boundaryCommit": "c72621fade774576ab9038f27e61670f5ba73335",
+  "runtime": "Node24.19.0/npm11.9.0/PostgreSQL16.15",
+  "commands": [
+    {
+      "command": "npm ci --no-fund",
+      "output": "added 111 packages in 740ms",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run migrate (fresh isolated local DB), repeat",
+      "output": "23 migrations applied; repeat no migrations applied",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/import-learning-catalog.js (twice)",
+      "output": {
+        "books": 217,
+        "units": 1373,
+        "videos": 1348,
+        "publicationStatus": "draft"
+      },
+      "exitCode": 0
+    },
+    {
+      "command": "npm test -- --test-concurrency=1",
+      "output": {
+        "tests": 297,
+        "pass": 297,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 87745.639625
+      },
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/test-db-roles.js --synthetic-only",
+      "output": {
+        "familyIdentityTests": 30,
+        "familyIdentityPass": 30,
+        "regressionTests": 96,
+        "regressionPass": 96,
+        "fail": 0
+      },
+      "exitCode": 0
+    },
+    {
+      "command": "existing scripts/backup.sh -> scripts/restore.sh with independent backup/migrator roles; node scripts/test-db-roles.js --verify-restored",
+      "output": "PASS restored checksum ledger entries, migrator ownership/repeat, runtime denial matrix, guardian/private policy and paused-study600seconds",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check",
+      "output": "Syntax checked 82 source/script/test files.",
+      "exitCode": 0
+    },
+    {
+      "command": "npm audit --audit-level=high",
+      "output": "found 0 vulnerabilities",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "output": "",
+      "exitCode": 0
+    },
+    {
+      "command": "gitleaks8.30.1 dir <changed-source> --redact",
+      "output": {
+        "files": 21,
+        "findings": 0
+      },
+      "exitCode": 0
+    }
+  ],
+  "sqlMatrices": [
+    {
+      "file": "phase3_schema_test.sql",
+      "exitCode": 0,
+      "fixtureRollback": true,
+      "readOnlyAssertions": false
+    },
+    {
+      "file": "phase4_schema_test.sql",
+      "exitCode": 0,
+      "fixtureRollback": true,
+      "readOnlyAssertions": false
+    },
+    {
+      "file": "phase6_schema_test.sql",
+      "exitCode": 0,
+      "fixtureRollback": false,
+      "readOnlyAssertions": true
+    },
+    {
+      "file": "schema_test.sql",
+      "exitCode": 0,
+      "fixtureRollback": true,
+      "readOnlyAssertions": false
+    }
+  ],
+  "migrationManifest": [
+    {
+      "file": "0001_identity_family.sql",
+      "sha256": "03339b58ceea571e9f9851153f039c7bba32b89eb8259c2171b5ec9934ab0443"
+    },
+    {
+      "file": "0002_auth.sql",
+      "sha256": "5a89eef261278ddc0caa49e5fff2ecbd800bcc86b62f3cbb6aef8681b9d201ad"
+    },
+    {
+      "file": "0003_planner_school_family.sql",
+      "sha256": "65989395542a6d103c4bec94f197f69f0d1f2598e8a7fd680ba0b9a2e8780b4a"
+    },
+    {
+      "file": "0004_ai_learning_wellbeing.sql",
+      "sha256": "d1c463276bbe48bc81f525f75b5542a65790f5e94629602533efa731cfad54c8"
+    },
+    {
+      "file": "0005_iran_family_learning.sql",
+      "sha256": "b54181ac5c8fd30e797ecf9eb65b2759549ec596b05cb96b36a7880b704f4ce2"
+    },
+    {
+      "file": "0006_iran_calendar_1405_holidays.sql",
+      "sha256": "431bfe20a4f4a94d77c92d9e3191eb932951ec1f3087e3fcfbdbf6803d36da54"
+    },
+    {
+      "file": "0007_auth_contacts.sql",
+      "sha256": "f8d20ecb8ded06c210125dd973670ead88cbbcb4a9ff2acf9c15e0e52059e392"
+    },
+    {
+      "file": "0008_study_sessions.sql",
+      "sha256": "546aa351dca8936fefd8cde9b2080b1a6e198b4174da643898657add135d7a7a"
+    },
+    {
+      "file": "0009_authorization_privacy.sql",
+      "sha256": "48c9423b303c1c00688326a21ac53e40e2183ded3ac8c9ea9bccdf0081f81fe3"
+    },
+    {
+      "file": "0010_planner_sync.sql",
+      "sha256": "a1994e6af0acb171f8c85195b18cb287c1d97a37147ae5edd9eadcecd5fbd7bf"
+    },
+    {
+      "file": "0011_profile_category.sql",
+      "sha256": "6ee7f5a00ecb9d2daf65d47e189a4850693d944a7dd36ef0521d911dd483c732"
+    },
+    {
+      "file": "0012_school_archive.sql",
+      "sha256": "e5e697a816a3d3b00dd2b0d1cf4dca43d130fb8478150419245ca36077ca3e84"
+    },
+    {
+      "file": "0013_aparat_learning_library.sql",
+      "sha256": "78add32ebd97bcb8a6a6cf6e65ad7aed26ce8fbf5e35d2f343d64878fdcac8c6"
+    },
+    {
+      "file": "0014_learning_feedback.sql",
+      "sha256": "8897b6d581644dc3c614573c0c21af2e2fd328413067bb9338ac0e42707856fd"
+    },
+    {
+      "file": "0015_learning_assessment.sql",
+      "sha256": "b62ac6551b5ef920740e8e1f7eb63f74a1bebd2f7b60243fa7269c5bca1c269a"
+    },
+    {
+      "file": "0016_content_review.sql",
+      "sha256": "2c390305940afb72fcfe92d180a08dc64cd9dc27d87a4ca9d2e8583ed2de147e"
+    },
+    {
+      "file": "0017_learning_goal_mutations.sql",
+      "sha256": "241578122d62c418c7d951607d15fc69c038d4ec678ca0c42f618042d9e8a930"
+    },
+    {
+      "file": "0018_family_lifecycle.sql",
+      "sha256": "711eb59781fd76d23440b9f55eae92489f365fdd0db1d32c8779ebd89818d09a"
+    },
+    {
+      "file": "0019_school_lifecycle.sql",
+      "sha256": "ed5bac695d4b0375e098a62d99b52fa8484b6318c16125339574974d3467c52a"
+    },
+    {
+      "file": "0020_content_publication_audit.sql",
+      "sha256": "84e8112f271eef5c3ee0860d3c3c94302ea9abd81d069147a10b52651b7d5fa3"
+    },
+    {
+      "file": "0023_auth_ip_rate_limit.sql",
+      "sha256": "805fc309af065c7f01f6255ecdf78f9cb32d24626c977b58612260a46650a77b"
+    },
+    {
+      "file": "0024_child_device_safety.sql",
+      "sha256": "c8853f59672e0eb3c291d81eebd299dd1107f5047aa5c00bbe0767b0809bfc86"
+    },
+    {
+      "file": "0025_managed_guardian_authority.sql",
+      "sha256": "ba04802b92ab498332c81f6e053569dc7e418b02c59eb2c02cb8823218edf49b"
+    }
+  ],
+  "priorFailure": {
+    "tests": 297,
+    "pass": 296,
+    "fail": 1,
+    "cause": "Existing auth_delivery test looked for exact old SQL while observing a real recovery/login lock. Updated predicate still observes actual account-row lock waits; final unfiltered suite passed."
+  },
+  "review": "Independent focused29pass; NUL input500 reproduced then validator400 verified; no unresolved critical/important within bounded sandbox scope.",
+  "unverified": [
+    "New child UI and QR",
+    "Android installation/upgrade and iOS Safari",
+    "Actual SMS/template approval",
+    "Iran network reachability",
+    "Production consent and hosting",
+    "Public online multi-user system",
+    "New child planner/timer/quiz permitted data path",
+    "Live Supabase application of0024/0025",
+    "Fresh local Flutter/APK build for this package"
+  ],
+  "liveOperations": "No merge/deploy/DNS/live database or SMS operation",
+  "evidenceSha256": {
+    "final-full-suite.log": "6423d2a5f432a2709e5e84f89442148da612e31d5abc98be3fde069e7ea5fcbc",
+    "runtime-role.log": "f1ae3141f835705136ff42a6b5277aab6d7b52b857c058ec3aee3f87698a829b",
+    "restore-role.log": "81eb5dd942497df8f3ae64393079c5b2dd45c715b20514b98520a6f36755d1d6"
+  }
+}

@@ -188,7 +188,10 @@ try {
       'AI_API_KEY','AI_BASE_URL','AI_MODEL','OPENAI_API_KEY']) env[key]='';
     for(const key of ['API_DB_PASSWORD','MIGRATOR_DB_PASSWORD','BACKUP_DB_PASSWORD','POSTGRES_PASSWORD']) delete env[key];
     const familyEnv={...env};delete familyEnv.TEST_FIXTURE_DATABASE_URL;
-    const family=spawnSync(process.execPath,['--test','tests/online_acceptance.test.js'],{cwd:backend,env:familyEnv,stdio:'inherit'});
+    // These new identity tests must use the runtime role directly. The broader
+    // catalog suite below uses a separate migrator only for fixture setup.
+    const family=spawnSync(process.execPath,['--test','--test-concurrency=1','tests/online_acceptance.test.js',
+      'tests/child_identity.test.js','tests/managed_child_server.test.js'],{cwd:backend,env:familyEnv,stdio:'inherit'});
     assert.equal(family.status,0,'Runtime-role family HTTP/DB acceptance failed');
     const acceptance=spawnSync(process.execPath,['--test',
       'tests/learning_library.test.js','tests/learning_feedback.test.js','tests/learning_assessment.test.js',

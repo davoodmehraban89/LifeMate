@@ -1,5 +1,12 @@
 # LifeGuide Changelog
 
+## Unreleased — synthetic child identity sandbox
+
+- Add local-only managed child creation with required date of birth, explicit synthetic consent and creator/recipient guardian approval; no real-data or legal-consent approval.
+- Bind parent-issued devices to restricted database scope and issuer, revoke prior devices on recovery and preserve restrictions through refresh. Deny private legacy routes and managed-child age/role upgrades.
+- Add local migrations0024/0025 and real PostgreSQL authorization, concurrency, expiry and restricted-role regressions. Production remains disabled even with the sandbox flag.
+- Backend package remains0.7.1; this is not a release. [Evidence and limits](docs/audits/2026-10-16-child-identity-sandbox.md).
+
 ## Unreleased — Phase 1 auth hardening
 
 - Share auth/session IP quotas in PostgreSQL across processes and restart, storing domain-separated HMAC metadata rather than raw addresses; retain separate contact cooldowns.

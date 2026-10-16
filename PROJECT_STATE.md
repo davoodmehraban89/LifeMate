@@ -1,5 +1,13 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## فاز۱ — هویت کودکِ صرفاً ساختگی، بدون انتشار — ۲۰۲۶-۱۰-۱۶
+
+سه بخش وابسته بر PR24 آماده شد: [schema در PR27](https://github.com/davoodmehraban89/LifeMate/pull/27)، [مرز نشست در PR28](https://github.com/davoodmehraban89/LifeMate/pull/28) و جریان `feat/child-device-safety` روی آن‌ها. ساخت کودک با DOB اجباری و رضایتِ صریحاً غیرحقوقیِ sandbox، سرپرست دوم با دعوت سازنده/پذیرش گیرنده، بازیابی با ابطال نشست‌های قبلی، scope محدود در DB و refresh و API دیدپذیری پیاده شد. Production حتی با flag فعال503؛ داده واقعی مجاز نیست.
+
+**VERIFIED محلی:** npm ci؛23migration و تکرار/import تکراری؛ چهار SQL assertion موفق؛ Backend **297pass/0fail/0skip**، runtime30 و regression96 موفق؛ backup/restore مستقل و کنترل مجوز پس از restore؛ syntax82، audit0 و بررسی diff. [گزارش، شکست اولیه و حدود شواهد](docs/audits/2026-10-16-child-identity-sandbox.md).
+
+۲۱ migration قبلی و bundleهای تاریخی Supabase حفظ شدند؛ live QA تغییر نکرد. هیچ merge/deploy/DNS/SMS یا داده زنده‌ای تغییر نکرد. UI/QR، Android/Safari، آنلاین عمومی، رضایت حقوقی و مسیر آموزشی مجاز جدید هنوز **UNVERIFIED/تکمیل‌نشده** هستند. مسیرهای خصوصی قدیمی برای نشست جدید بسته‌اند؛ کامل‌شدن Backend این بسته، آماده‌بودن نرم‌افزار خانواده نیست. **فاز۱ کامل نیست و فاز۲ شروع نشده است.** Feature1، نام LifeGuide و شناسه‌های فنی موجود حفظ شدند.
+
 ## فاز۱ — اصلاح هویت در PR وابسته؛ بدون انتشار
 
 مالک پس از گزارش فاز۰ شروع فاز۱ را تأیید کرد. شاخه `fix/auth-abuse-expiry-safety` از PR14 در `5da6c4290e422162c13c3fe5260345770dde7ffa` منشعب است؛ به main یا سرویس زنده منتقل نشده است. محدودیت IP مشترک PostgreSQL، بررسی تازه انقضا پس از قفل و gate تأیید ارسال SMS پیاده شد. **VERIFIED محلی:** `npm test -- --test-concurrency=1` →271pass/0fail/0skip؛ migration و import تکراری، چهار SQL matrix و syntax موفق. [گزارش و محدودیت‌ها](docs/audits/2026-10-15-phase1-auth-hardening.md).
