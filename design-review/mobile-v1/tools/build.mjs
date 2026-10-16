@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+const require=createRequire(import.meta.url);
+const {build}=require('esbuild');
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const out=path.resolve(process.env.DESIGN_OUTPUT || path.join(root,'exports')); fs.mkdirSync(out,{recursive:true});
+const result=await build({stdin:{contents:"import React from 'react';import {createRoot} from 'react-dom/client';import App from './src/App.tsx';import './src/index.css';createRoot(document.getElementById('root')).render(<App/>);",loader:'tsx',resolveDir:root},bundle:true,minify:true,write:false,outfile:out+'/app.js',nodePaths:(process.env.NODE_PATH || '').split(path.delimiter).filter(Boolean),loader:{'.ttf':'dataurl'},define:{'process.env.NODE_ENV':'"production"'},logLevel:'warning'});
+const js=result.outputFiles.find(f=>f.path.endsWith('.js')).text;
+const css=result.outputFiles.find(f=>f.path.endsWith('.css')).text;
+const html='<!DOCTYPE html><html lang="fa" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>طرح قابل کلیک LifeGuide</title><style>'+css+'</style><div id="root"></div><script>'+js.replaceAll('</script','<\\/script')+'</script></html>';
+fs.writeFileSync(out+'/LifeGuide-preview.html',html);console.log('Self-contained prototype:',Buffer.byteLength(html),'bytes; bundled font, React and CSS.');
