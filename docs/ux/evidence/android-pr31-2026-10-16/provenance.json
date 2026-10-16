@@ -1,0 +1,21 @@
+{
+  "status": "VERIFIED_ARTIFACT_NOT_DEVICE_ACCEPTANCE",
+  "repository": "davoodmehraban89/LifeMate",
+  "pr": 31,
+  "commit": "c067163033ebcb6862292e6943dedbb543b9056b",
+  "workflowRun": 38906353812,
+  "workflowUrl": "https://github.com/davoodmehraban89/LifeMate/actions/runs/38906353812",
+  "artifactId": 12048063680,
+  "artifactZipBytes": 87902767,
+  "artifactZipSha256": "3699fa0efc8e6ca875e980118248db1d7c02b41399bc7eb20a3360677fec3bd3",
+  "artifactDigestMatchesGitHub": true,
+  "apkBytes": 168988950,
+  "apkSha256": "671f29ab5a33f4c170ccbb1af65e3da163eee8125e06a7a531c6de322604042d",
+  "manifestCheck": "PASS locally on downloaded APK",
+  "ciDebugBuildStep": "success",
+  "ciManifestAndSignatureStep": "success",
+  "localApksigner": "UNVERIFIED: tool not installed",
+  "deviceInstallAndUpgrade": "UNVERIFIED",
+  "productionRelease": false,
+  "publicDeploy": false
+}

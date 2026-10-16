@@ -1,0 +1,16 @@
+{
+  "result": "PASS",
+  "mode": "debug",
+  "package": "ir.lifeguide.app",
+  "versionName": "0.7.1",
+  "versionCode": 7,
+  "label": "لایف‌گاید",
+  "debuggable": true,
+  "allowBackup": false,
+  "usesCleartextTraffic": false,
+  "internetPermission": true,
+  "minSdkVersion": 24,
+  "targetSdkVersion": 36,
+  "sha256": "671f29ab5a33f4c170ccbb1af65e3da163eee8125e06a7a531c6de322604042d",
+  "limitations": "Signature is checked separately by apksigner; device install/lifecycle UNVERIFIED."
+}
