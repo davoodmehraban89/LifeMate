@@ -19,11 +19,13 @@ class PlannerSeriesDialog extends StatefulWidget {
     required this.api,
     this.initialDate,
     this.onCreate,
+    this.clock = DateTime.now,
   });
 
   final HttpIdentityApi api;
   final DateTime? initialDate;
   final CreatePlannerSeries? onCreate;
+  final DateTime Function() clock;
 
   @override
   State<PlannerSeriesDialog> createState() => _PlannerSeriesDialogState();
@@ -70,10 +72,23 @@ class _PlannerSeriesDialogState extends State<PlannerSeriesDialog> {
 
   bool get editable => !busy && frozenPayload == null;
 
+  // The server accepts ±730 Tehran calendar days. A UTC reference and a one-day
+  // margin avoid offering an unsupported boundary near midnight or a time-zone
+  // change. This is a UI guard; the API remains authoritative.
+  DateTime get referenceDay {
+    final now = widget.clock().toUtc();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  DateTime get firstDate => referenceDay.subtract(const Duration(days: 729));
+  DateTime get lastDate => referenceDay.add(const Duration(days: 729));
+  bool supportedDate(DateTime value) =>
+      !value.isBefore(firstDate) && !value.isAfter(lastDate);
+
   @override
   void initState() {
     super.initState();
-    final date = widget.initialDate ?? DateTime.now();
+    final date = widget.initialDate ?? widget.clock();
     startsOn = DateTime(date.year, date.month, date.day);
     untilOn = startsOn.add(const Duration(days: 90));
     selected.add(startsOn.weekday);
@@ -88,11 +103,18 @@ class _PlannerSeriesDialogState extends State<PlannerSeriesDialog> {
 
   Future<void> pickDate({required bool end}) async {
     if (!editable) return;
+    final selectedDate = end ? untilOn : startsOn;
+    final first = firstDate, last = lastDate;
+    final initial = selectedDate.isBefore(first)
+        ? first
+        : selectedDate.isAfter(last)
+            ? last
+            : selectedDate;
     final date = await showDatePicker(
       context: context,
-      initialDate: end ? untilOn : startsOn,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100, 12, 31),
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
     );
     if (date != null && mounted && editable) {
       setState(() => end ? untilOn = date : startsOn = date);
@@ -123,6 +145,14 @@ class _PlannerSeriesDialogState extends State<PlannerSeriesDialog> {
   Map<String, dynamic>? payload() {
     if (title.text.trim().isEmpty) {
       error = 'عنوان را وارد کن.';
+      return null;
+    }
+    if (!supportedDate(startsOn)) {
+      error = 'تاریخ شروع باید در بازهٔ مجاز دو ساله باشد.';
+      return null;
+    }
+    if (hasEnd && !supportedDate(untilOn)) {
+      error = 'تاریخ پایان باید در بازهٔ مجاز دو ساله باشد.';
       return null;
     }
     if (hasEnd && untilOn.isBefore(startsOn)) {

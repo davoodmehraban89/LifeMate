@@ -21,6 +21,7 @@ void main() {
     ValueChanged<PlannerSeriesOutcome?>? onClosed,
     Size size = const Size(390, 844),
     double textScale = 1,
+    DateTime? initialDate,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -44,7 +45,8 @@ void main() {
                   textDirection: TextDirection.rtl,
                   child: PlannerSeriesDialog(
                     api: HttpIdentityApi(baseUrl: 'https://example.invalid'),
-                    initialDate: DateTime(2026, 10, 19),
+                    initialDate: initialDate ?? DateTime(2026, 10, 19),
+                    clock: () => DateTime.utc(2026, 10, 18, 12),
                     onCreate: create,
                   ),
                 ),
@@ -248,5 +250,56 @@ void main() {
         findsOneWidget);
     expect(tester.getSize(find.byKey(const ValueKey('series-save'))).height,
         greaterThanOrEqualTo(48));
+  });
+
+  testWidgets('unsupported start stays visible and cannot be submitted',
+      (tester) async {
+    final today = DateTime(2026, 10, 18);
+    final unsupported = today.add(const Duration(days: 800));
+    var submitted = 0;
+    await open(tester, (payload, {id}) async {
+      submitted++;
+      return PlannerSeriesOutcome(queued: false, id: id!);
+    }, initialDate: unsupported);
+    await tester.enterText(find.byKey(const ValueKey('series-title')), 'نمونه');
+    await tester.tap(find.byKey(const ValueKey('series-save')));
+    await tester.pumpAndSettle();
+    expect(find.text('تاریخ شروع باید در بازهٔ مجاز دو ساله باشد.'),
+        findsOneWidget);
+    expect(submitted, 0);
+    await tapVisible(tester, find.byKey(const ValueKey('series-start-date')));
+    final picker =
+        tester.widget<DatePickerDialog>(find.byType(DatePickerDialog));
+    expect(picker.firstDate, today.subtract(const Duration(days: 729)));
+    expect(picker.lastDate, today.add(const Duration(days: 729)));
+    expect(picker.initialDate, picker.lastDate);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('${unsupported.year}-'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('optional end beyond horizon is rejected before enqueue',
+      (tester) async {
+    final today = DateTime(2026, 10, 18);
+    var submitted = 0;
+    await open(tester, (payload, {id}) async {
+      submitted++;
+      return PlannerSeriesOutcome(queued: false, id: id!);
+    }, initialDate: today.add(const Duration(days: 720)));
+    await tester.enterText(find.byKey(const ValueKey('series-title')), 'نمونه');
+    await tapVisible(tester, find.byKey(const ValueKey('series-has-end')));
+    await tester.tap(find.byKey(const ValueKey('series-save')));
+    await tester.pumpAndSettle();
+    expect(find.text('تاریخ پایان باید در بازهٔ مجاز دو ساله باشد.'),
+        findsOneWidget);
+    expect(submitted, 0);
+    await tapVisible(tester, find.byKey(const ValueKey('series-end-date')));
+    final picker =
+        tester.widget<DatePickerDialog>(find.byType(DatePickerDialog));
+    expect(picker.firstDate, today.subtract(const Duration(days: 729)));
+    expect(picker.lastDate, today.add(const Duration(days: 729)));
+    expect(picker.initialDate, picker.lastDate);
+    expect(tester.takeException(), isNull);
   });
 }
