@@ -1,7 +1,7 @@
 {
   "status": "VERIFIED_LOCAL_SYNTHETIC_ONLY",
-  "sourceHead": "0bad011a0a37a43a4cc2d7ab69cf4f0bb0c00884",
-  "compiledMainSha256": "f0defa9ed20a7f2dc9b1c2f280caada6326574250d6687505da54de65f02e184",
+  "sourceHead": "087862349849d10af9f238352d9f1aea202e901f",
+  "compiledMainSha256": "2dcc68a8416bcac9f66f586cbf1bdc74a7a1dd49f46be0cd8bf504a7b96093a1",
   "browser": "151.0.7922.173",
   "tlsVerified": true,
   "apiResponsesIntercepted": false,
@@ -63,25 +63,29 @@
   ],
   "testTool": {
     "path": "apps/lifemate/tool/test_weekly_planner_browser.cjs",
-    "sha256": "c0682137b92c135f43c5395f1aaaeb78e496bb8270a2b6825f84a64dd2bb1f37"
+    "sha256": "b5f5c5d2d4e1d76451f32ba824c28276a85a37f234882c802fdda90e1ff32b39"
   },
   "screenshots": [
     {
       "path": "docs/ux/weekly-planner-2026-10-18/LifeGuide-weekly-editor.png",
-      "sha256": "a1d2adb9273e1876bd471f0d8f1f6024be25b26ed814f9b911b6dd795496e626"
+      "sha256": "a56b645fd4c150fb6a0b4ac60bfc0f9a46ab63e2161f5eb6d11d9aae31c6fd92"
     },
     {
       "path": "docs/ux/weekly-planner-2026-10-18/LifeGuide-weekly-home.png",
-      "sha256": "84ff8eded20d8408ec92036cca7498d9c50dcf1665c14b88d2c2e4fef4f5bf86"
+      "sha256": "9e1d2da3722ce14e435ece0ae40be8320baa1802cf58dbb78e83b0fc9ec7c7c5"
     },
     {
       "path": "docs/ux/weekly-planner-2026-10-18/LifeGuide-weekly-reopened.png",
-      "sha256": "95e8704dded3edbd1a83a848e1df2d531ea52bacd81973c103722038ef143f2b"
+      "sha256": "99ee0de6c8104ac969cd1e6a703544402500a7e23a74e9e6bb93b4d6139ec7e0"
     },
     {
       "path": "docs/ux/weekly-planner-2026-10-18/LifeGuide-weekly-schedule.png",
-      "sha256": "b67c4d1b5da56f0f56aaa65bc24f6abaddfec0abc968e6bc358c5391dd27c048"
+      "sha256": "c5322601977fd0ff62e40628c57a7d03dab93ccb5d73b0a95b81fb76e3f33dd1"
     }
   ],
-  "syntheticAccountType": "standard legacy minor account; not managed-child education scope"
+  "syntheticAccountType": "standard legacy minor account; not managed-child education scope",
+  "visibleUiAssertions": [
+    "Gregorian week range is labelled",
+    "selected occurrence shows end time 12:00"
+  ]
 }

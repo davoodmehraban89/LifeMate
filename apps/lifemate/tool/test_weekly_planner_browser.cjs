@@ -135,6 +135,8 @@ async function waitForDatabaseTitle(id,title) {
   const read=await api('GET','/v1/plan-items/'+occurrence.id,undefined,token);
   assert.equal(read.status,200);assert.equal(read.body.series_id,seriesId);assert.equal(read.body.ends_at,occurrence.ends_at.toISOString());
   assert.equal((await db.query('select count(*)::int n from reminder r join plan_item p on p.id=r.plan_item_id where p.series_id=$1',[seriesId])).rows[0].n,expectedCount);
+  await text('میلادی');
+  await text('تا 12:00');
   await page.screenshot({path:path.join(out,'LifeGuide-weekly-schedule.png')});
   record('UI creates weekly school with different weekday hours; actual REST and PostgreSQL confirm private unique occurrences');
 
