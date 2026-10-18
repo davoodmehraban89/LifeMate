@@ -1,0 +1,58 @@
+{
+  "status": "VERIFIED_BUILD_AND_FILE_ONLY",
+  "sourceCommit": "087862349849d10af9f238352d9f1aea202e901f",
+  "runId": 39170095124,
+  "runUrl": "https://github.com/davoodmehraban89/LifeMate/actions/runs/39170095124",
+  "jobs": {
+    "security": "success",
+    "backend": "success",
+    "flutter": "success"
+  },
+  "artifactId": 12152098377,
+  "artifactName": "LifeGuide-debug-apk",
+  "zipBytes": 87986805,
+  "zipSha256": "e9f30169db2f6bfcfb8b999cb5f6d181e2f7e4648a819832367d1b6807910b9f",
+  "apkBytes": 169072686,
+  "apkSha256": "c46d54bb281f71a2e6cf693c34862ce315df01daba2c7a982eaceba81fbf3e28",
+  "localManifest": {
+    "result": "PASS",
+    "mode": "debug",
+    "package": "ir.lifeguide.app",
+    "versionName": "0.7.2",
+    "versionCode": 8,
+    "label": "لایف‌گاید",
+    "debuggable": true,
+    "allowBackup": false,
+    "usesCleartextTraffic": false,
+    "internetPermission": true,
+    "minSdkVersion": 24,
+    "targetSdkVersion": 36,
+    "sha256": "c46d54bb281f71a2e6cf693c34862ce315df01daba2c7a982eaceba81fbf3e28",
+    "limitations": "Signature is checked separately by apksigner; device install/lifecycle UNVERIFIED.",
+    "permissions": [
+      "android.permission.INTERNET",
+      "android.permission.POST_NOTIFICATIONS",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
+      "android.permission.SCHEDULE_EXACT_ALARM",
+      "ir.lifeguide.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+    ],
+    "privateReminderReceiver": true
+  },
+  "ciSignature": {
+    "command": "apksigner verify --verbose --print-certs build/LifeGuide-debug.apk",
+    "schemeV2": true,
+    "certificateDN": "C=US, O=Android, CN=Android Debug",
+    "verifiedIn": "CI runner; not locally rerun"
+  },
+  "sourceAndDocsNote": "Later receipt/browser-harness/documentation commits do not change APK application source. CI39169749107 on earlier0bad011 was superseded/cancelled, not final evidence.",
+  "unverified": [
+    "Physical Android installation/upgrade and actual alarm delivery",
+    "Stable release keystore/signing",
+    "Independent private child login and public shared backend",
+    "Safari/iPhone and Iran reachability"
+  ],
+  "approvalGates": [
+    "No merge or deployment authorized",
+    "ADR0016 initial child delivery choice remains proposed"
+  ]
+}

@@ -1,5 +1,13 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## برنامهٔ هفته و اعلان Android — ۲۰۲۶-۱۰-۱۸؛ هنوز آمادهٔ بهره‌برداری کودک نیست
+
+مالک اجرای بستهٔ برنامهٔ شخصی را تأیید کرد. API مستقل در [PR34](https://github.com/davoodmehraban89/LifeMate/pull/34) و Flutter/Android وابسته در [PR35](https://github.com/davoodmehraban89/LifeMate/pull/35) آماده شد؛ هیچ merge/deploy انجام نشد. نوبت‌های واقعی PostgreSQL، تکرار و ساعت‌های مستقل، صف پایدار، تیک/ویرایش هر روز و اعلان opt-in با دریافت تازهٔ مالک پیاده شد. Feature1، نام LifeGuide و مرز خصوصی نشست کودک حفظ شدند.
+
+**VERIFIED محلی در0878623:** Backend308pass/0fail/0skip؛ Flutter277pass/0fail؛ analyze بدون مشکل، build releaseوب67.0ثانیه و منابع محلی؛ بررسی credential فایل‌های tracked و naming459مورد موفق. بازبینی سه خطای خاموش‌کردن اعلان، برگشت تیک/یادآوری و پیشرفت خانه را پیدا کرد؛ رگرسیون و اصلاح ثبت شد. [دستورها، خروجی و شکست‌های اولیه](docs/audits/evidence/weekly-planner-local-2026-10-18.json).
+
+**UNVERIFIED/باز:** CI39170095124 روی0878623 هر سه job موفق؛ APK0.7.2+8/debug ساخته و از اتصال رسمی دریافت شد، ZIP با digest گیت‌هاب و manifest/hash محلی برابر است. [گواه فایل/امضا](docs/audits/evidence/weekly-planner-ci-apk-2026-10-18.json). مرورگر HTTPS واقعی با API/PostgreSQL محلی6/6موفق، بدون interception یا مبدأ خارجی؛ [گواه](docs/audits/evidence/weekly-planner-browser-2026-10-18.json). نصب و اعلان واقعی Android، Safari/ایران و امضای release اجرا نشده‌اند. سرور آنلاین و ورود خصوصی مستقل کودک آماده نیست. [ADR0016](docs/decisions/0016-initial-child-planner-delivery.md) دو مسیر مستقلِ روی گوشی یا انتظار برای آنلاین را آماده کرده و منتظر پاسخ مالک است؛ درخواست «ادامه» انتخاب سیاستی محسوب نشده است. URL یا حساب ساختگی جای اتصال گذاشته نشد. [پذیرش گوشی و محدودیت‌ها](docs/operations/WEEKLY_PLANNER_ANDROID.md). فاز استفادهٔ کودک تکمیل‌شده گزارش نمی‌شود.
+
 ## ادامهٔ بررسی PR31 و تصمیم دسترسی آموزشی — ۲۰۲۶-۱۰-۱۶
 
 GitHubAPI،CIاجرای38906353812برایheadc067163راsuccessوartifactآزمایشیAndroidرا موجود نشان داد. ZIPاز اتصال رسمی دریافت شد؛ digestآن باGitHubبرابر وmanifestواقعی محلیPASSاست. این شواهدِbuild/integrityاست، نه نصب‌روی‌گوشی یا انتشار. [جزئیات تحویل](docs/ux/2026-10-16-pr31-ci-android-handoff.md).
