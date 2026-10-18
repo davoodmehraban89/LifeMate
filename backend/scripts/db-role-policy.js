@@ -18,7 +18,7 @@ export const applicationTables = [
   'content_review_mutation', 'content_review_brief', 'content_review_brief_source',
   'learning_assessment', 'learning_assessment_attempt', 'learning_review_schedule',
   'menstrual_cycle_entry', 'notification_outbox', 'notification_preference',
-  'plan_item', 'profile', 'reminder', 'schema_migration', 'sharing_grant',
+  'plan_item', 'planner_series', 'profile', 'reminder', 'schema_migration', 'sharing_grant',
   'study_interval', 'study_mutation', 'study_session', 'subject', 'sync_mutation',
   'textbook_catalog', 'wellbeing_checkin', 'wellbeing_safety_event',
 ];

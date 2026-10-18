@@ -44,6 +44,10 @@ function normalizeMigration(filename, source) {
     sql = sql.replace(/^revoke all on managed_child,child_consent,child_device_invitation,guardian_invitation from public;$/m,
       '-- Child identity tables are included in the QA wrapper lockdown.');
   }
+  if (filename === '0026_personal_planner_series.sql') {
+    sql = sql.replace(/^revoke all on planner_series from public;$/m,
+      '-- Private planner series are included in the QA wrapper lockdown.');
+  }
 
   // Fail closed if a future source migration changes its privilege/schema rules.
   if (/\b(?:public|auth|storage|realtime)\s*\./i.test(sql) ||
@@ -57,11 +61,11 @@ function normalizeMigration(filename, source) {
 
 export async function buildSupabaseQaSql({ migrationsDir = sourceRoot } = {}) {
   const entries = (await readdir(migrationsDir)).filter(name => /^\d{4}_[a-z0-9_]+\.sql$/.test(name)).sort();
-  const expected = [...Array.from({length:20}, (_,i) => String(i+1).padStart(4,'0')), '0023', '0024', '0025'];
+  const expected = [...Array.from({length:20}, (_,i) => String(i+1).padStart(4,'0')), '0023', '0024', '0025', '0026'];
   if (entries.length !== expected.length ||
       entries.some((name, i) => name.slice(0,4) !== expected[i]) ||
       entries[20] !== '0023_auth_ip_rate_limit.sql' || entries[21] !== '0024_child_device_safety.sql' ||
-      entries[22] !== '0025_managed_guardian_authority.sql') {
+      entries[22] !== '0025_managed_guardian_authority.sql' || entries[23] !== '0026_personal_planner_series.sql') {
     throw new Error('expected_baseline_and_auth_migrations_in_order');
   }
 

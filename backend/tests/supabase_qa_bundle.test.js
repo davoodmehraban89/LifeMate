@@ -6,13 +6,16 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildSupabaseQaSql } from '../scripts/build-supabase-qa-sql.js';
 
-test('QA bundle retains original checksums plus additive identity migrations and keeps private lockdown', async () => {
+test('QA bundle retains original checksums plus additive identity and planner migrations and keeps private lockdown', async () => {
   const { sql, manifest } = await buildSupabaseQaSql();
-  assert.equal(manifest.length, 23);
+  assert.equal(manifest.length, 24);
   assert.ok(manifest.slice(0,20).every((x,i) => x.filename.startsWith(String(i+1).padStart(4,'0')+'_')));
   assert.equal(manifest[20].filename, '0023_auth_ip_rate_limit.sql');
   assert.equal(manifest[21].filename, '0024_child_device_safety.sql');
   assert.equal(manifest[22].filename, '0025_managed_guardian_authority.sql');
+  assert.equal(manifest[23].filename, '0026_personal_planner_series.sql');
+  assert.match(sql, /create table planner_series/);
+  assert.match(sql, /plan_item_series_private/);
   assert.match(sql, /create table auth_ip_rate_limit/);
   assert.ok(manifest.every(x => /^[a-f0-9]{64}$/.test(x.sha256)));
   assert.match(sql, /set local search_path=lifeguide_qa,extensions,pg_catalog/);
@@ -50,6 +53,7 @@ test('QA bundle generation rejects drift adding production schema privileges', a
     await writeFile(join(dir,'0023_auth_ip_rate_limit.sql'), 'select 1;');
     await writeFile(join(dir,'0024_child_device_safety.sql'), 'select 1;');
     await writeFile(join(dir,'0025_managed_guardian_authority.sql'), 'select 1;');
+    await writeFile(join(dir,'0026_personal_planner_series.sql'), 'select 1;');
     await writeFile(join(dir,'0004_test.sql'),'create table public.account(id int);');
     await assert.rejects(buildSupabaseQaSql({ migrationsDir:pathToFileURL(dir+'/') }),/source_migration_outside_private_qa:0004_test.sql/);
   } finally { await rm(dir,{recursive:true,force:true}); }
