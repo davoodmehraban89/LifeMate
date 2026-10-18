@@ -6,6 +6,7 @@ import 'runtime_config.dart';
 import 'runtime_http_client.dart';
 import 'session_store.dart';
 import 'web_instance.dart';
+import 'local_reminders.dart';
 
 abstract class IdentityApi {
   String? get accessToken;
@@ -147,6 +148,7 @@ class HttpIdentityApi implements IdentityApi {
     this.onSessionChanged,
     this.onScopeDiscarded,
     this.onScopeQuarantined,
+    this.onSessionDeactivating,
   })  : baseUrl = normalizeApiUrl(
             baseUrl ?? (throw ArgumentError('API configuration is required.'))),
         _client = client ?? createRuntimeHttpClient(),
@@ -162,9 +164,13 @@ class HttpIdentityApi implements IdentityApi {
   void Function()? onSessionChanged;
   Future<void> Function(String)? onScopeDiscarded;
   Future<void> Function(String)? onScopeQuarantined;
+  Future<void> Function()? onSessionDeactivating;
   bool hasQuarantinedSession = false;
   Future<void>? _refreshing;
   int _sessionGeneration = 0;
+
+  /// Changes on logout, expiry and endpoint disposal, not ordinary refresh.
+  int get sessionRevision => _sessionGeneration;
   String? currentUserId;
   String get endpointIdentity => baseUrl;
   String? get cacheNamespace => accessToken == null || currentUserId == null
@@ -291,11 +297,21 @@ class HttpIdentityApi implements IdentityApi {
       {bool quarantine = false, String? scopeOverride}) async {
     final scope = scopeOverride ??
         (currentUserId == null ? null : '$endpointIdentity|$currentUserId');
+    Object? failure;
+    StackTrace? failureStack;
+    Future<void>? reminderCancellation;
+    try {
+      // Invalidate queued native scheduling synchronously before identity/cache
+      // changes; native cancellation completes before credential storage clears.
+      reminderCancellation =
+          (onSessionDeactivating ?? androidLocalReminders.deactivate)();
+    } catch (error, stack) {
+      failure = error;
+      failureStack = stack;
+    }
     accessToken = null;
     _refreshToken = null;
     currentUserId = null;
-    Object? failure;
-    StackTrace? failureStack;
     Future<void>? quarantinePending;
     // Invalidate old cache handles synchronously, before notifying the signed
     // out UI or awaiting credential storage. Quarantine performs no disk writes.
@@ -308,6 +324,12 @@ class HttpIdentityApi implements IdentityApi {
       failureStack = stack;
     }
     onSessionChanged?.call();
+    try {
+      await reminderCancellation;
+    } catch (error, stack) {
+      failure ??= error;
+      failureStack ??= stack;
+    }
     try {
       await _sessionStore.clear();
     } catch (error, stack) {

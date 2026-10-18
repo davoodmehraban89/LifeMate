@@ -60,7 +60,7 @@ final class AndroidLocalReminderPort implements LocalReminderPort {
         _now = now ?? DateTime.now;
   final MethodChannel _channel;
   final DateTime Function() _now;
-  Future<void> _tail = Future.value();
+  Future<void>? _tail;
   int _generation = 0;
   String? _scope;
   DateTime? _validUntil;
@@ -75,10 +75,17 @@ final class AndroidLocalReminderPort implements LocalReminderPort {
       permissionGranted: false,
       active: false,
       scheduledCount: 0);
-  Future<void> _serial(Future<void> Function() work) {
-    final result = _tail.then((_) => work());
-    _tail = result.then((_) {}, onError: (Object _, StackTrace __) {});
-    return result;
+  Future<void> _serial(Future<void> Function() work) async {
+    final previous = _tail;
+    final release = Completer<void>();
+    _tail = release.future;
+    if (previous != null) await previous;
+    try {
+      await work();
+    } finally {
+      if (identical(_tail, release.future)) _tail = null;
+      release.complete();
+    }
   }
 
   Future<void> _write(String method, [Map<String, Object>? arguments]) async {
