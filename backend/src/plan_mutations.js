@@ -24,6 +24,9 @@ function date(value, field) {
   if (typeof value !== 'string' || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,6})?(?:Z|[+-]\d\d:\d\d)$/.test(value)) fail(400, `invalid_${field}`);
   const parsed = new Date(value);
   if (!Number.isFinite(parsed.getTime())) fail(400, `invalid_${field}`);
+  const calendarDay = value.slice(0, 10), midnight = new Date(calendarDay + 'T00:00:00Z');
+  if (!Number.isFinite(midnight.getTime()) || midnight.toISOString().slice(0, 10) !== calendarDay
+    || !/^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(value.slice(11, 19))) fail(400, `invalid_${field}`);
   return parsed;
 }
 function text(value, field, max, nullable = false) {
@@ -43,11 +46,11 @@ function integer(value, field, min, max) {
 }
 function normalize(payload, existing = null) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) fail(400, 'invalid_plan_item');
-  for (const key of ['ownerUserId', 'owner_user_id', 'version', 'activity_version', 'created_at', 'updated_at', 'completed_at']) if (key in payload) fail(400, 'server_owned_field');
+  for (const key of ['ownerUserId', 'owner_user_id', 'version', 'activity_version', 'created_at', 'updated_at', 'completed_at', 'seriesId', 'series_id', 'originalOccurrenceDate', 'original_occurrence_date']) if (key in payload) fail(400, 'server_owned_field');
   const fields = {};
   const isCreate = !existing;
   const defaults = { kind: 'task', title: '', priority: 'normal', visibility: 'private', familyId: null, subjectId: null, learningUnitId: null,
-    notes: null, startsAt: null, dueAt: null, durationMinutes: null, plannedDurationSeconds: null,
+    notes: null, startsAt: null, endsAt: null, dueAt: null, durationMinutes: null, plannedDurationSeconds: null,
     recurrenceRule: null, parentItemId: null };
   const values = isCreate ? { ...defaults, ...payload } : payload;
   const pick = (key, column, validation) => { if (values[key] !== undefined) fields[column] = validation(values[key]); };
@@ -62,6 +65,7 @@ function normalize(payload, existing = null) {
   pick('learningUnitId', 'learning_unit_id', (x) => id(x, 'learning_unit_id'));
   pick('parentItemId', 'parent_item_id', (x) => id(x, 'parent_item_id'));
   pick('startsAt', 'starts_at', (x) => date(x, 'starts_at'));
+  pick('endsAt', 'ends_at', (x) => date(x, 'ends_at'));
   pick('dueAt', 'due_at', (x) => date(x, 'due_at'));
   pick('recurrenceRule', 'recurrence_rule', (x) => text(x, 'recurrence_rule', 1000, true));
   pick('durationMinutes', 'duration_minutes', (x) => integer(x, 'duration_minutes', 1, 1440));
@@ -80,6 +84,8 @@ function normalize(payload, existing = null) {
       && (merged.grade_points == null || merged.grade_out_of == null || Number(merged.grade_out_of) <= 0 || Number(merged.grade_points) > Number(merged.grade_out_of))) fail(400, 'invalid_grade');
   }
   if (merged.starts_at && merged.due_at && new Date(merged.due_at) < new Date(merged.starts_at)) fail(400, 'invalid_date_order');
+  if (merged.ends_at && (!merged.starts_at || new Date(merged.ends_at) <= new Date(merged.starts_at))) fail(400, 'invalid_end_order');
+  if (merged.series_id && (merged.visibility !== 'private' || merged.family_id !== null)) fail(400, 'planner_occurrence_private');
   if (['family', 'parent_guardian', 'selected_members'].includes(merged.visibility) && !merged.family_id) fail(400, 'family_required_for_visibility');
   return { fields, merged };
 }
@@ -110,7 +116,7 @@ async function grants(client, item, selected) {
     "insert into sharing_grant(resource_type,resource_id,grantee_user_id,granted_by) values('plan_item',$1,$2,$3)", [item.id, member, item.owner_user_id],
   );
 }
-async function reminders(client, item, payload) {
+async function reminders(client, item, payload, previous = null) {
   if (payload.reminderMinutesBefore !== undefined) {
     if (!Array.isArray(payload.reminderMinutesBefore) || payload.reminderMinutesBefore.length > 100 || payload.reminderMinutesBefore.some((x) => !Number.isSafeInteger(x) || x < 0 || x > 10080)) fail(400, 'invalid_reminders');
     await client.query('delete from reminder where plan_item_id=$1', [item.id]);
@@ -120,11 +126,25 @@ async function reminders(client, item, payload) {
     );
   }
   if (['completed', 'cancelled'].includes(item.status)) await client.query("update reminder set status='cancelled' where plan_item_id=$1 and status in ('scheduled','claimed')", [item.id]);
-  else await client.query('select recompute_reminder_schedule($1)', [item.id]);
+  else {
+    // Undo before the next scheduled alert restores only this occurrence's
+    // existing choices, never an already-past alert or another day's row.
+    if (previous && ['completed','cancelled'].includes(previous.status)
+      && payload.reminderMinutesBefore === undefined) {
+      await client.query(`update reminder set status='scheduled',claimed_at=null,
+        delivered_at=null,failure_reason=null where plan_item_id=$1 and status='cancelled'
+        and coalesce($2::timestamptz,$3::timestamptz)-make_interval(mins=>minutes_before)>now()`,
+      [item.id,item.starts_at,item.due_at]);
+    }
+    await client.query('select recompute_reminder_schedule($1)', [item.id]);
+  }
 }
-export async function createPlanItem(client, userId, payload, itemId = crypto.randomUUID()) {
+export async function createPlanItem(client, userId, payload, itemId = crypto.randomUUID(), occurrence = null) {
   if (!validUuid(itemId)) fail(400, 'invalid_id');
   const { fields } = normalize(payload);
+  // Only the server generator supplies this argument; payloads cannot assign
+  // or alter the immutable series/date identity.
+  if (occurrence) { fields.series_id = occurrence.seriesId; fields.original_occurrence_date = occurrence.date; }
   const selected = await relations(client, userId, { ...fields, owner_user_id: userId }, payload);
   const columns = ['id', 'owner_user_id', ...Object.keys(fields)];
   const values = [itemId, userId, ...Object.values(fields)];
@@ -148,7 +168,7 @@ export async function updatePlanItem(client, userId, itemId, payload, expectedVe
   const update = [...Object.keys(fields).map((key, i) => `${key}=$${i + 2}`), 'updated_at=now()'];
   const item = (await client.query(`update plan_item set ${update.join(',')} where id=$1 returning *`, values)).rows[0];
   await grants(client, item, selected);
-  await reminders(client, item, payload);
+  await reminders(client, item, payload, current);
   return item;
 }
 export async function planTransaction(pool, userId, execute) {

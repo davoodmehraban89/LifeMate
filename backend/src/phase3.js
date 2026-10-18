@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import express from 'express';
+import { createPlannerSeriesRouter } from './planner_series.js';
 import { schoolLifecycleError, assertSchoolSession } from './school_lifecycle.js';
 import { applyPlanMutation, createPlanItem, updatePlanItem, planTransaction, serializePlanItem, validUuid, PlanMutationError } from './plan_mutations.js';
 
@@ -78,6 +79,7 @@ async function audit(pool, actorUserId, familyId, action, targetType, targetId, 
 
 export function createPhase3Router({ pool, auth }) {
   const router = express.Router();
+  router.use(createPlannerSeriesRouter({ pool, auth }));
 
   router.get('/today', auth, async (req, res) => {
     const from = asDate(req.query.from) ?? new Date();
