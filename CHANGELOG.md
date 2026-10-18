@@ -1,5 +1,12 @@
 # LifeGuide Changelog
 
+## 0.7.2 — 2026-10-18 — نامزد آزمون برنامهٔ هفتگی (منتشرنشده)
+
+- برنامهٔ خصوصی روزانه، روزدرمیان و هفتگی با ساعت مستقل هر روز، پایان صریح، نوبت‌های واقعی PostgreSQL و تیک/ویرایش مستقل.
+- صف پایدار با شناسهٔ ثابت و بازیابی پیش‌نویس ردشده؛ خانهٔ کودک با قدم بعدی، کارهای امروز و پیشرفت به‌جای شش کارت تکراری.
+- پورت اعلان محلی Android با مجوز اختیاری ساعت دقیق، حالت تقریبی، عنوان همراه قابل تنظیم و حذف اعلان‌های قدیمی هنگام تغییر/خروج.
+- Backend0.7.2 و Flutter0.7.2+8؛ نصب واقعی، اعلان سیستم، ورود خصوصی کودک و بهره‌برداری آنلاین هنوز UNVERIFIED/مسدودند. هیچ merge/deploy/schema زنده اجرا نشد.
+
 ## Unreleased — approved Flutter mobile navigation
 
 - Implement the owner-approved compact RTL home, separate child/adult menus and back navigation in the existing Flutter client; reuse real API-backed education/family/study/notification views.

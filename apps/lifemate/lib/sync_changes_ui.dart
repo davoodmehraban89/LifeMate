@@ -8,6 +8,7 @@ import 'study_coordinator.dart';
 import 'learning_sync.dart';
 import 'learning_feedback_ui.dart';
 import 'learning_quiz_ui.dart';
+import 'planner_series.dart';
 
 class SyncChangesPage extends StatefulWidget {
   const SyncChangesPage({super.key, required this.api});
@@ -72,6 +73,11 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
       }
       final api = widget.api;
       if (api is HttpIdentityApi) {
+        try {
+          await PlannerSeriesSync(api, store: store).flush();
+        } catch (caught) {
+          failure ??= caught;
+        }
         try {
           await StudySync(api, store: store).flush();
         } catch (caught) {
@@ -144,9 +150,21 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
         return;
       }
       Map<String, dynamic>? serverItem;
+      final isSeries = mutation['entityType'] == 'planner_series';
       try {
-        serverItem = await api.requestJson(
-            'GET', '/v1/plan-items/${Uri.encodeComponent(id)}');
+        final response = await api.requestJson('GET',
+            '/v1/${isSeries ? 'planner-series' : 'plan-items'}/${Uri.encodeComponent(id)}');
+        if (isSeries) {
+          if (response['series'] is! Map) {
+            throw const ApiException(502, 'invalid_series_response');
+          }
+          serverItem = Map<String, dynamic>.from(response['series'] as Map);
+          if (serverItem['owner_user_id'] != api.currentUserId) {
+            throw const ApiException(502, 'invalid_series_response');
+          }
+        } else {
+          serverItem = response;
+        }
       } on ApiException catch (failure) {
         final isUnsent =
             queue.any((m) => m['entityId'] == id && m['operation'] == 'create');
@@ -194,7 +212,10 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
               ));
       if (mounted) setState(() => dialogOpen = false);
       if (accepted == true) {
-        await store.discardEntityChanges(id, serverItem: serverItem);
+        await store.discardEntityChanges(id,
+            serverItem: serverItem,
+            cacheKey: isSeries ? 'planner_series' : null,
+            entityType: isSeries ? 'planner_series' : null);
       }
     } catch (failure) {
       if (mounted) {
@@ -225,6 +246,7 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
 
   String _entityTitle(Map<String, dynamic> mutation) =>
       switch (mutation['entityType']) {
+        'planner_series' => 'برنامهٔ تکراری',
         'study_session' => 'ثبت مطالعه',
         'learning_progress' => 'پیشرفت درس',
         'learning_attempt' => 'پاسخ آزمون',
@@ -322,7 +344,8 @@ class _SyncChangesPageState extends State<SyncChangesPage> {
                       if (_manualRetryPage(mutation) case final page?)
                         'بررسی و ارسال از «$page»',
                     ].join('\n')),
-                    trailing: mutation['entityType'] == 'plan_item' &&
+                    trailing: ['plan_item', 'planner_series']
+                                .contains(mutation['entityType']) &&
                             ['conflict', 'rejected']
                                 .contains(mutation['queueStatus']) &&
                             !hiddenEntities.contains(mutation['entityId'])

@@ -1,0 +1,73 @@
+{
+  "sourceCommit": "087862349849d10af9f238352d9f1aea202e901f",
+  "status": "VERIFIED_LOCAL_SYNTHETIC_ONLY",
+  "liveChanges": false,
+  "checks": [
+    {
+      "command": "npm test -- --test-concurrency=1",
+      "environment": "Disposable loopback PostgreSQL16; 24 migrations; synthetic JWT and fixtures; private env file",
+      "output": "tests 308; pass 308; fail 0; skipped 0; duration_ms 165009.672696",
+      "log": "/tmp/weekly-backend-final-full.log"
+    },
+    {
+      "command": "flutter test --no-pub --reporter compact",
+      "output": "01:38 +277: All tests passed!",
+      "log": "/tmp/weekly-flutter-final-277.log"
+    },
+    {
+      "command": "flutter analyze --no-pub",
+      "output": "No issues found! (ran in 1.6s)",
+      "log": "/tmp/weekly-visible-analyze.log"
+    },
+    {
+      "command": "flutter build web --release --no-web-resources-cdn --pwa-strategy=none",
+      "output": "Compiling 67.0s; Built build/web",
+      "log": "/tmp/weekly-visible-web-build.log"
+    },
+    {
+      "command": "node tool/self_host_web.mjs build/web",
+      "output": "Web resources use local CanvasKit/font bases; external SDK/CDN defaults removed."
+    },
+    {
+      "command": "python3 scripts/check-tracked-secrets.py",
+      "output": "Tracked-file credential/artifact scan passed; this is not a complete secret audit."
+    },
+    {
+      "command": "python3 scripts/audit-naming.py --check",
+      "output": "Naming audit passed: 459 retained text occurrences classified; binary fonts/icons excluded."
+    },
+    {
+      "command": "node scripts/check-syntax.js",
+      "workingDirectory": "backend",
+      "output": "Syntax checked 84 source/script/test files."
+    },
+    {
+      "command": "dart format --output=none --set-exit-if-changed lib test",
+      "output": "Formatted 88 files (0 changed) in 0.51 seconds."
+    }
+  ],
+  "earlierFailures": [
+    "First backend full runs lacked an exported synthetic JWT or used a database name rejected by test fixture guards; rerun used local lifemate_ci without weakening guards.",
+    "New alarm singleton retained a completed async tail across widget test zones; bounded serial tail now clears after completion.",
+    "First full Flutter result: 272 passed and 4 old task-detail mock fixtures failed because they lacked the new series GET response. Updated mocks; focused8/8 and final complete276/276 passed.",
+    "Combined CI39169749107 was cancelled by superseding push0878623; do not treat its partial results as final build evidence."
+  ],
+  "reviewFixes": [
+    "Late reminder refresh cannot reverse explicit OFF across coordinator instances.",
+    "Completion undo restores future reminders of that item only.",
+    "Home progress includes completed owner tasks; /today contract unchanged.",
+    "Rejected series stays recoverable without blocking other plans."
+  ],
+  "unverified": [
+    "Physical Android install/upgrade, alarm sound/timing/reboot/Doze/force-stop",
+    "Safari/iPhone/PWA device acceptance and Iran without VPN",
+    "Public online API/backend/database integration and real OTP",
+    "Independent private child identity/consent and real-child use",
+    "Production release signing/deployment/merge"
+  ],
+  "pendingAtRecord": [
+    "Owner choice ADR0016; physical-device and public-child acceptance"
+  ],
+  "ciEvidence": "weekly-planner-ci-apk-2026-10-18.json",
+  "browserEvidence": "weekly-planner-browser-2026-10-18.json"
+}

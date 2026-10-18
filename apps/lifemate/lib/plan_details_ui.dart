@@ -171,6 +171,10 @@ class _PlanDetailsPageState extends State<PlanDetailsPage>
                                 item['startsAt'] ??
                                 item['due_at'] ??
                                 item['dueAt'])),
+                            if (item['ends_at'] != null ||
+                                item['endsAt'] != null)
+                              Text(
+                                  'پایان: ${widget.dateLabel(item['ends_at'] ?? item['endsAt'])}'),
                             Text(minutes > 0
                                 ? '$minutes دقیقه زمان برنامه‌ریزی‌شده'
                                 : 'زمان مطالعه تعیین نشده است'),

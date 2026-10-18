@@ -1,0 +1,91 @@
+{
+  "status": "VERIFIED_LOCAL_SYNTHETIC_ONLY",
+  "sourceHead": "087862349849d10af9f238352d9f1aea202e901f",
+  "compiledMainSha256": "2dcc68a8416bcac9f66f586cbf1bdc74a7a1dd49f46be0cd8bf504a7b96093a1",
+  "browser": "151.0.7922.173",
+  "tlsVerified": true,
+  "apiResponsesIntercepted": false,
+  "checks": [
+    {
+      "name": "verified HTTPS login to compiled Flutter with synthetic standard minor account",
+      "result": "PASS"
+    },
+    {
+      "name": "UI creates weekly school with different weekday hours; actual REST and PostgreSQL confirm private unique occurrences",
+      "result": "PASS"
+    },
+    {
+      "name": "ticking one occurrence leaves every other occurrence independently planned",
+      "result": "PASS"
+    },
+    {
+      "name": "page restart restores authenticated server-backed weekly record and completion",
+      "result": "PASS"
+    },
+    {
+      "name": "offline occurrence edit is durably pending while PostgreSQL remains unchanged",
+      "result": "PASS"
+    },
+    {
+      "name": "reconnect and subsequent restart retain one edited occurrence without duplicate generation",
+      "result": "PASS"
+    }
+  ],
+  "recurrence": {
+    "frequency": "weekly",
+    "timezone": "Asia/Tehran",
+    "slots": [
+      {
+        "end": "12:00",
+        "start": "08:00",
+        "weekday": 1
+      },
+      {
+        "end": "14:00",
+        "start": "10:00",
+        "weekday": 3
+      }
+    ],
+    "occurrenceCount": 18,
+    "completedCount": 1
+  },
+  "offlineEditFields": [
+    "title"
+  ],
+  "javascriptErrors": [],
+  "externalRuntimeOrigins": [],
+  "unverified": [
+    "physical Android/iPhone/Safari",
+    "background OS alarms",
+    "managed-child private planner authorization",
+    "offline cold start",
+    "production deployment"
+  ],
+  "testTool": {
+    "path": "apps/lifemate/tool/test_weekly_planner_browser.cjs",
+    "sha256": "b5f5c5d2d4e1d76451f32ba824c28276a85a37f234882c802fdda90e1ff32b39"
+  },
+  "screenshots": [
+    {
+      "path": "docs/ux/weekly-planner-2026-10-18/LifeGuide-weekly-editor.png",
+      "sha256": "a56b645fd4c150fb6a0b4ac60bfc0f9a46ab63e2161f5eb6d11d9aae31c6fd92"
+    },
+    {
+      "path": "docs/ux/weekly-planner-2026-10-18/LifeGuide-weekly-home.png",
+      "sha256": "9e1d2da3722ce14e435ece0ae40be8320baa1802cf58dbb78e83b0fc9ec7c7c5"
+    },
+    {
+      "path": "docs/ux/weekly-planner-2026-10-18/LifeGuide-weekly-reopened.png",
+      "sha256": "99ee0de6c8104ac969cd1e6a703544402500a7e23a74e9e6bb93b4d6139ec7e0"
+    },
+    {
+      "path": "docs/ux/weekly-planner-2026-10-18/LifeGuide-weekly-schedule.png",
+      "sha256": "c5322601977fd0ff62e40628c57a7d03dab93ccb5d73b0a95b81fb76e3f33dd1"
+    }
+  ],
+  "syntheticAccountType": "standard legacy minor account; not managed-child education scope",
+  "visibleUiAssertions": [
+    "Gregorian week range is labelled",
+    "selected occurrence shows end time 12:00"
+  ]
+}

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'api.dart';
 import 'offline_store.dart';
+import 'local_reminders.dart';
 
 String newMutationId() {
   final random = Random.secure();
@@ -19,10 +20,14 @@ class MutationOutcome {
 }
 
 class PlanSync {
-  PlanSync(this.api, {OfflineStore? store})
-      : store = store ?? OfflineStore.forApi(api);
+  PlanSync(this.api, {OfflineStore? store, LocalReminderPort? reminders})
+      : store = store ?? OfflineStore.forApi(api),
+        reminders = reminders ?? androidLocalReminders;
   final IdentityApi api;
   final OfflineStore store;
+  final LocalReminderPort reminders;
+  Future<T> withLocalMutationLock<T>(Future<T> Function() work) =>
+      _serial(work);
   static final _tails = <String, Future<void>>{};
   Future<T> _serial<T>(Future<T> Function() operation) {
     final previous = _tails[store.scope];
@@ -79,6 +84,14 @@ class PlanSync {
         };
         final optimistic = optimisticPlanItem(item, mutation);
         await store.enqueue(mutation, optimisticItem: optimistic);
+        try {
+          await reminders
+              .suppressPlanItems(store.scope, {item['id'] as String});
+        } catch (_) {
+          // Do not leave a stale alarm after a durable offline edit. If targeted
+          // cancellation fails, remove this device's full reminder opt-in.
+          await reminders.deactivate();
+        }
         try {
           await _flushQueue();
           final pending =
