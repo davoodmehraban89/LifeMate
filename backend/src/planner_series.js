@@ -6,6 +6,12 @@ const DAY = 86400000;
 const fail = (status, code) => { throw new PlanMutationError(status, code); };
 const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const stampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/;
+function validStamp(value) {
+  if (typeof value !== 'string' || !stampPattern.test(value) || value.startsWith('0000-')) return false;
+  const calendarDay = value.slice(0,10), midnight = new Date(calendarDay + 'T00:00:00Z');
+  return Number.isFinite(midnight.getTime()) && midnight.toISOString().slice(0,10) === calendarDay
+    && /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(value.slice(11,19)) && Number.isFinite(Date.parse(value));
+}
 const dayNumber = day => Date.parse(day + 'T00:00:00Z') / DAY;
 const addDays = (day, count) => new Date((dayNumber(day) + count) * DAY).toISOString().slice(0,10);
 function date(value) {
@@ -159,8 +165,7 @@ export function createPlannerSeriesRouter({ pool,auth }) {
   }));
   router.get('/planner-reminders',auth,route(async (req,res) => {
     const from = req.query.from, to = req.query.to;
-    if (typeof from !== 'string' || typeof to !== 'string' || !stampPattern.test(from) || !stampPattern.test(to)
-      || !Number.isFinite(Date.parse(from)) || !Number.isFinite(Date.parse(to)) || Date.parse(to) <= Date.parse(from)
+    if (!validStamp(from) || !validStamp(to) || Date.parse(to) <= Date.parse(from)
       || Date.parse(to)-Date.parse(from) > 2*DAY) fail(400,'invalid_reminder_window');
     const reminders = (await pool.query(`select r.id,r.plan_item_id,r.scheduled_for,r.owner_user_id from reminder r join plan_item p on p.id=r.plan_item_id
       where r.owner_user_id=$1 and p.owner_user_id=$1 and r.status='scheduled' and p.status in ('planned','in_progress')

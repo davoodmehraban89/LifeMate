@@ -136,6 +136,7 @@ test('canonical reminder windows are owner-only, bounded48h and exclude complete
   assert.deepEqual(Object.keys(r.body.reminders[0]).sort(),['id','owner_user_id','plan_item_id','scheduled_for']);
   assert.equal((await request(outsider,'GET',path)).body.reminders.length,0); assert.equal((await request(null,'GET',path)).status,401);
   assert.equal((await request(actor,'GET',`/planner-reminders?from=${today}T00:00:00Z&to=${day(3)}T00:00:00Z`)).status,400);
+  assert.equal((await request(actor,'GET','/planner-reminders?from=2026-02-30T09:00:00Z&to=2026-03-02T10:00:00Z')).status,400);
   const items = await rows(body.id);
   assert.equal((await request(actor,'PATCH',`/plan-items/${items[0].id}`,{ expectedVersion:1,status:'completed' })).status,200);
   assert.equal((await request(actor,'DELETE',`/plan-items/${items[1].id}`,{ expectedVersion:1 })).status,200);
