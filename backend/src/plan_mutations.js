@@ -116,7 +116,7 @@ async function grants(client, item, selected) {
     "insert into sharing_grant(resource_type,resource_id,grantee_user_id,granted_by) values('plan_item',$1,$2,$3)", [item.id, member, item.owner_user_id],
   );
 }
-async function reminders(client, item, payload) {
+async function reminders(client, item, payload, previous = null) {
   if (payload.reminderMinutesBefore !== undefined) {
     if (!Array.isArray(payload.reminderMinutesBefore) || payload.reminderMinutesBefore.length > 100 || payload.reminderMinutesBefore.some((x) => !Number.isSafeInteger(x) || x < 0 || x > 10080)) fail(400, 'invalid_reminders');
     await client.query('delete from reminder where plan_item_id=$1', [item.id]);
@@ -126,7 +126,18 @@ async function reminders(client, item, payload) {
     );
   }
   if (['completed', 'cancelled'].includes(item.status)) await client.query("update reminder set status='cancelled' where plan_item_id=$1 and status in ('scheduled','claimed')", [item.id]);
-  else await client.query('select recompute_reminder_schedule($1)', [item.id]);
+  else {
+    // Undo before the next scheduled alert restores only this occurrence's
+    // existing choices, never an already-past alert or another day's row.
+    if (previous && ['completed','cancelled'].includes(previous.status)
+      && payload.reminderMinutesBefore === undefined) {
+      await client.query(`update reminder set status='scheduled',claimed_at=null,
+        delivered_at=null,failure_reason=null where plan_item_id=$1 and status='cancelled'
+        and coalesce($2::timestamptz,$3::timestamptz)-make_interval(mins=>minutes_before)>now()`,
+      [item.id,item.starts_at,item.due_at]);
+    }
+    await client.query('select recompute_reminder_schedule($1)', [item.id]);
+  }
 }
 export async function createPlanItem(client, userId, payload, itemId = crypto.randomUUID(), occurrence = null) {
   if (!validUuid(itemId)) fail(400, 'invalid_id');
@@ -157,7 +168,7 @@ export async function updatePlanItem(client, userId, itemId, payload, expectedVe
   const update = [...Object.keys(fields).map((key, i) => `${key}=$${i + 2}`), 'updated_at=now()'];
   const item = (await client.query(`update plan_item set ${update.join(',')} where id=$1 returning *`, values)).rows[0];
   await grants(client, item, selected);
-  await reminders(client, item, payload);
+  await reminders(client, item, payload, current);
   return item;
 }
 export async function planTransaction(pool, userId, execute) {

@@ -58,6 +58,21 @@ test('same-id retry and simultaneous materialization do not duplicate occurrence
   for (const r of await Promise.all([1,2].map(() => request(actor,'POST',`/planner-series/${body.id}/materialize`,{ from:day(2),to:day(5) })))) assert.equal(r.status,200);
   assert.equal((await rows(body.id)).length,4);
 });
+test('undoing completion restores future reminder once for only that occurrence', async () => {
+  const actor=await user();
+  const start=new Date(Date.now()+3600000).toISOString(),end=new Date(Date.now()+5400000).toISOString();
+  const made=await request(actor,'POST','/plan-items',{title:'Synthetic undo',kind:'routine',startsAt:start,endsAt:end,reminderMinutesBefore:[5]});
+  assert.equal(made.status,201);const id=made.body.id;
+  const row=async()=> (await pool.query('select status from reminder where plan_item_id=$1',[id])).rows;
+  assert.deepEqual(await row(),[{status:'scheduled'}]);
+  assert.equal((await request(actor,'PATCH',`/plan-items/${id}`,{expectedVersion:1,status:'completed'})).status,200);
+  assert.deepEqual(await row(),[{status:'cancelled'}]);
+  assert.equal((await request(actor,'PATCH',`/plan-items/${id}`,{expectedVersion:2,status:'planned'})).status,200);
+  assert.deepEqual(await row(),[{status:'scheduled'}]);
+  const window=`?from=${encodeURIComponent(new Date().toISOString())}&to=${encodeURIComponent(new Date(Date.now()+86400000).toISOString())}`;
+  const list=await request(actor,'GET','/planner-reminders'+window);
+  assert.equal(list.status,200);assert.equal(list.body.reminders.filter(r=>r.plan_item_id===id).length,1);
+});
 test('alternate days keep original start anchor when initial materialization begins today', async () => {
   const actor = await user(), body = config({ startsOn:day(-7),untilOn:day(5),intervalDays:2 });
   assert.equal((await request(actor,'POST','/planner-series',body)).status,201);
