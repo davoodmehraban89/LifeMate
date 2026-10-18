@@ -5,8 +5,17 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var localReminderChannel: LocalReminderChannel? = null
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        localReminderChannel?.onPermissionResult(requestCode)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        localReminderChannel = LocalReminderChannel(this)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lifeguide/local_reminders")
+            .setMethodCallHandler(localReminderChannel)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lifeguide/local_write_guard")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
