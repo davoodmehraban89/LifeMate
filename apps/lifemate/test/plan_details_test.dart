@@ -189,7 +189,9 @@ void main() {
         baseUrl: 'https://timer-detail.example.test/api',
         client: MockClient((req) async {
           Object body;
-          if (req.url.path.endsWith('/study/sessions')) {
+          if (req.url.path.endsWith('/planner-series')) {
+            body = {'series': []};
+          } else if (req.url.path.endsWith('/study/sessions')) {
             body = {'sessions': []};
           } else if (req.method == 'POST') {
             final mutation =
@@ -241,21 +243,23 @@ void main() {
     final api = HttpIdentityApi(
         baseUrl: 'https://visibility-detail.example.test/api',
         client: MockClient((req) async => http.Response(
-            jsonEncode({
-              'items': visible
-                  ? [
-                      {
-                        'id': '30000000-0000-4000-8000-000000000005',
-                        'owner_user_id': 'other-owner',
-                        'title': 'اشتراک موقت ساختگی',
-                        'kind': 'assignment',
-                        'status': 'planned',
-                        'visibility': 'family',
-                        'version': 1
-                      }
-                    ]
-                  : []
-            }),
+            jsonEncode(req.url.path.endsWith('/planner-series')
+                ? {'series': []}
+                : {
+                    'items': visible
+                        ? [
+                            {
+                              'id': '30000000-0000-4000-8000-000000000005',
+                              'owner_user_id': 'other-owner',
+                              'title': 'اشتراک موقت ساختگی',
+                              'kind': 'assignment',
+                              'status': 'planned',
+                              'visibility': 'family',
+                              'version': 1
+                            }
+                          ]
+                        : []
+                  }),
             200,
             headers: {'content-type': 'application/json; charset=utf-8'})))
       ..accessToken = 'synthetic-token'
@@ -275,19 +279,21 @@ void main() {
     final api = HttpIdentityApi(
         baseUrl: 'https://background-detail.example.test/api',
         client: MockClient((req) async => http.Response(
-            jsonEncode({
-              'items': [
-                {
-                  'id': '30000000-0000-4000-8000-000000000006',
-                  'owner_user_id': 'other-owner',
-                  'title': 'اشتراک پس‌زمینه ساختگی',
-                  'kind': 'assignment',
-                  'status': 'planned',
-                  'visibility': 'family',
-                  'version': 1
-                }
-              ]
-            }),
+            jsonEncode(req.url.path.endsWith('/planner-series')
+                ? {'series': []}
+                : {
+                    'items': [
+                      {
+                        'id': '30000000-0000-4000-8000-000000000006',
+                        'owner_user_id': 'other-owner',
+                        'title': 'اشتراک پس‌زمینه ساختگی',
+                        'kind': 'assignment',
+                        'status': 'planned',
+                        'visibility': 'family',
+                        'version': 1
+                      }
+                    ]
+                  }),
             200,
             headers: {'content-type': 'application/json; charset=utf-8'})))
       ..accessToken = 'synthetic-token'
@@ -307,19 +313,21 @@ void main() {
     final api = HttpIdentityApi(
         baseUrl: 'https://detail.example.test/api',
         client: MockClient((req) async => http.Response(
-            jsonEncode({
-              'items': [
-                {
-                  'id': '30000000-0000-4000-8000-000000000003',
-                  'owner_user_id': 'other-owner',
-                  'title': 'کار مشترک',
-                  'kind': 'assignment',
-                  'status': 'planned',
-                  'visibility': 'family',
-                  'version': 1
-                }
-              ]
-            }),
+            jsonEncode(req.url.path.endsWith('/planner-series')
+                ? {'series': []}
+                : {
+                    'items': [
+                      {
+                        'id': '30000000-0000-4000-8000-000000000003',
+                        'owner_user_id': 'other-owner',
+                        'title': 'کار مشترک',
+                        'kind': 'assignment',
+                        'status': 'planned',
+                        'visibility': 'family',
+                        'version': 1
+                      }
+                    ]
+                  }),
             200,
             headers: {'content-type': 'application/json; charset=utf-8'})))
       ..accessToken = 'synthetic-token'

@@ -7,6 +7,9 @@ import 'plan_details_ui.dart';
 import 'study_ui.dart';
 import 'dashboard_ui.dart';
 import 'school_management_ui.dart';
+import 'planner_series.dart';
+import 'planner_series_ui.dart';
+import 'device_reminder_coordinator.dart';
 
 String faKind(String kind) => switch (kind) {
       'assignment' => 'تکلیف',
@@ -176,10 +179,23 @@ class SyncNotice extends StatelessWidget {
 }
 
 class TodayPage extends StatelessWidget {
-  const TodayPage({super.key, required this.api});
+  const TodayPage(
+      {super.key,
+      required this.api,
+      this.home = false,
+      this.displayName = '',
+      this.onOpenPlanner});
   final IdentityApi api;
+  final bool home;
+  final String displayName;
+  final VoidCallback? onOpenPlanner;
   @override
-  Widget build(BuildContext context) => _PlanList(api: api, today: true);
+  Widget build(BuildContext context) => _PlanList(
+      api: api,
+      today: true,
+      home: home,
+      displayName: displayName,
+      onOpenPlanner: onOpenPlanner);
 }
 
 class PlannerPage extends StatelessWidget {
@@ -190,9 +206,17 @@ class PlannerPage extends StatelessWidget {
 }
 
 class _PlanList extends StatefulWidget {
-  const _PlanList({required this.api, required this.today});
+  const _PlanList(
+      {required this.api,
+      required this.today,
+      this.home = false,
+      this.displayName = '',
+      this.onOpenPlanner});
   final IdentityApi api;
   final bool today;
+  final bool home;
+  final String displayName;
+  final VoidCallback? onOpenPlanner;
   @override
   State<_PlanList> createState() => _PlanListState();
 }
@@ -203,6 +227,9 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
   bool loading = false;
   String? busyId;
   String? operationError;
+  String? reminderError;
+  String? materializedWeek;
+  DateTime selectedDay = DateTime.now();
   Set<String> ownedCreates = {};
   ValueNotifier<Map<String, dynamic>?>? sharedDetail;
   String? sharedDetailId;
@@ -243,6 +270,24 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
     try {
       final store = OfflineStore.forApi(widget.api);
       await PlanSync(widget.api, store: store).flush();
+      final http = widget.api;
+      if (http is HttpIdentityApi) {
+        final series = PlannerSeriesSync(http, store: store);
+        await series.flush();
+        try {
+          final days =
+              plannerWeekDays(widget.today ? DateTime.now() : selectedDay);
+          final key = plannerDate(days.first);
+          if (materializedWeek != key) {
+            await series.materialize(days.first, days.last);
+            materializedWeek = key;
+          }
+        } catch (error) {
+          // A missing/new API route is a real compatibility error. Only a
+          // transport failure may use this account's existing offline rows.
+          if (!isOfflineFailure(error)) rethrow;
+        }
+      }
       final now = DateTime.now();
       final from = DateTime(now.year, now.month, now.day);
       final to = from.add(const Duration(days: 1));
@@ -250,10 +295,26 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
       var reminders = <Map<String, dynamic>>[];
       bool offline = false;
       try {
-        items = widget.today
-            ? await widget.api.getToday(from: from, to: to)
-            : await widget.api.listPlanItems();
+        items = widget.home
+            ? await widget.api.listPlanItems(from: from, to: to)
+            : widget.today
+                ? await widget.api.getToday(from: from, to: to)
+                : await widget.api.listPlanItems();
+        if (widget.home && http is HttpIdentityApi) {
+          items = items
+              .where((row) => row['owner_user_id'] == http.currentUserId)
+              .toList();
+        }
         if (widget.today) reminders = await widget.api.claimDueReminders();
+        if (http is HttpIdentityApi) {
+          try {
+            await DeviceReminderCoordinator(http).reconcile();
+            reminderError = null;
+          } catch (_) {
+            reminderError =
+                'برنامه دریافت شد؛ تازه‌سازی اعلان این گوشی موفق نشد. تنظیمات اعلان را بررسی کن.';
+          }
+        }
         // The store merges queued mutations atomically with each fresh cache.
         if (widget.today) {
           await store.cacheToday(items);
@@ -306,7 +367,10 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
       [Map<String, dynamic>? item, bool notify = true]) async {
     final outcome = await showDialog<MutationOutcome>(
         context: context,
-        builder: (_) => PlanItemDialog(api: widget.api, item: item));
+        builder: (_) => PlanItemDialog(
+            api: widget.api,
+            item: item,
+            initialDate: widget.today ? null : selectedDay));
     if (outcome != null && mounted) {
       if (notify) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -327,6 +391,90 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
         (owner == api.currentUserId ||
             (owner == null && ownedCreates.contains(item['id'])));
   }
+
+  Future<void> addSeries() async {
+    final api = widget.api;
+    if (api is! HttpIdentityApi) return;
+    final result = await showDialog<PlannerSeriesOutcome>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) =>
+            PlannerSeriesDialog(api: api, initialDate: selectedDay));
+    if (result != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(result.queued
+              ? 'پیش‌نویس روی دستگاه ماند؛ نوبت‌ها و اعلان پس از تأیید سرور آماده می‌شوند.'
+              : 'برنامهٔ تکراری و نوبت‌های آن در سرور ثبت شد.')));
+      await reload();
+    }
+  }
+
+  List<Map<String, dynamic>> visibleItems(LoadResult data) {
+    if (widget.today) {
+      return widget.home ? data.items.take(4).toList() : data.items;
+    }
+    final rows = data.items.where((row) {
+      final date = parseDate(
+          row['starts_at'] ?? row['startsAt'] ?? row['due_at'] ?? row['dueAt']);
+      return date != null && plannerDate(date) == plannerDate(selectedDay);
+    }).toList();
+    rows.sort((a, b) => (a['starts_at'] ?? a['due_at'] ?? '')
+        .toString()
+        .compareTo((b['starts_at'] ?? b['due_at'] ?? '').toString()));
+    return rows;
+  }
+
+  Widget weekSelector() =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          IconButton(
+              tooltip: 'هفتهٔ قبل',
+              onPressed: () => setState(() {
+                    selectedDay = selectedDay.subtract(const Duration(days: 7));
+                    future = load();
+                  }),
+              icon: const Icon(Icons.chevron_right)),
+          Expanded(
+              child: Text('هفتهٔ من',
+                  style: Theme.of(context).textTheme.titleLarge)),
+          TextButton(
+              onPressed: () => setState(() {
+                    selectedDay = DateTime.now();
+                    future = load();
+                  }),
+              child: const Text('امروز')),
+          IconButton(
+              tooltip: 'هفتهٔ بعد',
+              onPressed: () => setState(() {
+                    selectedDay = selectedDay.add(const Duration(days: 7));
+                    future = load();
+                  }),
+              icon: const Icon(Icons.chevron_left))
+        ]),
+        SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              for (final day in plannerWeekDays(selectedDay))
+                Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: ChoiceChip(
+                        key: ValueKey('planner-day-${day.weekday}'),
+                        label: Text('${const {
+                          6: 'شنبه',
+                          7: 'یکشنبه',
+                          1: 'دوشنبه',
+                          2: 'سه‌شنبه',
+                          3: 'چهارشنبه',
+                          4: 'پنجشنبه',
+                          5: 'جمعه'
+                        }[day.weekday]}\n${shortDay(day)}'),
+                        selected: plannerDate(day) == plannerDate(selectedDay),
+                        onSelected: (_) => setState(() => selectedDay = day)))
+            ])),
+        const SizedBox(height: 12),
+      ]);
+
+  String shortDay(DateTime day) => '${day.month}/${day.day}';
 
   Future<void> openDetails(Map<String, dynamic> item, bool offline) async {
     final canEdit = owns(item);
@@ -412,7 +560,11 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
       final sync = PlanSync(widget.api);
       final outcome = action == 'archive'
           ? await sync.archive(item)
-          : await sync.complete(item);
+          : action == 'start'
+              ? await sync.update(item, {'status': 'in_progress'})
+              : action == 'uncomplete'
+                  ? await sync.update(item, {'status': 'planned'})
+                  : await sync.complete(item);
       if (mounted) {
         // Detail has an inline receipt; avoid covering its action controls.
         if (!rethrowFailure || action == 'archive') {
@@ -440,6 +592,11 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
         if (s.hasError) return LoadError(error: s.error!, retry: reload);
         if (!s.hasData) return const Center(child: CircularProgressIndicator());
         final data = s.data!;
+        final visible = visibleItems(data);
+        final completed =
+            data.items.where((row) => row['status'] == 'completed').length;
+        final next =
+            data.items.where((row) => row['status'] != 'completed').firstOrNull;
         return RefreshIndicator(
             onRefresh: reload,
             child: ListView(padding: const EdgeInsets.all(16), children: [
@@ -453,6 +610,42 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
                   offline: data.offline,
                   pending: data.pending,
                   syncedAt: data.syncedAt),
+              if (reminderError != null)
+                Card(
+                    child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(reminderError!))),
+              if (widget.home) ...[
+                Text('سلام ${widget.displayName}',
+                    style: Theme.of(context).textTheme.headlineSmall),
+                const SizedBox(height: 12),
+                Card(
+                    child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('قدم بعدی',
+                                  style:
+                                      Theme.of(context).textTheme.titleLarge),
+                              const SizedBox(height: 8),
+                              Text(next?['title']?.toString() ??
+                                  'امروز کاری نداری؛ می‌توانی برنامهٔ فردا را آماده کنی.'),
+                              if (next != null)
+                                FilledButton(
+                                    onPressed: busyId == null && owns(next)
+                                        ? () => action(next, 'start')
+                                        : null,
+                                    child: const Text('شروع')),
+                              const SizedBox(height: 12),
+                              Text(
+                                  '$completed از ${data.items.length} کار امروز انجام شده'),
+                              LinearProgressIndicator(
+                                  value: data.items.isEmpty
+                                      ? 0
+                                      : completed / data.items.length),
+                            ]))),
+              ],
               if (operationError != null)
                 Card(
                     child: Padding(
@@ -462,7 +655,7 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
                                 color: Theme.of(context).colorScheme.error)))),
               Row(children: [
                 Expanded(
-                    child: Text(widget.today ? 'امروز' : 'برنامه‌ریز',
+                    child: Text(widget.today ? 'کارهای امروز' : 'برنامه‌ریز',
                         style: Theme.of(context).textTheme.headlineSmall)),
                 if (!widget.today)
                   FilledButton.icon(
@@ -470,16 +663,47 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
                       icon: const Icon(Icons.add),
                       label: const Text('جدید'))
               ]),
-              if (data.items.isEmpty)
+              if (widget.home)
+                Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: TextButton(
+                        key: const ValueKey('home-plan'),
+                        onPressed: widget.onOpenPlanner,
+                        child: const Text('دیدن برنامهٔ هفته'))),
+              if (!widget.today) ...[
+                weekSelector(),
+                if (widget.api is HttpIdentityApi)
+                  OutlinedButton.icon(
+                      onPressed: busyId == null ? addSeries : null,
+                      icon: const Icon(Icons.repeat),
+                      label: const Text('برنامهٔ تکراری')),
+                const Text(
+                    'تیک و ویرایش هر نوبت فقط همان روز را تغییر می‌دهد.'),
+              ],
+              if (visible.isEmpty)
                 const EmptyCard(
                     icon: Icons.task_alt,
                     title: 'موردی در این برنامه نیست',
                     subtitle: 'از برنامه‌ریز کار یا تکلیف جدید اضافه کن.'),
-              ...data.items.map((item) => Card(
+              ...visible.map((item) => Card(
                       child: ListTile(
-                    leading: Icon(item['status'] == 'completed'
-                        ? Icons.check_circle_outline
-                        : Icons.radio_button_unchecked),
+                    leading: !owns(item)
+                        ? const Icon(Icons.visibility_outlined)
+                        : IconButton(
+                            key: ValueKey('tick-${item['id']}'),
+                            tooltip: item['status'] == 'completed'
+                                ? 'برگرداندن به برنامه'
+                                : 'انجام شد',
+                            onPressed: busyId == null
+                                ? () => action(
+                                    item,
+                                    item['status'] == 'completed'
+                                        ? 'uncomplete'
+                                        : 'complete')
+                                : null,
+                            icon: Icon(item['status'] == 'completed'
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked)),
                     onTap: busyId == null
                         ? () => openDetails(item, data.offline)
                         : null,
@@ -491,31 +715,54 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator())
-                        : !owns(item)
-                            ? const Icon(Icons.visibility_outlined)
-                            : PopupMenuButton<String>(
-                                onSelected: (v) => action(item, v),
-                                itemBuilder: (_) => [
-                                      const PopupMenuItem(
-                                          value: 'edit', child: Text('ویرایش')),
-                                      const PopupMenuItem(
-                                          value: 'complete',
-                                          child: Text('انجام شد')),
-                                      if (item['pending_sync'] != true &&
-                                          widget.api is HttpIdentityApi &&
-                                          [
-                                            'assignment',
-                                            'task',
-                                            'study_session'
-                                          ].contains(item['kind']))
-                                        const PopupMenuItem(
-                                            value: 'study',
-                                            child: Text('تایمر مطالعه')),
-                                      const PopupMenuItem(
-                                          value: 'archive',
-                                          child: Text('بایگانی')),
-                                    ]),
+                        : widget.home &&
+                                owns(item) &&
+                                item['status'] != 'completed'
+                            ? TextButton(
+                                onPressed: busyId == null
+                                    ? () => action(item, 'start')
+                                    : null,
+                                child: const Text('شروع'))
+                            : !owns(item)
+                                ? const Icon(Icons.visibility_outlined)
+                                : PopupMenuButton<String>(
+                                    onSelected: (v) => action(item, v),
+                                    itemBuilder: (_) => [
+                                          const PopupMenuItem(
+                                              value: 'edit',
+                                              child: Text('ویرایش')),
+                                          const PopupMenuItem(
+                                              value: 'complete',
+                                              child: Text('انجام شد')),
+                                          if (item['pending_sync'] != true &&
+                                              widget.api is HttpIdentityApi &&
+                                              [
+                                                'assignment',
+                                                'task',
+                                                'study_session'
+                                              ].contains(item['kind']))
+                                            const PopupMenuItem(
+                                                value: 'study',
+                                                child: Text('تایمر مطالعه')),
+                                          const PopupMenuItem(
+                                              value: 'archive',
+                                              child: Text('بایگانی')),
+                                        ]),
                   ))),
+              if (!widget.today &&
+                  data.items.any((row) =>
+                      parseDate(row['starts_at'] ?? row['due_at']) ==
+                      null)) ...[
+                const SizedBox(height: 12),
+                Text('بدون زمان مشخص',
+                    style: Theme.of(context).textTheme.titleMedium),
+                for (final item in data.items.where((row) =>
+                    parseDate(row['starts_at'] ?? row['due_at']) == null))
+                  Card(
+                      child: ListTile(
+                          title: Text(item['title']?.toString() ?? ''),
+                          onTap: () => openDetails(item, data.offline))),
+              ],
             ]));
       });
 }
@@ -525,10 +772,12 @@ class PlanItemDialog extends StatefulWidget {
       {super.key,
       required this.api,
       this.item,
+      this.initialDate,
       this.initialKind = 'task',
       this.subjects = const []});
   final IdentityApi api;
   final Map<String, dynamic>? item;
+  final DateTime? initialDate;
   final String initialKind;
   final List<Map<String, dynamic>> subjects;
   @override
@@ -540,6 +789,9 @@ class _PlanItemDialogState extends State<PlanItemDialog> {
   late String kind;
   String priority = 'normal', status = 'planned';
   late DateTime when;
+  late DateTime endsWhen;
+  bool hasRange = false, rangeChanged = false, reminderChanged = false;
+  int reminderBefore = -1;
   bool shared = false, busy = false, sharingChanged = false;
   String originalVisibility = 'private';
   String? subjectId;
@@ -564,8 +816,15 @@ class _PlanItemDialogState extends State<PlanItemDialog> {
     kind = i?['kind']?.toString() ?? widget.initialKind;
     priority = i?['priority']?.toString() ?? 'normal';
     status = i?['status']?.toString() ?? 'planned';
-    when = parseDate(i?['due_at'] ?? i?['dueAt'] ?? i?['starts_at']) ??
-        DateTime.now().add(const Duration(hours: 1));
+    when = parseDate(
+            i?['starts_at'] ?? i?['startsAt'] ?? i?['due_at'] ?? i?['dueAt']) ??
+        (widget.initialDate == null
+            ? DateTime.now().add(const Duration(hours: 1))
+            : DateTime(widget.initialDate!.year, widget.initialDate!.month,
+                widget.initialDate!.day, 9));
+    hasRange = i == null || i['starts_at'] != null || i['startsAt'] != null;
+    endsWhen = parseDate(i?['ends_at'] ?? i?['endsAt']) ??
+        when.add(Duration(minutes: int.tryParse(minutes.text) ?? 30));
     originalVisibility = i?['visibility']?.toString() ?? 'private';
     shared = originalVisibility != 'private';
     subjectId = i?['subject_id']?.toString() ?? i?['subjectId']?.toString();
@@ -573,7 +832,7 @@ class _PlanItemDialogState extends State<PlanItemDialog> {
       subjectId = widget.subjects.first['id'].toString();
     }
     familyId = i?['family_id']?.toString() ?? i?['familyId']?.toString();
-    loadFamilies();
+    if (i?['series_id'] == null) loadFamilies();
   }
 
   Future<void> loadFamilies() async {
@@ -605,8 +864,25 @@ class _PlanItemDialogState extends State<PlanItemDialog> {
     final time = await showTimePicker(
         context: context, initialTime: TimeOfDay.fromDateTime(when));
     if (time != null && mounted) {
-      setState(() => when =
-          DateTime(date.year, date.month, date.day, time.hour, time.minute));
+      setState(() {
+        when =
+            DateTime(date.year, date.month, date.day, time.hour, time.minute);
+        endsWhen = DateTime(
+            date.year, date.month, date.day, endsWhen.hour, endsWhen.minute);
+        rangeChanged = true;
+      });
+    }
+  }
+
+  Future<void> pickEnd() async {
+    final time = await showTimePicker(
+        context: context, initialTime: TimeOfDay.fromDateTime(endsWhen));
+    if (time != null && mounted) {
+      setState(() {
+        endsWhen =
+            DateTime(when.year, when.month, when.day, time.hour, time.minute);
+        rangeChanged = true;
+      });
     }
   }
 
@@ -616,7 +892,13 @@ class _PlanItemDialogState extends State<PlanItemDialog> {
       setState(() => error = 'عنوان را وارد کن.');
       return;
     }
-    final duration = int.tryParse(numberInput(minutes.text));
+    final duration = hasRange
+        ? endsWhen.difference(when).inMinutes
+        : int.tryParse(numberInput(minutes.text));
+    if (hasRange && (duration == null || duration <= 0 || duration > 1440)) {
+      setState(() => error = 'پایان باید پس از شروع و در همان روز باشد.');
+      return;
+    }
     if (duration == null || duration < 0 || duration > 1440) {
       setState(
           () => error = 'زمان برنامه‌ریزی‌شده باید بین صفر و ۱۴۴۰ دقیقه باشد.');
@@ -662,7 +944,17 @@ class _PlanItemDialogState extends State<PlanItemDialog> {
         'priority': priority,
         'status': status,
         'notes': notes.text.trim(),
-        'dueAt': when.toUtc().toIso8601String(),
+        'dueAt': (hasRange ? endsWhen : when).toUtc().toIso8601String(),
+        if (item == null ||
+            rangeChanged ||
+            item['starts_at'] != null ||
+            item['startsAt'] != null) ...{
+          'startsAt': hasRange ? when.toUtc().toIso8601String() : null,
+          'endsAt': hasRange ? endsWhen.toUtc().toIso8601String() : null,
+        },
+        if (item == null || reminderChanged)
+          'reminderMinutesBefore':
+              reminderBefore < 0 ? <int>[] : [reminderBefore],
         'plannedDurationSeconds': duration * 60,
         'visibility': visibility,
         'familyId': visibility != 'private' ? familyId : null,
@@ -760,7 +1052,7 @@ class _PlanItemDialogState extends State<PlanItemDialog> {
                 const SizedBox(height: 12),
                 TextField(
                     controller: minutes,
-                    enabled: !busy,
+                    enabled: !busy && !hasRange,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                         labelText: 'زمان برنامه‌ریزی‌شده (دقیقه)')),
@@ -780,10 +1072,48 @@ class _PlanItemDialogState extends State<PlanItemDialog> {
                       decoration: const InputDecoration(
                           labelText: 'سقف نمره (اختیاری)')),
                 ],
+                CheckboxListTile(
+                    key: const ValueKey('plan-time-range'),
+                    title: const Text('ساعت شروع و پایان'),
+                    value: hasRange,
+                    onChanged: busy
+                        ? null
+                        : (value) => setState(() {
+                              hasRange = value ?? false;
+                              rangeChanged = true;
+                            })),
                 TextButton.icon(
                     onPressed: busy ? null : pickDate,
                     icon: const Icon(Icons.calendar_month),
-                    label: Text('موعد · ${shortDate(when.toIso8601String())}')),
+                    label: Text(
+                        '${hasRange ? 'شروع' : 'موعد'} · ${shortDate(when.toIso8601String())}')),
+                if (hasRange)
+                  TextButton.icon(
+                      key: const ValueKey('plan-end-time'),
+                      onPressed: busy ? null : pickEnd,
+                      icon: const Icon(Icons.schedule),
+                      label: Text(
+                          'پایان · ${shortDate(endsWhen.toIso8601String())}')),
+                DropdownButtonFormField<int>(
+                    key: const ValueKey('plan-reminder'),
+                    initialValue: reminderBefore,
+                    decoration: InputDecoration(
+                        labelText: widget.item != null && !reminderChanged
+                            ? 'یادآوری (فقط در صورت تغییر جایگزین می‌شود)'
+                            : 'یادآوری'),
+                    items: const [
+                      DropdownMenuItem(value: -1, child: Text('بدون یادآوری')),
+                      DropdownMenuItem(value: 0, child: Text('زمان شروع')),
+                      DropdownMenuItem(value: 5, child: Text('۵ دقیقه قبل')),
+                      DropdownMenuItem(value: 10, child: Text('۱۰ دقیقه قبل')),
+                      DropdownMenuItem(value: 15, child: Text('۱۵ دقیقه قبل'))
+                    ],
+                    onChanged: busy
+                        ? null
+                        : (value) => setState(() {
+                              reminderBefore = value ?? -1;
+                              reminderChanged = true;
+                            })),
                 TextField(
                     controller: notes,
                     enabled: !busy,
@@ -792,17 +1122,21 @@ class _PlanItemDialogState extends State<PlanItemDialog> {
                         labelText: 'یادداشت خصوصی',
                         helperText:
                             'یادداشت در گزارش والد نمایش داده نمی‌شود.')),
-                SwitchListTile(
-                    title: const Text('اشتراک تکلیف با والد / سرپرست'),
-                    subtitle: const Text(
-                        'عنوان، وضعیت و زمان ثبت‌شده برای سرپرست مجاز دیده می‌شود.'),
-                    value: shared,
-                    onChanged: busy
-                        ? null
-                        : (v) => setState(() {
-                              shared = v;
-                              sharingChanged = true;
-                            })),
+                if (widget.item?['series_id'] != null)
+                  const Text(
+                      'این نوبت خصوصی است؛ ویرایش و تیک فقط همین روز را تغییر می‌دهد.'),
+                if (widget.item?['series_id'] == null)
+                  SwitchListTile(
+                      title: const Text('اشتراک تکلیف با والد / سرپرست'),
+                      subtitle: const Text(
+                          'عنوان، وضعیت و زمان ثبت‌شده برای سرپرست مجاز دیده می‌شود.'),
+                      value: shared,
+                      onChanged: busy
+                          ? null
+                          : (v) => setState(() {
+                                shared = v;
+                                sharingChanged = true;
+                              })),
                 if (widget.item != null &&
                     !['private', 'parent_guardian']
                         .contains(originalVisibility) &&

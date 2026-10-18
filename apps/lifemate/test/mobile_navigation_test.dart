@@ -70,7 +70,7 @@ void main() {
 
   for (final size in [const Size(390, 844), const Size(320, 740)]) {
     testWidgets(
-        'compact home menus open separate destinations and back at $size',
+        'today home and bottom destinations open separate pages at $size',
         (tester) async {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
@@ -78,15 +78,16 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await shell(tester, MenuApi());
       expect(find.textContaining('کاربر نمونه'), findsOneWidget);
+      expect(find.text('قدم بعدی'), findsOneWidget);
       for (final entry in {
-        'plan': PlannerPage,
-        'courses': EducationLibraryPage,
-        'focus': StudyHub,
-        'family': ProfileFamilyPage
+        'برنامه': PlannerPage,
+        'درس‌ها': EducationLibraryPage,
+        'تمرکز': StudyHub,
+        'خانواده': ProfileFamilyPage
       }.entries) {
-        final menu = find.byKey(ValueKey('home-${entry.key}'));
+        final menu = find.descendant(
+            of: find.byType(NavigationBar), matching: find.text(entry.key));
         expect(menu.hitTestable(), findsOneWidget);
-        expect(tester.getRect(menu).bottom, lessThan(size.height - 50));
         await tester.tap(menu);
         await tester.pumpAndSettle();
         expect(find.byType(entry.value), findsOneWidget);
@@ -95,14 +96,11 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byKey(const ValueKey('home-plan')), findsOneWidget);
       }
-      for (final key in ['report', 'reminders']) {
-        expect(find.byKey(ValueKey('home-$key')).hitTestable(), findsOneWidget);
-        await tester.tap(find.byKey(ValueKey('home-$key')));
-        await tester.pumpAndSettle();
-        expect(find.byKey(const ValueKey('home-plan')), findsNothing);
-        await tester.tap(find.byTooltip('برگشت به خانه'));
-        await tester.pumpAndSettle();
-      }
+      await tester.tap(find.byTooltip('یادآوری‌ها'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('home-plan')), findsNothing);
+      await tester.tap(find.byTooltip('برگشت به خانه'));
+      await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });
@@ -123,14 +121,9 @@ void main() {
                 child: HomeShell(api: MenuApi())))));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('home-reminders')), 150,
-        scrollable: find
-            .descendant(
-                of: find.byKey(const ValueKey('home-scroll')),
-                matching: find.byType(Scrollable))
-            .first);
-    expect(find.byKey(const ValueKey('home-reminders')).hitTestable(),
-        findsOneWidget);
+        find.byKey(const ValueKey('home-plan')), 150);
+    expect(
+        find.byKey(const ValueKey('home-plan')).hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -152,7 +145,8 @@ void main() {
       (tester) async {
     final api = MenuApi();
     await shell(tester, api);
-    await tester.tap(find.byKey(const ValueKey('home-family')));
+    await tester.tap(find.descendant(
+        of: find.byType(NavigationBar), matching: find.text('خانواده')));
     await tester.pumpAndSettle();
     api.offlineProfile = true;
     await tester.tap(find.byTooltip('برگشت به خانه'));

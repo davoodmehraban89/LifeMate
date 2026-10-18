@@ -65,6 +65,9 @@ class PlannerSeriesSync {
               .where((s) => s['id'] == seriesId)
               .firstOrNull;
           if (accepted != null) {
+            if (_canonical(accepted['_create_payload']) != _canonical(body)) {
+              throw const ApiException(409, 'mutation_id_reused');
+            }
             return PlannerSeriesOutcome(queued: false, id: seriesId);
           }
           await store.enqueue({
@@ -94,7 +97,12 @@ class PlannerSeriesSync {
   Future<void> _flush() async {
     for (final queued in await store.readQueue()) {
       if (queued['entityType'] != 'planner_series') continue;
-      _throwTerminal(queued);
+      // A rejected draft stays visible in the recovery journal; it must not
+      // prevent unrelated plans from loading or other drafts from syncing.
+      if (queued['queueStatus'] == 'conflict' ||
+          queued['queueStatus'] == 'rejected') {
+        continue;
+      }
       _checkScope();
       try {
         final response = await api.requestJson('POST', '/v1/planner-series',
@@ -115,7 +123,10 @@ class PlannerSeriesSync {
           throw const ApiException(502, 'invalid_series_acknowledgement');
         }
         await store.acknowledge(queued['id'] as String,
-            item: Map<String, dynamic>.from(series),
+            item: {
+              ...Map<String, dynamic>.from(series),
+              '_create_payload': queued['payload']
+            },
             cacheKey: 'planner_series');
         // Fresh occurrence rows merge with other queued item edits in the store.
         final planner = await store.readPlanner();
@@ -129,6 +140,7 @@ class PlannerSeriesSync {
         if (error is ApiException &&
             error.statusCode >= 400 &&
             error.statusCode < 500 &&
+            error.statusCode != 401 &&
             error.statusCode != 429) {
           await store.markQueued(queued['id'] as String,
               error.statusCode == 409 ? 'conflict' : 'rejected',

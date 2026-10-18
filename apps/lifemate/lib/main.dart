@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'api.dart';
 import 'mobile_home.dart';
+import 'device_reminder_settings.dart';
 import 'study_ui.dart';
 import 'dashboard_ui.dart';
 import 'iran_hub.dart';
@@ -1228,6 +1229,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               retry: loadContext);
     }
     if (page == 'خانه') {
+      if (!adultShell) {
+        return TodayPage(
+            api: widget.api,
+            home: true,
+            displayName: displayName,
+            onOpenPlanner: () => selectPage('برنامه من'));
+      }
       return MobileHomeMenu(
           displayName: displayName, adult: adultShell, onOpen: openHomeMenu);
     }
@@ -1349,6 +1357,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                                 builder: (_) =>
                                     NotificationInboxPage(api: widget.api)));
                           }),
+                      if (httpApi != null)
+                        ListTile(
+                            leading: const Icon(Icons.alarm),
+                            title: const Text('اعلان روی این گوشی'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) => DeviceReminderSettingsPage(
+                                      api: httpApi!)));
+                            }),
                       ListTile(
                           leading: const Icon(Icons.sync_problem_outlined),
                           title: const Text('تغییرهای معلق و تعارض‌ها'),

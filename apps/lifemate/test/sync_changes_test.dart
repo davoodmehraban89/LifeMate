@@ -24,6 +24,16 @@ class _ConflictApi extends HttpIdentityApi {
       {Map<String, dynamic>? body, bool auth = true}) async {
     reads++;
     if (denied) throw const ApiException(403, 'forbidden');
+    if (path.contains('/planner-series/')) {
+      return {
+        'series': {
+          'id': path.split('/').last,
+          'owner_user_id': currentUserId,
+          'title': 'Server recurring',
+          'version': 2,
+        }
+      };
+    }
     return {
       'id': path.split('/').last,
       'title': 'Server current',
@@ -130,6 +140,34 @@ void main() {
     expect(await store.readDiscardedChanges(), isEmpty);
   });
 
+  testWidgets(
+      'rejected series can leave queue only after explicit recoverable choice',
+      (tester) async {
+    final api = _ConflictApi();
+    final store = OfflineStore.forApi(api);
+    const id = '00000000-0000-4000-8000-000000000100';
+    final draft = {
+      ...mutation(1, id, operation: 'create'),
+      'entityType': 'planner_series'
+    };
+    await store.enqueue(draft);
+    await store.markQueued(draft['id'] as String, 'rejected');
+    await tester.pumpWidget(MaterialApp(home: SyncChangesPage(api: api)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('بررسی و انتخاب'));
+    await tester.pumpAndSettle();
+    expect(find.text('نسخه سرور 2: Server recurring'), findsOneWidget);
+    expect(await store.readQueue(), hasLength(1));
+    await tester.tap(find.text('استفاده از نسخه سرور'));
+    await tester.pumpAndSettle();
+    expect(await store.readQueue(), isEmpty);
+    expect((await store.readDiscardedChanges()).single['payload'],
+        draft['payload']);
+    expect((await store.readList('planner_series')).single['title'],
+        'Server recurring');
+    expect(await store.readPlanner(), isEmpty);
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets(
       'conflict dialog preserves local changes until explicit use-server choice',
       (tester) async {

@@ -169,6 +169,29 @@ void main() {
         sync.create(payload, id: seriesId), throwsA(isA<ApiException>()));
     expect(f.requests, isEmpty);
   });
+  test('rejected draft does not block other sync and keeps recoverable journal',
+      () async {
+    final f = Fixture()..status = 400;
+    await expectLater(
+        f.reopen().create(payload, id: seriesId), throwsA(isA<ApiException>()));
+    f.status = null;
+    await f.reopen().flush();
+    expect(f.requests.length, 1);
+    await f.store.discardEntityChanges(seriesId,
+        entityType: 'planner_series', cacheKey: 'planner_series');
+    expect(await f.store.readQueue(), isEmpty);
+    expect((await f.store.readDiscardedChanges()).single['entityType'],
+        'planner_series');
+  });
+  test('acknowledged UUID cannot silently accept edited payload', () async {
+    final f = Fixture();
+    await f.reopen().create(payload, id: seriesId);
+    await expectLater(
+        f.reopen().create({...payload, 'title': 'changed'}, id: seriesId),
+        throwsA(isA<ApiException>()
+            .having((e) => e.code, 'code', 'mutation_id_reused')));
+    expect(f.requests.length, 1);
+  });
   test('Saturday week and dates retain selected calendar day', () {
     final days = plannerWeekDays(DateTime(2026, 10, 18));
     expect(days.first.weekday, DateTime.saturday);
