@@ -1,0 +1,559 @@
+{
+  "status": "VERIFIED_EXPORTS_ONLY",
+  "createdAt": "2026-10-18T16:13:28.433Z",
+  "browser": "151.0.7922.173",
+  "screenCount": 44,
+  "boardFrameCount": 67,
+  "sourceSha256": "4ebdd709db2dc43ea75e1466cfb4ed3dfbe16067e68d16d8a0efc402f7cac340",
+  "boardSize": {
+    "x": 0,
+    "y": 0,
+    "width": 2200,
+    "height": 18007.4375
+  },
+  "images": [
+    {
+      "id": "welcome",
+      "screen": "welcome",
+      "state": "normal",
+      "theme": "calm",
+      "title": "خوش‌آمد و انتخاب نقش",
+      "file": "screenshots/welcome.png"
+    },
+    {
+      "id": "parent-phone",
+      "screen": "parent-phone",
+      "state": "normal",
+      "theme": "calm",
+      "title": "ورود نمایشی والد",
+      "file": "screenshots/parent-phone.png"
+    },
+    {
+      "id": "otp",
+      "screen": "otp",
+      "state": "normal",
+      "theme": "calm",
+      "title": "کد یکبارمصرف نمونه",
+      "file": "screenshots/otp.png"
+    },
+    {
+      "id": "create-child",
+      "screen": "create-child",
+      "state": "normal",
+      "theme": "calm",
+      "title": "پروفایل ساختگی کودک",
+      "file": "screenshots/create-child.png"
+    },
+    {
+      "id": "consent",
+      "screen": "consent",
+      "state": "normal",
+      "theme": "calm",
+      "title": "متن رضایت نمایشی",
+      "file": "screenshots/consent.png"
+    },
+    {
+      "id": "invite-card",
+      "screen": "invite-card",
+      "state": "normal",
+      "theme": "calm",
+      "title": "دعوت نمونهٔ کودک",
+      "file": "screenshots/invite-card.png"
+    },
+    {
+      "id": "child-invite",
+      "screen": "child-invite",
+      "state": "normal",
+      "theme": "calm",
+      "title": "ورود نمایشی دانش‌آموز",
+      "file": "screenshots/child-invite.png"
+    },
+    {
+      "id": "child-visibility",
+      "screen": "child-visibility",
+      "state": "normal",
+      "theme": "calm",
+      "title": "والدم چه چیزی می‌بیند؟",
+      "file": "screenshots/child-visibility.png"
+    },
+    {
+      "id": "home",
+      "screen": "home",
+      "state": "normal",
+      "theme": "calm",
+      "title": "امروزِ من",
+      "file": "screenshots/home.png"
+    },
+    {
+      "id": "plan",
+      "screen": "plan",
+      "state": "normal",
+      "theme": "calm",
+      "title": "برنامهٔ من",
+      "file": "screenshots/plan.png"
+    },
+    {
+      "id": "task",
+      "screen": "task",
+      "state": "normal",
+      "theme": "calm",
+      "title": "جزئیات کار",
+      "file": "screenshots/task.png"
+    },
+    {
+      "id": "edit-task",
+      "screen": "edit-task",
+      "state": "normal",
+      "theme": "calm",
+      "title": "زمان کار نمونه",
+      "file": "screenshots/edit-task.png"
+    },
+    {
+      "id": "courses",
+      "screen": "courses",
+      "state": "normal",
+      "theme": "calm",
+      "title": "درس‌های من",
+      "file": "screenshots/courses.png"
+    },
+    {
+      "id": "lesson",
+      "screen": "lesson",
+      "state": "normal",
+      "theme": "calm",
+      "title": "عددهای صحیح",
+      "file": "screenshots/lesson.png"
+    },
+    {
+      "id": "practice",
+      "screen": "practice",
+      "state": "normal",
+      "theme": "calm",
+      "title": "تمرین راهنما",
+      "file": "screenshots/practice.png"
+    },
+    {
+      "id": "quiz",
+      "screen": "quiz",
+      "state": "normal",
+      "theme": "calm",
+      "title": "آزمونک نمونه",
+      "file": "screenshots/quiz.png"
+    },
+    {
+      "id": "quiz-result",
+      "screen": "quiz-result",
+      "state": "normal",
+      "theme": "calm",
+      "title": "نتیجهٔ همین پیش‌نمایش",
+      "file": "screenshots/quiz-result.png"
+    },
+    {
+      "id": "quiz-review",
+      "screen": "quiz-review",
+      "state": "normal",
+      "theme": "calm",
+      "title": "مرور پاسخ‌ها",
+      "file": "screenshots/quiz-review.png"
+    },
+    {
+      "id": "focus",
+      "screen": "focus",
+      "state": "normal",
+      "theme": "calm",
+      "title": "وقت تمرکز",
+      "file": "screenshots/focus.png"
+    },
+    {
+      "id": "family",
+      "screen": "family",
+      "state": "normal",
+      "theme": "calm",
+      "title": "خانواده و اشتراک",
+      "file": "screenshots/family.png"
+    },
+    {
+      "id": "reminders",
+      "screen": "reminders",
+      "state": "normal",
+      "theme": "calm",
+      "title": "یادآوری‌ها",
+      "file": "screenshots/reminders.png"
+    },
+    {
+      "id": "settings",
+      "screen": "settings",
+      "state": "normal",
+      "theme": "calm",
+      "title": "حساب و تنظیمات",
+      "file": "screenshots/settings.png"
+    },
+    {
+      "id": "student-report",
+      "screen": "student-report",
+      "state": "normal",
+      "theme": "calm",
+      "title": "گزارش من",
+      "file": "screenshots/student-report.png"
+    },
+    {
+      "id": "parent-home",
+      "screen": "parent-home",
+      "state": "normal",
+      "theme": "calm",
+      "title": "خانهٔ والد",
+      "file": "screenshots/parent-home.png"
+    },
+    {
+      "id": "report",
+      "screen": "report",
+      "state": "normal",
+      "theme": "calm",
+      "title": "گزارش‌های مجاز",
+      "file": "screenshots/report.png"
+    },
+    {
+      "id": "parent-plan",
+      "screen": "parent-plan",
+      "state": "normal",
+      "theme": "calm",
+      "title": "برنامهٔ شخصی والد",
+      "file": "screenshots/parent-plan.png"
+    },
+    {
+      "id": "parent-family",
+      "screen": "parent-family",
+      "state": "normal",
+      "theme": "calm",
+      "title": "خانوادهٔ نمونه",
+      "file": "screenshots/parent-family.png"
+    },
+    {
+      "id": "parent-settings",
+      "screen": "parent-settings",
+      "state": "normal",
+      "theme": "calm",
+      "title": "تنظیمات والد",
+      "file": "screenshots/parent-settings.png"
+    },
+    {
+      "id": "parent-content",
+      "screen": "parent-content",
+      "state": "normal",
+      "theme": "calm",
+      "title": "مرور وضعیت محتوای نمایشی",
+      "file": "screenshots/parent-content.png"
+    },
+    {
+      "id": "parent-reminders",
+      "screen": "parent-reminders",
+      "state": "normal",
+      "theme": "calm",
+      "title": "یادآوری‌های خود والد",
+      "file": "screenshots/parent-reminders.png"
+    },
+    {
+      "id": "parent-account-actions",
+      "screen": "parent-account-actions",
+      "state": "normal",
+      "theme": "calm",
+      "title": "مدیریت حساب والدِ نمونه",
+      "file": "screenshots/parent-account-actions.png"
+    },
+    {
+      "id": "parent-leave-family",
+      "screen": "parent-leave-family",
+      "state": "normal",
+      "theme": "calm",
+      "title": "خروج والد از خانواده",
+      "file": "screenshots/parent-leave-family.png"
+    },
+    {
+      "id": "parent-export-data",
+      "screen": "parent-export-data",
+      "state": "normal",
+      "theme": "calm",
+      "title": "خروجی دادهٔ خود والد",
+      "file": "screenshots/parent-export-data.png"
+    },
+    {
+      "id": "parent-delete-account",
+      "screen": "parent-delete-account",
+      "state": "normal",
+      "theme": "calm",
+      "title": "حذف حساب والد",
+      "file": "screenshots/parent-delete-account.png"
+    },
+    {
+      "id": "parent-confirm-action",
+      "screen": "parent-confirm-action",
+      "state": "normal",
+      "theme": "calm",
+      "title": "تأیید دومِ والد",
+      "file": "screenshots/parent-confirm-action.png"
+    },
+    {
+      "id": "parent-action-preview",
+      "screen": "parent-action-preview",
+      "state": "normal",
+      "theme": "calm",
+      "title": "پایان مسیر نمونهٔ والد",
+      "file": "screenshots/parent-action-preview.png"
+    },
+    {
+      "id": "account-actions",
+      "screen": "account-actions",
+      "state": "normal",
+      "theme": "calm",
+      "title": "مدیریت حساب نمونه",
+      "file": "screenshots/account-actions.png"
+    },
+    {
+      "id": "leave-family",
+      "screen": "leave-family",
+      "state": "normal",
+      "theme": "calm",
+      "title": "خروج از خانواده",
+      "file": "screenshots/leave-family.png"
+    },
+    {
+      "id": "export-data",
+      "screen": "export-data",
+      "state": "normal",
+      "theme": "calm",
+      "title": "خروجی داده",
+      "file": "screenshots/export-data.png"
+    },
+    {
+      "id": "delete-account",
+      "screen": "delete-account",
+      "state": "normal",
+      "theme": "calm",
+      "title": "حذف حساب",
+      "file": "screenshots/delete-account.png"
+    },
+    {
+      "id": "confirm-action",
+      "screen": "confirm-action",
+      "state": "normal",
+      "theme": "calm",
+      "title": "تأیید دومِ نمایشی",
+      "file": "screenshots/confirm-action.png"
+    },
+    {
+      "id": "action-preview",
+      "screen": "action-preview",
+      "state": "normal",
+      "theme": "calm",
+      "title": "پایان شبیه‌سازی",
+      "file": "screenshots/action-preview.png"
+    },
+    {
+      "id": "math-bidi",
+      "screen": "math-bidi",
+      "state": "normal",
+      "theme": "calm",
+      "title": "نمونهٔ جهت‌دهی ریاضی",
+      "file": "screenshots/math-bidi.png"
+    },
+    {
+      "id": "components",
+      "screen": "components",
+      "state": "normal",
+      "theme": "calm",
+      "title": "اجزای رابط",
+      "file": "screenshots/components.png"
+    },
+    {
+      "id": "welcome-error",
+      "screen": "welcome",
+      "state": "error",
+      "theme": "calm",
+      "title": "خوش‌آمد و انتخاب نقش · خطا",
+      "file": "screenshots/welcome-error.png"
+    },
+    {
+      "id": "parent-phone-error",
+      "screen": "parent-phone",
+      "state": "error",
+      "theme": "calm",
+      "title": "ورود نمایشی والد · خطا",
+      "file": "screenshots/parent-phone-error.png"
+    },
+    {
+      "id": "otp-error",
+      "screen": "otp",
+      "state": "wrong",
+      "theme": "calm",
+      "title": "کد یکبارمصرف نمونه · خطا",
+      "file": "screenshots/otp-error.png"
+    },
+    {
+      "id": "create-child-error",
+      "screen": "create-child",
+      "state": "error",
+      "theme": "calm",
+      "title": "پروفایل ساختگی کودک · خطا",
+      "file": "screenshots/create-child-error.png"
+    },
+    {
+      "id": "child-invite-error",
+      "screen": "child-invite",
+      "state": "error",
+      "theme": "calm",
+      "title": "ورود نمایشی دانش‌آموز · خطا",
+      "file": "screenshots/child-invite-error.png"
+    },
+    {
+      "id": "consent-error",
+      "screen": "consent",
+      "state": "error",
+      "theme": "calm",
+      "title": "متن رضایت نمایشی · خطا",
+      "file": "screenshots/consent-error.png"
+    },
+    {
+      "id": "child-visibility-error",
+      "screen": "child-visibility",
+      "state": "error",
+      "theme": "calm",
+      "title": "والدم چه چیزی می‌بیند؟ · خطا",
+      "file": "screenshots/child-visibility-error.png"
+    },
+    {
+      "id": "leave-family-error",
+      "screen": "leave-family",
+      "state": "error",
+      "theme": "calm",
+      "title": "خروج از خانواده · خطا",
+      "file": "screenshots/leave-family-error.png"
+    },
+    {
+      "id": "export-data-error",
+      "screen": "export-data",
+      "state": "error",
+      "theme": "calm",
+      "title": "خروجی داده · خطا",
+      "file": "screenshots/export-data-error.png"
+    },
+    {
+      "id": "delete-account-error",
+      "screen": "delete-account",
+      "state": "error",
+      "theme": "calm",
+      "title": "حذف حساب · خطا",
+      "file": "screenshots/delete-account-error.png"
+    },
+    {
+      "id": "otp-expired",
+      "screen": "otp",
+      "state": "expired",
+      "theme": "calm",
+      "title": "کد نمونه · expired",
+      "file": "screenshots/otp-expired.png"
+    },
+    {
+      "id": "otp-cooldown",
+      "screen": "otp",
+      "state": "cooldown",
+      "theme": "calm",
+      "title": "کد نمونه · cooldown",
+      "file": "screenshots/otp-cooldown.png"
+    },
+    {
+      "id": "otp-rate-limit",
+      "screen": "otp",
+      "state": "rate-limit",
+      "theme": "calm",
+      "title": "کد نمونه · rate-limit",
+      "file": "screenshots/otp-rate-limit.png"
+    },
+    {
+      "id": "home-empty",
+      "screen": "home",
+      "state": "empty",
+      "theme": "calm",
+      "title": "خانه · empty",
+      "file": "screenshots/home-empty.png"
+    },
+    {
+      "id": "home-loading",
+      "screen": "home",
+      "state": "loading",
+      "theme": "calm",
+      "title": "خانه · loading",
+      "file": "screenshots/home-loading.png"
+    },
+    {
+      "id": "home-error",
+      "screen": "home",
+      "state": "error",
+      "theme": "calm",
+      "title": "خانه · error",
+      "file": "screenshots/home-error.png"
+    },
+    {
+      "id": "home-offline",
+      "screen": "home",
+      "state": "offline",
+      "theme": "calm",
+      "title": "خانه · offline",
+      "file": "screenshots/home-offline.png"
+    },
+    {
+      "id": "home-conflict",
+      "screen": "home",
+      "state": "conflict",
+      "theme": "calm",
+      "title": "خانه · conflict",
+      "file": "screenshots/home-conflict.png"
+    },
+    {
+      "id": "home-session",
+      "screen": "home",
+      "state": "session",
+      "theme": "calm",
+      "title": "خانه · session",
+      "file": "screenshots/home-session.png"
+    },
+    {
+      "id": "home-rate-limit",
+      "screen": "home",
+      "state": "rate-limit",
+      "theme": "calm",
+      "title": "خانه · rate-limit",
+      "file": "screenshots/home-rate-limit.png"
+    },
+    {
+      "id": "bright-home",
+      "screen": "home",
+      "state": "normal",
+      "theme": "bright",
+      "title": "امروزِ من · کمی پرانرژی‌تر",
+      "file": "screenshots/bright-home.png"
+    },
+    {
+      "id": "bright-lesson",
+      "screen": "lesson",
+      "state": "normal",
+      "theme": "bright",
+      "title": "عددهای صحیح · کمی پرانرژی‌تر",
+      "file": "screenshots/bright-lesson.png"
+    },
+    {
+      "id": "bright-plan",
+      "screen": "plan",
+      "state": "normal",
+      "theme": "bright",
+      "title": "برنامهٔ من · کمی پرانرژی‌تر",
+      "file": "screenshots/bright-plan.png"
+    }
+  ],
+  "unverified": [
+    "Safari",
+    "physical devices",
+    "Iran reachability",
+    "real video",
+    "student usability test"
+  ]
+}

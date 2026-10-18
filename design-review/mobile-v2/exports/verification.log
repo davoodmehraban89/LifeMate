@@ -1,0 +1,17 @@
+Measured width 320px: 748 layouts; 0 cumulative failures.
+Measured width 360px: 1496 layouts; 0 cumulative failures.
+Measured width 390px: 2244 layouts; 0 cumulative failures.
+Running interaction check: bidi
+Running interaction check: navigation
+Running interaction check: system-state-interactions
+Running interaction check: quiz
+Running interaction check: board
+{
+  "status": "VERIFIED_DESIGN_ONLY",
+  "checksPassed": 11,
+  "measuredLayouts": 2244,
+  "failures": 0,
+  "minimumFontPx": 12,
+  "minimumContrast": 5.827057,
+  "receipt": "/tmp/lifeguide-design-v2/design-review/mobile-v2/exports/verification.json"
+}

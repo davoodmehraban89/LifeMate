@@ -1,0 +1,25 @@
+{
+  "status": "VERIFIED_LOCAL_DESIGN_FILES",
+  "recordedAt": "2026-10-18T16:17:04.979170+00:00",
+  "baseBranch": "design/mobile-navigation-review",
+  "baseCommit": "4c7efbb93585072ae02b0f19999e490163acbb20",
+  "designBranch": "design/mobile-accessibility-v2",
+  "files": {
+    "src/app.js": "8ac1831b4f0bd74999e8229eaab6464d1b938b94abbd8f81b37b7034016742f0",
+    "src/design.css": "c09c52936df734ee7c3f98cbce597797693dbe877852405e3414982ca492fa15",
+    "design-tokens.json": "139fa00356a008f25965fe6918272063c1b0db53889c9011bfda47111f6dccc3",
+    "tools/check.cjs": "6193f2ef8b35e7858c0a3af70cb26c5a3cf1d44d4df8aa35b4a8bcb0cab4fa5a",
+    "tools/build.mjs": "9bbad1b20c4cd0ab339e2b6694f875851f790c21eb75aff248e644a0be16e111",
+    "tools/export.cjs": "c2641810ef24a6439d6f976d8e4a8dc6191d67d5af9e918b19e335eb8cbc7cc3",
+    "tools/test-checker.cjs": "0105de2fe1007c2de87a8e587dbd109af68b8ad011d67deca5e1c20d9eb1aa5d",
+    "assets/persian.ttf": "6b999662f669b2c9b00c10ce4a110b6f5179c20f3f77e5ccb897e3ab965cf9f5",
+    "exports/LifeGuide-preview.html": "4ebdd709db2dc43ea75e1466cfb4ed3dfbe16067e68d16d8a0efc402f7cac340"
+  },
+  "htmlMatchesExportManifest": true,
+  "noProductFilesChanged": true,
+  "limits": [
+    "Local Chromium design checks only",
+    "No live deployment",
+    "No physical device or Safari acceptance"
+  ]
+}
