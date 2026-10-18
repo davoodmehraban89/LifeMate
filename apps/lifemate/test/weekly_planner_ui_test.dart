@@ -57,6 +57,15 @@ class PlannerFixture extends FakeApi {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('visible range includes end clock in the local planner label', () {
+    final start = DateTime(2026, 10, 19, 8), end = DateTime(2026, 10, 19, 12);
+    expect(
+        planTimeLabel({
+          'starts_at': start.toUtc().toIso8601String(),
+          'ends_at': end.toUtc().toIso8601String()
+        }),
+        contains('تا 12:00'));
+  });
   setUp(() {
     SharedPreferencesAsyncPlatform.instance =
         InMemorySharedPreferencesAsync.withData({});

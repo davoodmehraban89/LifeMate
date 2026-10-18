@@ -29,6 +29,13 @@ String shortDate(dynamic value) {
       : '${d.month}/${d.day} · ${d.hour}:${d.minute.toString().padLeft(2, '0')}';
 }
 
+String planTimeLabel(Map<String, dynamic> item) {
+  final start =
+      item['starts_at'] ?? item['startsAt'] ?? item['due_at'] ?? item['dueAt'];
+  final end = parseDate(item['ends_at'] ?? item['endsAt']);
+  return '${shortDate(start)}${end == null ? '' : ' تا ${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}'}';
+}
+
 String uiErrorText(Object error) {
   if (error is ApiException) {
     if (error.code == 'local_storage_restart_required') {
@@ -451,6 +458,8 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
                   }),
               icon: const Icon(Icons.chevron_left))
         ]),
+        Text(
+            '${plannerDate(plannerWeekDays(selectedDay).first)} تا ${plannerDate(plannerWeekDays(selectedDay).last)} · میلادی'),
         SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(children: [
@@ -467,7 +476,7 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
                           3: 'چهارشنبه',
                           4: 'پنجشنبه',
                           5: 'جمعه'
-                        }[day.weekday]}\n${shortDay(day)}'),
+                        }[day.weekday]} · ${shortDay(day)}'),
                         selected: plannerDate(day) == plannerDate(selectedDay),
                         onSelected: (_) => setState(() => selectedDay = day)))
             ])),
@@ -709,7 +718,7 @@ class _PlanListState extends State<_PlanList> with WidgetsBindingObserver {
                         : null,
                     title: Text(item['title']?.toString() ?? ''),
                     subtitle: Text(
-                        '${faKind(item['kind']?.toString() ?? 'task')} · ${shortDate(item['startsAt'] ?? item['starts_at'] ?? item['dueAt'] ?? item['due_at'])}${item['pending_sync'] == true ? '\nدر انتظار تأیید سرور' : ''}'),
+                        '${faKind(item['kind']?.toString() ?? 'task')} · ${planTimeLabel(item)}${item['pending_sync'] == true ? '\nدر انتظار تأیید سرور' : ''}'),
                     trailing: busyId == item['id']
                         ? const SizedBox(
                             width: 24,
