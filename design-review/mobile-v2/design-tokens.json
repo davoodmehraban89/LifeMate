@@ -1,0 +1,16 @@
+{
+  "product": "LifeGuide",
+  "version": "design-v2",
+  "units": {"tokens":"logical px at 100% text scale", "webTypography":"rem, root 16px", "flutter":"logical pixels, respect TextScaler"},
+  "colors": {
+    "calm": {"canvas":"#F2F5F0","surface":"#FFFFFF","ink":"#203A32","muted":"#50635B","primary":"#245C4C","onPrimary":"#FFFFFF","primarySoft":"#E4EDE5","accentSoft":"#F6EDD7","border":"#788B80","danger":"#8C283B","dangerSoft":"#FCEBF0","success":"#24523C","successSoft":"#E5F2E8"},
+    "bright": {"canvas":"#F8F3E9","surface":"#FFFFFF","ink":"#302D4D","muted":"#615B71","primary":"#514277","onPrimary":"#FFFFFF","primarySoft":"#EEE8F8","accentSoft":"#FBE5C8","border":"#8B819B","danger":"#8C283B","dangerSoft":"#FCEBF0","success":"#24523C","successSoft":"#E5F2E8"}
+  },
+  "typography": {"fontFamily":"LifeGuidePersian","helper":{"size":12,"weight":500},"bodySmall":{"size":14,"weight":400},"body":{"size":16,"weight":400},"title":{"size":20,"weight":700},"headline":{"size":26,"weight":700},"lineHeight":1.65,"minimum":12,"maximumTestedTextScale":2},
+  "spacing": [4,8,12,16,20,24,32],
+  "radii": {"control":16,"card":20,"hero":28,"chip":12},
+  "shadows": {"card":{"x":0,"y":4,"blur":20,"spread":0,"color":"#203A3210"},"navigation":{"x":0,"y":-2,"blur":16,"spread":0,"color":"#203A3210"}},
+  "touch": {"minimumWidth":48,"minimumHeight":48,"gap":8},
+  "contrast": {"textMinimum":4.5,"method":"WCAG relative luminance; measured rendered pairs in exports/verification.json"},
+  "motion": {"normalMs":140,"reducedMotionMs":0}
+}

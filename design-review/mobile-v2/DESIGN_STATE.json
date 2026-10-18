@@ -1,0 +1,52 @@
+{
+  "product": "LifeGuide",
+  "package": "LifeGuide-Design-v2",
+  "status": "AWAITING_OWNER_DESIGN_APPROVAL",
+  "date": "2026-10-18",
+  "branch": "design/mobile-accessibility-v2",
+  "baseBranch": "design/mobile-navigation-review",
+  "baseCommit": "4c7efbb93585072ae02b0f19999e490163acbb20",
+  "sampleDataOnly": true,
+  "backendConnected": false,
+  "persistentStorage": false,
+  "productionDeploy": false,
+  "merge": false,
+  "dnsChanged": false,
+  "productCodeChanged": false,
+  "screenCount": 44,
+  "boardFrameCount": 67,
+  "directions": {
+    "calm": [
+      "home",
+      "plan",
+      "lesson"
+    ],
+    "bright": [
+      "home",
+      "plan",
+      "lesson"
+    ]
+  },
+  "verified": {
+    "browser": "151.0.7922.173",
+    "layoutChecks": 2244,
+    "failureCount": 0,
+    "minimumFontPx": 12,
+    "minimumContrast": 5.827057,
+    "minimumTargetWidthPx": 48,
+    "minimumTargetHeightPx": 48,
+    "receipt": "exports/verification.json",
+    "exportReceipt": "exports/export-manifest.json",
+    "negativeControls": "exports/checker-negative-controls.json"
+  },
+  "unverified": {
+    "safari": "UNVERIFIED: Safari has not been run.",
+    "realDevice": "UNVERIFIED: no physical Android/iPhone/iPad test has been performed.",
+    "iranReachability": "UNVERIFIED: this local static check does not measure access from Iran.",
+    "videoPlayback": "UNVERIFIED: no approved video source or real video playback is included.",
+    "studentUsability": "UNVERIFIED: the ten-minute student test script has not been conducted.",
+    "backendAndPersistence": "UNVERIFIED and outside scope: no server, sending, saving, or real authentication."
+  },
+  "policy": "Display only: unchanged v1 shared tasks, allowed recorded-time summaries and shareable learning progress; no private note/chat/health/quiz-score parent exposure. New consent/auth/export/delete are mock UX proposals, not policy acceptance.",
+  "nextAction": "Owner reviews the design package. STOP; no Flutter/backend implementation, merge or deploy before relevant approval."
+}

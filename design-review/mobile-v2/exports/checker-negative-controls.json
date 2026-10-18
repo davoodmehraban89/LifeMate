@@ -1,0 +1,54 @@
+{
+  "status": "VERIFIED_CHECKER_NEGATIVE_CONTROLS",
+  "results": [
+    {
+      "name": "valid",
+      "expected": "PASS",
+      "observedProblems": [],
+      "result": "PASS"
+    },
+    {
+      "name": "font-small",
+      "expected": "REJECT",
+      "observedProblems": [
+        "font-below-minimum"
+      ],
+      "result": "PASS"
+    },
+    {
+      "name": "contrast-low",
+      "expected": "REJECT",
+      "observedProblems": [
+        "text-contrast"
+      ],
+      "result": "PASS"
+    },
+    {
+      "name": "touch-small",
+      "expected": "REJECT",
+      "observedProblems": [
+        "element-horizontal-overflow",
+        "touch-target"
+      ],
+      "result": "PASS"
+    },
+    {
+      "name": "overflow-horizontal",
+      "expected": "REJECT",
+      "observedProblems": [
+        "document-horizontal-overflow",
+        "element-horizontal-overflow",
+        "element-horizontal-overflow"
+      ],
+      "result": "PASS"
+    },
+    {
+      "name": "clipped-text",
+      "expected": "REJECT",
+      "observedProblems": [
+        "clipped-text"
+      ],
+      "result": "PASS"
+    }
+  ]
+}

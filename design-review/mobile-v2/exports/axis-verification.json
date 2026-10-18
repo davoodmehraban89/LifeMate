@@ -1,0 +1,311 @@
+{
+  "status": "VERIFIED_CHROMIUM_ONLY",
+  "results": [
+    {
+      "width": 320,
+      "scale": 1,
+      "labels": [
+        {
+          "value": "−۱۰",
+          "fontPx": 15.7859375,
+          "left": 1.9800777435302734,
+          "right": 21.136329650878906,
+          "top": 22.46484375,
+          "bottom": 49.46484375,
+          "frameWidth": 296,
+          "frameHeight": 157.859375,
+          "withinFrame": true
+        },
+        {
+          "value": "−۳",
+          "fontPx": 15.7859375,
+          "left": 151.01060485839844,
+          "right": 168.2174835205078,
+          "top": 22.46484375,
+          "bottom": 49.46484375,
+          "frameWidth": 296,
+          "frameHeight": 157.859375,
+          "withinFrame": true
+        },
+        {
+          "value": "۰",
+          "fontPx": 15.7859375,
+          "left": 225.20501708984375,
+          "right": 230.17376708984375,
+          "top": 121.126953125,
+          "bottom": 148.126953125,
+          "frameWidth": 296,
+          "frameHeight": 157.859375,
+          "withinFrame": true
+        },
+        {
+          "value": "۳",
+          "fontPx": 15.7859375,
+          "left": 286.4886474609375,
+          "right": 294.4886779785156,
+          "top": 22.46484375,
+          "bottom": 49.46484375,
+          "frameWidth": 296,
+          "frameHeight": 157.859375,
+          "withinFrame": true
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "width": 320,
+      "scale": 2,
+      "labels": [
+        {
+          "value": "−۱۰",
+          "fontPx": 31.571875,
+          "left": 1.9800777435302734,
+          "right": 40.32382774353027,
+          "top": 5.46484375,
+          "bottom": 59.46484375,
+          "frameWidth": 296,
+          "frameHeight": 157.859375,
+          "withinFrame": true
+        },
+        {
+          "value": "−۳",
+          "fontPx": 31.571875,
+          "left": 142.62777709960938,
+          "right": 176.14340209960938,
+          "top": 5.46484375,
+          "bottom": 59.46484375,
+          "frameWidth": 296,
+          "frameHeight": 157.859375,
+          "withinFrame": true
+        },
+        {
+          "value": "۰",
+          "fontPx": 31.571875,
+          "left": 222.72064208984375,
+          "right": 232.6581268310547,
+          "top": 104.126953125,
+          "bottom": 158.126953125,
+          "frameWidth": 296,
+          "frameHeight": 157.859375,
+          "withinFrame": true
+        },
+        {
+          "value": "۳",
+          "fontPx": 31.571875,
+          "left": 278.9418029785156,
+          "right": 294.0199279785156,
+          "top": 5.46484375,
+          "bottom": 59.46484375,
+          "frameWidth": 296,
+          "frameHeight": 157.859375,
+          "withinFrame": true
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "width": 360,
+      "scale": 1,
+      "labels": [
+        {
+          "value": "−۱۰",
+          "fontPx": 17.91875,
+          "left": 2.2515621185302734,
+          "right": 24.01718521118164,
+          "top": 25.796875,
+          "bottom": 55.796875,
+          "frameWidth": 336,
+          "frameHeight": 179.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "−۳",
+          "fontPx": 17.91875,
+          "left": 171.41607666015625,
+          "right": 190.873046875,
+          "top": 25.796875,
+          "bottom": 55.796875,
+          "frameWidth": 336,
+          "frameHeight": 179.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "۰",
+          "fontPx": 17.91875,
+          "left": 255.63580322265625,
+          "right": 261.2763977050781,
+          "top": 137.7890625,
+          "bottom": 167.7890625,
+          "frameWidth": 336,
+          "frameHeight": 179.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "۳",
+          "fontPx": 17.91875,
+          "left": 325.1859436035156,
+          "right": 334.1859436035156,
+          "top": 25.796875,
+          "bottom": 55.796875,
+          "frameWidth": 336,
+          "frameHeight": 179.1875,
+          "withinFrame": true
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "width": 360,
+      "scale": 2,
+      "labels": [
+        {
+          "value": "−۱۰",
+          "fontPx": 35.8375,
+          "left": 2.2515621185302734,
+          "right": 45.78281211853027,
+          "top": 6.796875,
+          "bottom": 67.796875,
+          "frameWidth": 336,
+          "frameHeight": 179.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "−۳",
+          "fontPx": 35.8375,
+          "left": 161.9004669189453,
+          "right": 199.9473419189453,
+          "top": 6.796875,
+          "bottom": 67.796875,
+          "frameWidth": 336,
+          "frameHeight": 179.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "۰",
+          "fontPx": 35.8375,
+          "left": 252.81549072265625,
+          "right": 264.0967102050781,
+          "top": 118.7890625,
+          "bottom": 179.7890625,
+          "frameWidth": 336,
+          "frameHeight": 179.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "۳",
+          "fontPx": 35.8375,
+          "left": 316.6390380859375,
+          "right": 333.7484130859375,
+          "top": 6.796875,
+          "bottom": 67.796875,
+          "frameWidth": 336,
+          "frameHeight": 179.1875,
+          "withinFrame": true
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "width": 390,
+      "scale": 1,
+      "labels": [
+        {
+          "value": "−۱۰",
+          "fontPx": 19.51875,
+          "left": 2.4515628814697266,
+          "right": 26.15468978881836,
+          "top": 27.796875,
+          "bottom": 60.796875,
+          "frameWidth": 366,
+          "frameHeight": 195.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "−۳",
+          "fontPx": 19.51875,
+          "left": 186.72633361816406,
+          "right": 207.429443359375,
+          "top": 27.796875,
+          "bottom": 60.796875,
+          "frameWidth": 366,
+          "frameHeight": 195.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "۰",
+          "fontPx": 19.51875,
+          "left": 278.4627990722656,
+          "right": 284.6034240722656,
+          "top": 149.7890625,
+          "bottom": 182.7890625,
+          "frameWidth": 366,
+          "frameHeight": 195.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "۳",
+          "fontPx": 19.51875,
+          "left": 354.2359619140625,
+          "right": 363.5484619140625,
+          "top": 27.796875,
+          "bottom": 60.796875,
+          "frameWidth": 366,
+          "frameHeight": 195.1875,
+          "withinFrame": true
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "width": 390,
+      "scale": 2,
+      "labels": [
+        {
+          "value": "−۱۰",
+          "fontPx": 39.0375,
+          "left": 2.4515628814697266,
+          "right": 49.85781288146973,
+          "top": 6.796875,
+          "bottom": 73.796875,
+          "frameWidth": 366,
+          "frameHeight": 195.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "−۳",
+          "fontPx": 39.0375,
+          "left": 176.36695861816406,
+          "right": 217.78883361816406,
+          "top": 6.796875,
+          "bottom": 73.796875,
+          "frameWidth": 366,
+          "frameHeight": 195.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "۰",
+          "fontPx": 39.0375,
+          "left": 275.3924865722656,
+          "right": 287.6737365722656,
+          "top": 128.7890625,
+          "bottom": 195.7890625,
+          "frameWidth": 366,
+          "frameHeight": 195.1875,
+          "withinFrame": true
+        },
+        {
+          "value": "۳",
+          "fontPx": 39.0375,
+          "left": 344.9078369140625,
+          "right": 363.5484619140625,
+          "top": 6.796875,
+          "bottom": 73.796875,
+          "frameWidth": 366,
+          "frameHeight": 195.1875,
+          "withinFrame": true
+        }
+      ],
+      "result": "PASS"
+    }
+  ]
+}

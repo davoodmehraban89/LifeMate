@@ -1,0 +1,2038 @@
+{
+  "schemaVersion": 2,
+  "scope": "LifeGuide-Design-v2: static, fictional, interactive design only",
+  "status": "VERIFIED_DESIGN_ONLY",
+  "startedAt": "2026-10-18T16:13:52.652Z",
+  "command": "NODE_PATH=/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules node tools/check.cjs",
+  "baseUrl": "http://127.0.0.1:8772/LifeGuide-preview.html",
+  "browser": "151.0.7922.173",
+  "matrices": {
+    "widths": [
+      320,
+      360,
+      390
+    ],
+    "themes": [
+      "calm",
+      "bright"
+    ],
+    "fontScale": [
+      1,
+      2
+    ],
+    "systemStates": [
+      "normal",
+      "empty",
+      "loading",
+      "error",
+      "offline",
+      "conflict",
+      "session",
+      "rate-limit"
+    ]
+  },
+  "checks": [
+    {
+      "check": "public design inspection contract and screen inventory",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "screenCount": 44,
+      "boardFrameCount": 67
+    },
+    {
+      "check": "default lesson has no video/embed source",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "realVideoPlayback": "UNVERIFIED"
+    },
+    {
+      "check": "two visibly distinct directions retain the same navigation structure",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "themes": [
+        {
+          "theme": "calm",
+          "primary": "#245C4C",
+          "canvas": "#F2F5F0",
+          "bottomDestinations": [
+            "خانه",
+            "برنامه",
+            "درس‌ها",
+            "تمرکز",
+            "خانواده"
+          ]
+        },
+        {
+          "theme": "bright",
+          "primary": "#514277",
+          "canvas": "#F8F3E9",
+          "bottomDestinations": [
+            "خانه",
+            "برنامه",
+            "درس‌ها",
+            "تمرکز",
+            "خانواده"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "rendered text >=12px, measured contrast >=4.5:1, targets >=48x48, no horizontal overflow or hidden text at 100% and 200%",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "layouts": 2244,
+      "minimumFontPx": 12,
+      "minimumContrast": 5.827057,
+      "widths": [
+        320,
+        360,
+        390
+      ],
+      "themes": [
+        "calm",
+        "bright"
+      ]
+    },
+    {
+      "check": "bidi: mandatory LTR islands and minus glyph left of following digit",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "examples": 4,
+      "screenshot": "screenshots/bidi-math-390.png",
+      "screenshotMode": "390px phone width, expanded scroll content to show every example together"
+    },
+    {
+      "check": "clickable student navigation and separate parent navigation",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "studentDestinations": [
+        {
+          "name": "خانه",
+          "destination": "home"
+        },
+        {
+          "name": "برنامه",
+          "destination": "plan"
+        },
+        {
+          "name": "درس‌ها",
+          "destination": "courses"
+        },
+        {
+          "name": "تمرکز",
+          "destination": "focus"
+        },
+        {
+          "name": "خانواده",
+          "destination": "family"
+        }
+      ],
+      "parentDestinationCount": 5
+    },
+    {
+      "check": "retry, explicit conflict choices, offline reconnect, session re-entry, rate-limit and OTP cooldown controls change their fixture states",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "actionCount": 142,
+      "actions": [
+        {
+          "screen": "welcome",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-phone",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "otp",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "create-child",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "consent",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "invite-card",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "child-invite",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "child-visibility",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "home",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "home",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "home",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "home",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "home",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "home",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "home",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "plan",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "plan",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "plan",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "plan",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "plan",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "plan",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "plan",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "task",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "edit-task",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "courses",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "courses",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "courses",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "courses",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "courses",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "courses",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "courses",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "lesson",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "lesson",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "lesson",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "lesson",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "lesson",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "lesson",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "lesson",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "practice",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "quiz",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "quiz",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "quiz",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "quiz",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "quiz",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "quiz",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "quiz",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "quiz-result",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "quiz-review",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "focus",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "focus",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "focus",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "focus",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "focus",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "focus",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "focus",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "family",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "family",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "family",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "family",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "family",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "family",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "family",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "reminders",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "reminders",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "reminders",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "reminders",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "reminders",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "reminders",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "reminders",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "settings",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "settings",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "settings",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "settings",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "settings",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "settings",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "settings",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "student-report",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "student-report",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "student-report",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "student-report",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "student-report",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "student-report",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "student-report",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-home",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-home",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-home",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-home",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-home",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-home",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-home",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "report",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "report",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "report",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "report",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "report",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "report",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "report",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-plan",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-plan",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-plan",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-plan",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-plan",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-plan",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-plan",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-family",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-family",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-family",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-family",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-family",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-family",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-family",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-settings",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-settings",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-settings",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-settings",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-settings",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-settings",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-settings",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-content",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-reminders",
+          "state": "empty",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-reminders",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-reminders",
+          "state": "offline",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-reminders",
+          "state": "conflict",
+          "action": "resolve:local",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-reminders",
+          "state": "conflict",
+          "action": "resolve:other",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-reminders",
+          "state": "session",
+          "action": "go:welcome",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-reminders",
+          "state": "rate-limit",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-account-actions",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-leave-family",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-export-data",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-delete-account",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-confirm-action",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "parent-action-preview",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "account-actions",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "leave-family",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "export-data",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "delete-account",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "confirm-action",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "action-preview",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "math-bidi",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "components",
+          "state": "error",
+          "action": "state:normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "otp",
+          "state": "wrong",
+          "action": "resend cooldown -> simulated expiry -> normal",
+          "result": "PASS"
+        },
+        {
+          "screen": "otp",
+          "state": "expired",
+          "action": "resend cooldown -> simulated expiry -> normal",
+          "result": "PASS"
+        }
+      ]
+    },
+    {
+      "check": "ten fictional quiz questions, displayed score, answer review and retry",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "questionCount": 10,
+      "resultText": "۳ از ۱۰ پاسخ درست"
+    },
+    {
+      "check": "full board has every declared frame and design label",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "frameCount": 67,
+      "minimumRequired": 20,
+      "frames": [
+        {
+          "screen": "welcome",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 649.53125,
+          "overflow": [
+            {
+              "scrollHeight": 509,
+              "clientHeight": 509
+            }
+          ]
+        },
+        {
+          "screen": "parent-phone",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 503.75,
+          "overflow": [
+            {
+              "scrollHeight": 363,
+              "clientHeight": 363
+            }
+          ]
+        },
+        {
+          "screen": "otp",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 632.53125,
+          "overflow": [
+            {
+              "scrollHeight": 492,
+              "clientHeight": 492
+            }
+          ]
+        },
+        {
+          "screen": "create-child",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 704.3125,
+          "overflow": [
+            {
+              "scrollHeight": 564,
+              "clientHeight": 564
+            }
+          ]
+        },
+        {
+          "screen": "consent",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 823.890625,
+          "overflow": [
+            {
+              "scrollHeight": 683,
+              "clientHeight": 683
+            }
+          ]
+        },
+        {
+          "screen": "invite-card",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 727.09375,
+          "overflow": [
+            {
+              "scrollHeight": 586,
+              "clientHeight": 586
+            }
+          ]
+        },
+        {
+          "screen": "child-invite",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 599.921875,
+          "overflow": [
+            {
+              "scrollHeight": 459,
+              "clientHeight": 459
+            }
+          ]
+        },
+        {
+          "screen": "child-visibility",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 811.484375,
+          "overflow": [
+            {
+              "scrollHeight": 671,
+              "clientHeight": 671
+            }
+          ]
+        },
+        {
+          "screen": "home",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 1166.921875,
+          "overflow": [
+            {
+              "scrollHeight": 986,
+              "clientHeight": 986
+            }
+          ]
+        },
+        {
+          "screen": "plan",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 972.34375,
+          "overflow": [
+            {
+              "scrollHeight": 791,
+              "clientHeight": 791
+            }
+          ]
+        },
+        {
+          "screen": "task",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 715.75,
+          "overflow": [
+            {
+              "scrollHeight": 535,
+              "clientHeight": 535
+            }
+          ]
+        },
+        {
+          "screen": "edit-task",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 754.09375,
+          "overflow": [
+            {
+              "scrollHeight": 613,
+              "clientHeight": 613
+            }
+          ]
+        },
+        {
+          "screen": "courses",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 594.359375,
+          "overflow": [
+            {
+              "scrollHeight": 413,
+              "clientHeight": 413
+            }
+          ]
+        },
+        {
+          "screen": "lesson",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 1141.15625,
+          "overflow": [
+            {
+              "scrollHeight": 960,
+              "clientHeight": 960
+            }
+          ]
+        },
+        {
+          "screen": "practice",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 627.34375,
+          "overflow": [
+            {
+              "scrollHeight": 446,
+              "clientHeight": 446
+            }
+          ]
+        },
+        {
+          "screen": "quiz",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 675.046875,
+          "overflow": [
+            {
+              "scrollHeight": 494,
+              "clientHeight": 494
+            }
+          ]
+        },
+        {
+          "screen": "quiz-result",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 589.84375,
+          "overflow": [
+            {
+              "scrollHeight": 409,
+              "clientHeight": 409
+            }
+          ]
+        },
+        {
+          "screen": "quiz-review",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 2797.796875,
+          "overflow": [
+            {
+              "scrollHeight": 2617,
+              "clientHeight": 2617
+            }
+          ]
+        },
+        {
+          "screen": "focus",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 629.96875,
+          "overflow": [
+            {
+              "scrollHeight": 449,
+              "clientHeight": 449
+            }
+          ]
+        },
+        {
+          "screen": "family",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 752.515625,
+          "overflow": [
+            {
+              "scrollHeight": 572,
+              "clientHeight": 572
+            }
+          ]
+        },
+        {
+          "screen": "reminders",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 900.734375,
+          "overflow": [
+            {
+              "scrollHeight": 720,
+              "clientHeight": 720
+            }
+          ]
+        },
+        {
+          "screen": "settings",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 677.34375,
+          "overflow": [
+            {
+              "scrollHeight": 496,
+              "clientHeight": 496
+            }
+          ]
+        },
+        {
+          "screen": "student-report",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 582.34375,
+          "overflow": [
+            {
+              "scrollHeight": 401,
+              "clientHeight": 401
+            }
+          ]
+        },
+        {
+          "screen": "parent-home",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 715.34375,
+          "overflow": [
+            {
+              "scrollHeight": 534,
+              "clientHeight": 534
+            }
+          ]
+        },
+        {
+          "screen": "report",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 904.515625,
+          "overflow": [
+            {
+              "scrollHeight": 724,
+              "clientHeight": 724
+            }
+          ]
+        },
+        {
+          "screen": "parent-plan",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 456.1875,
+          "overflow": [
+            {
+              "scrollHeight": 275,
+              "clientHeight": 275
+            }
+          ]
+        },
+        {
+          "screen": "parent-family",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 583.5625,
+          "overflow": [
+            {
+              "scrollHeight": 403,
+              "clientHeight": 403
+            }
+          ]
+        },
+        {
+          "screen": "parent-settings",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 498.5625,
+          "overflow": [
+            {
+              "scrollHeight": 318,
+              "clientHeight": 318
+            }
+          ]
+        },
+        {
+          "screen": "parent-content",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 664.328125,
+          "overflow": [
+            {
+              "scrollHeight": 524,
+              "clientHeight": 524
+            }
+          ]
+        },
+        {
+          "screen": "parent-reminders",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 900.734375,
+          "overflow": [
+            {
+              "scrollHeight": 720,
+              "clientHeight": 720
+            }
+          ]
+        },
+        {
+          "screen": "parent-account-actions",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 525.140625,
+          "overflow": [
+            {
+              "scrollHeight": 384,
+              "clientHeight": 384
+            }
+          ]
+        },
+        {
+          "screen": "parent-leave-family",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 563.53125,
+          "overflow": [
+            {
+              "scrollHeight": 423,
+              "clientHeight": 423
+            }
+          ]
+        },
+        {
+          "screen": "parent-export-data",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 570.140625,
+          "overflow": [
+            {
+              "scrollHeight": 429,
+              "clientHeight": 429
+            }
+          ]
+        },
+        {
+          "screen": "parent-delete-account",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 507.140625,
+          "overflow": [
+            {
+              "scrollHeight": 366,
+              "clientHeight": 366
+            }
+          ]
+        },
+        {
+          "screen": "parent-confirm-action",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 460.359375,
+          "overflow": [
+            {
+              "scrollHeight": 320,
+              "clientHeight": 320
+            }
+          ]
+        },
+        {
+          "screen": "parent-action-preview",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 389.96875,
+          "overflow": [
+            {
+              "scrollHeight": 249,
+              "clientHeight": 249
+            }
+          ]
+        },
+        {
+          "screen": "account-actions",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 525.140625,
+          "overflow": [
+            {
+              "scrollHeight": 384,
+              "clientHeight": 384
+            }
+          ]
+        },
+        {
+          "screen": "leave-family",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 563.53125,
+          "overflow": [
+            {
+              "scrollHeight": 423,
+              "clientHeight": 423
+            }
+          ]
+        },
+        {
+          "screen": "export-data",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 570.140625,
+          "overflow": [
+            {
+              "scrollHeight": 429,
+              "clientHeight": 429
+            }
+          ]
+        },
+        {
+          "screen": "delete-account",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 507.140625,
+          "overflow": [
+            {
+              "scrollHeight": 366,
+              "clientHeight": 366
+            }
+          ]
+        },
+        {
+          "screen": "confirm-action",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 460.359375,
+          "overflow": [
+            {
+              "scrollHeight": 320,
+              "clientHeight": 320
+            }
+          ]
+        },
+        {
+          "screen": "action-preview",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 389.96875,
+          "overflow": [
+            {
+              "scrollHeight": 249,
+              "clientHeight": 249
+            }
+          ]
+        },
+        {
+          "screen": "math-bidi",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 1160.1875,
+          "overflow": [
+            {
+              "scrollHeight": 1019,
+              "clientHeight": 1019
+            }
+          ]
+        },
+        {
+          "screen": "components",
+          "state": "normal",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 968.5,
+          "overflow": [
+            {
+              "scrollHeight": 828,
+              "clientHeight": 828
+            }
+          ]
+        },
+        {
+          "screen": "welcome",
+          "state": "error",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 820.703125,
+          "overflow": [
+            {
+              "scrollHeight": 680,
+              "clientHeight": 680
+            }
+          ]
+        },
+        {
+          "screen": "parent-phone",
+          "state": "error",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 701.3125,
+          "overflow": [
+            {
+              "scrollHeight": 561,
+              "clientHeight": 561
+            }
+          ]
+        },
+        {
+          "screen": "otp",
+          "state": "wrong",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 704.921875,
+          "overflow": [
+            {
+              "scrollHeight": 564,
+              "clientHeight": 564
+            }
+          ]
+        },
+        {
+          "screen": "create-child",
+          "state": "error",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 901.875,
+          "overflow": [
+            {
+              "scrollHeight": 761,
+              "clientHeight": 761
+            }
+          ]
+        },
+        {
+          "screen": "child-invite",
+          "state": "error",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 797.484375,
+          "overflow": [
+            {
+              "scrollHeight": 657,
+              "clientHeight": 657
+            }
+          ]
+        },
+        {
+          "screen": "consent",
+          "state": "error",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 1021.453125,
+          "overflow": [
+            {
+              "scrollHeight": 881,
+              "clientHeight": 881
+            }
+          ]
+        },
+        {
+          "screen": "child-visibility",
+          "state": "error",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 1009.046875,
+          "overflow": [
+            {
+              "scrollHeight": 868,
+              "clientHeight": 868
+            }
+          ]
+        },
+        {
+          "screen": "leave-family",
+          "state": "error",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 761.09375,
+          "overflow": [
+            {
+              "scrollHeight": 620,
+              "clientHeight": 620
+            }
+          ]
+        },
+        {
+          "screen": "export-data",
+          "state": "error",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 767.703125,
+          "overflow": [
+            {
+              "scrollHeight": 627,
+              "clientHeight": 627
+            }
+          ]
+        },
+        {
+          "screen": "delete-account",
+          "state": "error",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 704.703125,
+          "overflow": [
+            {
+              "scrollHeight": 564,
+              "clientHeight": 564
+            }
+          ]
+        },
+        {
+          "screen": "otp",
+          "state": "expired",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 704.921875,
+          "overflow": [
+            {
+              "scrollHeight": 564,
+              "clientHeight": 564
+            }
+          ]
+        },
+        {
+          "screen": "otp",
+          "state": "cooldown",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 704.921875,
+          "overflow": [
+            {
+              "scrollHeight": 564,
+              "clientHeight": 564
+            }
+          ]
+        },
+        {
+          "screen": "otp",
+          "state": "rate-limit",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 438.75,
+          "overflow": [
+            {
+              "scrollHeight": 298,
+              "clientHeight": 298
+            }
+          ]
+        },
+        {
+          "screen": "home",
+          "state": "empty",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 556.953125,
+          "overflow": [
+            {
+              "scrollHeight": 376,
+              "clientHeight": 376
+            }
+          ]
+        },
+        {
+          "screen": "home",
+          "state": "loading",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 593.09375,
+          "overflow": [
+            {
+              "scrollHeight": 412,
+              "clientHeight": 412
+            }
+          ]
+        },
+        {
+          "screen": "home",
+          "state": "error",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 1364.484375,
+          "overflow": [
+            {
+              "scrollHeight": 1183,
+              "clientHeight": 1183
+            }
+          ]
+        },
+        {
+          "screen": "home",
+          "state": "offline",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 1488.875,
+          "overflow": [
+            {
+              "scrollHeight": 1308,
+              "clientHeight": 1308
+            }
+          ]
+        },
+        {
+          "screen": "home",
+          "state": "conflict",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 728.734375,
+          "overflow": [
+            {
+              "scrollHeight": 548,
+              "clientHeight": 548
+            }
+          ]
+        },
+        {
+          "screen": "home",
+          "state": "session",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 418.5625,
+          "overflow": [
+            {
+              "scrollHeight": 238,
+              "clientHeight": 238
+            }
+          ]
+        },
+        {
+          "screen": "home",
+          "state": "rate-limit",
+          "theme": "calm",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 478.953125,
+          "overflow": [
+            {
+              "scrollHeight": 298,
+              "clientHeight": 298
+            }
+          ]
+        },
+        {
+          "screen": "home",
+          "state": "normal",
+          "theme": "bright",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 1166.921875,
+          "overflow": [
+            {
+              "scrollHeight": 986,
+              "clientHeight": 986
+            }
+          ]
+        },
+        {
+          "screen": "lesson",
+          "state": "normal",
+          "theme": "bright",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 1141.15625,
+          "overflow": [
+            {
+              "scrollHeight": 960,
+              "clientHeight": 960
+            }
+          ]
+        },
+        {
+          "screen": "plan",
+          "state": "normal",
+          "theme": "bright",
+          "label": "طرح تعاملی با داده ساختگی",
+          "height": 972.34375,
+          "overflow": [
+            {
+              "scrollHeight": 791,
+              "clientHeight": 791
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "already loaded fixture remains locally navigable without network",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "limitation": "Not a PWA/service-worker/server-sync acceptance test."
+    },
+    {
+      "check": "no JavaScript errors, failed static assets, external requests, or server/authentication traffic",
+      "status": "VERIFIED",
+      "result": "PASS",
+      "javascriptErrors": 0,
+      "failedStaticRequests": 0,
+      "externalRequests": 0,
+      "forbiddenRequests": 0
+    }
+  ],
+  "failures": [],
+  "measurements": {
+    "auditedLayouts": 2244,
+    "visibleTextNodes": 33912,
+    "touchTargets": 18576,
+    "minimumFontPx": 12,
+    "minimumContrast": 5.827057,
+    "minimumTargetWidthPx": 48,
+    "minimumTargetHeightPx": 48,
+    "worstContrast": {
+      "screen": "parent-phone",
+      "state": "normal",
+      "theme": "calm",
+      "viewportWidthPx": 320,
+      "fontScale": 1,
+      "value": 5.8270572986771425,
+      "selector": "p.helper",
+      "text": "شماره یا ایمیل واقعی وارد نکن. این طرح فرم واقعیِ تماس ندارد.",
+      "rect": {
+        "x": 12,
+        "y": 454.25,
+        "width": 296,
+        "height": 21
+      },
+      "fontSizePx": 12,
+      "ratio": 5.8270572986771425,
+      "foreground": [
+        80,
+        99,
+        91,
+        1
+      ],
+      "background": [
+        242,
+        245,
+        240,
+        1
+      ]
+    },
+    "minimumFont": {
+      "screen": "welcome",
+      "state": "normal",
+      "theme": "calm",
+      "viewportWidthPx": 320,
+      "fontScale": 1,
+      "value": 12,
+      "selector": "div.prototype-label",
+      "text": "طرح تعاملی با داده ساختگی",
+      "rect": {
+        "x": 0,
+        "y": 124.69,
+        "width": 320,
+        "height": 37
+      },
+      "fontSizePx": 12
+    },
+    "bidi": [
+      {
+        "example": "−۳",
+        "text": "−۳",
+        "direction": "ltr",
+        "unicodeBidi": "isolate",
+        "minus": {
+          "left": 181.188,
+          "right": 196.375,
+          "top": 419.859,
+          "bottom": 463.859
+        },
+        "followingDigit": {
+          "left": 196.359,
+          "right": 208.797,
+          "top": 419.859,
+          "bottom": 463.859
+        },
+        "passed": true
+      },
+      {
+        "example": "−۱۰",
+        "text": "−۱۰",
+        "direction": "ltr",
+        "unicodeBidi": "isolate",
+        "minus": {
+          "left": 179.203,
+          "right": 194.391,
+          "top": 587.047,
+          "bottom": 631.047
+        },
+        "followingDigit": {
+          "left": 194.375,
+          "right": 202.625,
+          "top": 587.047,
+          "bottom": 631.047
+        },
+        "passed": true
+      },
+      {
+        "example": "۷ + (−۳)",
+        "text": "۷ + (−۳)",
+        "direction": "ltr",
+        "unicodeBidi": "isolate",
+        "minus": {
+          "left": 200.172,
+          "right": 215.375,
+          "top": 754.234,
+          "bottom": 798.234
+        },
+        "followingDigit": {
+          "left": 215.359,
+          "right": 227.797,
+          "top": 754.234,
+          "bottom": 798.234
+        },
+        "passed": true
+      },
+      {
+        "example": "½",
+        "text": "½",
+        "direction": "ltr",
+        "unicodeBidi": "isolate",
+        "minus": null,
+        "followingDigit": null,
+        "passed": true
+      }
+    ]
+  },
+  "screenshots": [
+    "screenshots/bidi-math-390.png"
+  ],
+  "runtimeErrors": [],
+  "failedStaticRequests": [],
+  "externalRequests": [],
+  "forbiddenRequests": [],
+  "unverified": {
+    "safari": "UNVERIFIED: Safari has not been run.",
+    "realDevice": "UNVERIFIED: no physical Android/iPhone/iPad test has been performed.",
+    "iranReachability": "UNVERIFIED: this local static check does not measure access from Iran.",
+    "videoPlayback": "UNVERIFIED: no approved video source or real video playback is included.",
+    "studentUsability": "UNVERIFIED: the ten-minute student test script has not been conducted.",
+    "backendAndPersistence": "UNVERIFIED and outside scope: no server, sending, saving, or real authentication."
+  },
+  "finishedAt": "2026-10-18T16:15:23.186Z",
+  "passed": true,
+  "failureCount": 0
+}
