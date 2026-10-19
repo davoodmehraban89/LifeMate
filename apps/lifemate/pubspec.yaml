@@ -17,7 +17,10 @@ dependencies:
   web: ^1.1.1
   webview_flutter: ^4.14.1
   webview_flutter_android: ^4.14.1
+  sqflite: ^2.4.2
+  path: ^1.9.1
 dev_dependencies:
+  sqflite_common_ffi: ^2.3.6
   shared_preferences_platform_interface: ^2.4.2
   flutter_test:
     sdk: flutter
