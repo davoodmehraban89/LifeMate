@@ -1,0 +1,35 @@
+{
+  "status": "VERIFIED_FAILURE",
+  "runId": 39192545919,
+  "sourceCommit": "7fb737d044d61b61b6b3d7bba3eba47859710ba5",
+  "command": "gh run view 39192545919 --log-failed",
+  "source": "Sanitized receipt extracted from official completed job log; artifact ZIP not verified",
+  "artifactZipIntegrity": "UNVERIFIED",
+  "receipt": {
+    "schemaVersion": 1,
+    "result": "FAIL",
+    "scope": "synthetic API 35 emulator only",
+    "simulatedServerAcknowledgement": true,
+    "limitations": {
+      "physicalDevice": "UNVERIFIED",
+      "reboot": "UNVERIFIED",
+      "Doze": "UNVERIFIED",
+      "soundOrVibration": "UNVERIFIED",
+      "permissionConsentUI": "UNVERIFIED",
+      "realServerAcknowledgement": "UNVERIFIED",
+      "signedRelease": "UNVERIFIED"
+    },
+    "checks": {
+      "emulatorAndFreshInstallGates": "PASS",
+      "inspectDoesNotActivate": "PASS"
+    },
+    "apk": {
+      "sha256": "f7e95adb41c35a05ee96242c70bfb63c61f95c08be18c2624101349586b08d84",
+      "package": "ir.lifeguide.app",
+      "debuggable": true,
+      "targetSdkVersion": 36
+    },
+    "error": "fixture_process_did_not_exit"
+  },
+  "interpretation": "Fresh emulator/install and initial inspect passed. Process-death proof failed; notification acceptance not reached. HOME/background demotion race is a hypothesis pending rerun."
+}

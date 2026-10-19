@@ -232,6 +232,7 @@ class Harness:
         self.installed = False
         self.receipt = {"schemaVersion": 1, "result": "FAIL",
                         "scope": "synthetic API 35 emulator only",
+                        "currentPhase": "preflight",
                         "simulatedServerAcknowledgement": True,
                         "limitations": LIMITATIONS.copy(), "checks": {}}
 
@@ -280,25 +281,37 @@ class Harness:
 
     def process_dead(self):
         self._ready()
+        self.receipt.pop("processExit", None)
+        self.receipt["lastProcessState"] = "UNVERIFIED"
         self.adb.shell("input", "keyevent", "KEYCODE_HOME")
         self.adb.shell("am", "kill", PACKAGE)
+        attempts = 1
         until = self.clock() + 10
         while True:
             state = self.adb.shell("sh", "-c", PID_QUERY).strip()
             require(state in ("PRESENT", "ABSENT"), "fixture_process_query_failed")
+            self.receipt["lastProcessState"] = state
             if state == "ABSENT":
+                self.receipt["processExit"] = {
+                    "confirmedAbsent": True, "ordinaryKillAttempts": attempts}
                 return True
             require(self.clock() < until, "fixture_process_did_not_exit")
             self.sleep(0.25)
+            # HOME demotion is asynchronous. Ordinary am kill can initially be
+            # a no-op while Android still considers the app foreground.
+            self.adb.shell("am", "kill", PACKAGE)
+            attempts += 1
 
     def launch(self, mode):
         self._ready()
         require(mode in MODES, "invalid_fixture_request")
+        self.receipt["currentPhase"] = "before_launch_" + mode
         self.process_dead()
         nonce = secrets.token_hex(8)
         route = "/" + mode + "?nonce=" + nonce
         if mode == "schedule":
             route += "&delay=45"
+        self.receipt["currentPhase"] = "waiting_" + mode + "_marker"
         output = self.adb.shell("am", "start", "-W", "-n", PACKAGE + "/.MainActivity",
                                 "--es", "route", route)
         require("Error" not in output and "Exception" not in output,
@@ -309,6 +322,7 @@ class Harness:
             for line in logs.splitlines():
                 marker = fixture_marker(line, nonce, mode)
                 if marker is not None:
+                    self.receipt["currentPhase"] = "after_" + mode + "_marker"
                     return marker
             require(self.clock() < until, "fixture_marker_timeout")
             self.sleep(0.5)
@@ -348,6 +362,7 @@ class Harness:
                 state["reminders"][0].get("delivered", False) is False,
                 "fixture_schedule_not_persisted")
         require(self.active_keys() == [], "unexpected_fixture_notification_before_deadline")
+        self.receipt["currentPhase"] = "after_schedule_created"
         return at, state
 
     def wait_for_post(self, at):
@@ -382,6 +397,10 @@ class Harness:
 
         at, scheduled = self.scheduled(exact=True)
         self.process_dead()
+        require(self.device_epoch_ms() + 1000 < at,
+                "process_absence_missed_alarm_deadline")
+        require(self.preferences() == scheduled and not self.active_keys(),
+                "alarm_delivery_preceded_process_absence_proof")
         checks["processAbsentBeforeAlarm"] = "PASS"
         key = self.wait_for_post(at)
         delivered = self.preferences()
@@ -428,6 +447,7 @@ class Harness:
         require(self.preferences() is None and not self.active_keys(),
                 "off_did_not_clear_native_state_and_posts")
         checks["offClearsNativeStateAndPosts"] = "PASS"
+        self.receipt["currentPhase"] = "complete"
         self.receipt["result"] = "PASS"
         return self.receipt
 

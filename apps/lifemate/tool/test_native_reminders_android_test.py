@@ -49,6 +49,9 @@ class SyntheticEmulator(FakeAdb):
         self.private_body = False
         self.refuse_kill = False
         self.pid_query_failure = False
+        self.background_delay = 0
+        self.background_ready_at = 0
+        self.pid_states = []
 
     def clock(self):
         return self.elapsed
@@ -84,9 +87,13 @@ class SyntheticEmulator(FakeAdb):
         if parts[:4] == ("shell", "cmd", "appops", "set"):
             self.exact = parts[-1] == "allow"
         if parts == ("shell", "input", "keyevent", "KEYCODE_HOME"):
+            self.background_ready_at = self.elapsed + self.background_delay
             return ""
         if parts == ("shell", "am", "kill", subject.PACKAGE):
-            self.alive = self.refuse_kill
+            if self.refuse_kill:
+                self.alive = True
+            elif self.elapsed >= self.background_ready_at:
+                self.alive = False
             return ""
         if parts == ("shell", "pidof", subject.PACKAGE):
             if self.pid_query_failure:
@@ -95,7 +102,9 @@ class SyntheticEmulator(FakeAdb):
         if parts[:3] == ("shell", "sh", "-c"):
             if self.pid_query_failure:
                 return ""
-            return "PRESENT" if self.alive else "ABSENT"
+            state = "PRESENT" if self.alive else "ABSENT"
+            self.pid_states.append(state)
+            return state
         if parts == ("shell", "date", "+%s"):
             return str(self.epoch() // 1000)
         if parts[:3] == ("shell", "run-as", subject.PACKAGE):
@@ -368,9 +377,50 @@ class LifecycleTest(unittest.TestCase):
     def test_process_claim_fails_when_pid_remains(self):
         adb = SyntheticEmulator()
         adb.refuse_kill = True
+        harness = self.harness(adb)
         with self.assertRaisesRegex(subject.AcceptanceError, "fixture_process_did_not_exit"):
-            self.harness(adb).run()
+            harness.run()
         self.assertEqual(adb.modes, [])
+        self.assertEqual(harness.receipt["currentPhase"], "before_launch_inspect")
+        self.assertEqual(harness.receipt["lastProcessState"], "PRESENT")
+        self.assertNotIn("processExit", harness.receipt)
+
+    def test_retries_ordinary_kill_after_home_background_transition(self):
+        adb = SyntheticEmulator()
+        adb.background_delay = 1
+        adb.alive = True
+        harness = self.harness(adb)
+        harness.install_fixture()
+        self.assertTrue(harness.process_dead())
+        self.assertFalse(adb.alive)
+        self.assertEqual(adb.pid_states[0], "PRESENT")
+        self.assertEqual(adb.pid_states[-1], "ABSENT")
+        self.assertGreaterEqual(adb.elapsed, adb.background_delay)
+        self.assertLessEqual(adb.elapsed, 10)
+        kills = [parts for parts in adb.calls
+                 if parts == ("shell", "am", "kill", subject.PACKAGE)]
+        self.assertGreater(len(kills), 1)
+        self.assertEqual(harness.receipt["processExit"], {
+            "confirmedAbsent": True, "ordinaryKillAttempts": len(kills)})
+
+    def test_late_process_absence_cannot_claim_death_before_alarm(self):
+        class SlowScheduledKill(SyntheticEmulator):
+            delayed = False
+
+            def command(self, *parts, allow_failure=False):
+                if (parts == ("shell", "am", "kill", subject.PACKAGE) and
+                        self.state and self.state["reminders"] and not self.delayed):
+                    self.delayed = True
+                    self.sleep(46)  # The modeled receiver posts before kill completes.
+                return super().command(*parts, allow_failure=allow_failure)
+
+        adb = SlowScheduledKill()
+        harness = self.harness(adb)
+        with self.assertRaisesRegex(subject.AcceptanceError, "process_absence_missed_alarm_deadline"):
+            harness.run()
+        self.assertTrue(adb.posted)
+        self.assertEqual(harness.receipt["currentPhase"], "after_schedule_created")
+        self.assertNotIn("processAbsentBeforeAlarm", harness.receipt["checks"])
 
     def test_empty_failed_pid_query_cannot_claim_process_absence(self):
         adb = SyntheticEmulator()

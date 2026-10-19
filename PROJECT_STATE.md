@@ -1,5 +1,13 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## آزمون مستقل اعلان Android — ۲۰۲۶-۱۰-۱۹؛ پذیرش گوشی هنوز باز است
+
+[PR36](https://github.com/davoodmehraban89/LifeMate/pull/36) فقط fixture و ابزار آزمون شبیه‌ساز است؛ Flutter/Android عملیاتی، Backend و APK تحویلی0.7.2+8 تغییر نکرده‌اند. پورت اصلی با رکورد ساختگی و برچسب صریحِ تأیید سرور شبیه‌سازی‌شده استفاده می‌شود. دستگاه فیزیکی/بستهٔ از قبل نصب‌شده رد می‌شود؛ fixture APK توزیع نمی‌شود.
+
+**VERIFIED در7fb737d:** Flutter282pass، host21pass و analyze بدون ایراد؛ CI عمومی39192545903 موفق با Backend308pass، role41 و regression96، buildوب و APKdebug. **اجرای شبیه‌ساز39192545919 شکست خورد**: `fixture_process_did_not_exit`؛ نصب تازه و inspect موفق بودند، پذیرش رسیدن اعلان انجام نشد. [شکست حفظ‌شده](docs/audits/evidence/android-reminder-ci-first-2026-10-19.json) و [دستورهای محلی](docs/audits/evidence/android-reminder-tooling-2026-10-19.json). اصلاح ابزار بستن عادی و اثبات بسته‌شدن پیش از موعد در حال بررسی است؛ نتیجهٔ اجرای بعدی باید جدا ثبت شود.
+
+**VERIFIED خواندنی:** GETباTLSمعتبر در19اکتبر روی سه مسیر عمومی `app.lifeguide.ir/config.json`،`/api/health` و`/health` هر سه404 داد؛ APIسازگار از این مسیرها تأیید نشد. [رسید](docs/audits/evidence/public-api-paths-2026-10-19.json). این آزمون دسترسی از ایران یا تمام مسیرهای دامنه نیست. هیچ deploy،merge،DNS،حساب/داده واقعی یا تغییر سیاستی انجام نشده است. نصب/اعلان/صدا/باتری روی گوشی، Safari، ورود خصوصی کودک و APIعمومی همچنان **UNVERIFIED/باز** هستند. [راهنمای آزمون](docs/operations/ANDROID_REMINDER_ACCEPTANCE.md).
+
 ## برنامهٔ هفته و اعلان Android — ۲۰۲۶-۱۰-۱۸؛ هنوز آمادهٔ بهره‌برداری کودک نیست
 
 مالک اجرای بستهٔ برنامهٔ شخصی را تأیید کرد. API مستقل در [PR34](https://github.com/davoodmehraban89/LifeMate/pull/34) و Flutter/Android وابسته در [PR35](https://github.com/davoodmehraban89/LifeMate/pull/35) آماده شد؛ هیچ merge/deploy انجام نشد. نوبت‌های واقعی PostgreSQL، تکرار و ساعت‌های مستقل، صف پایدار، تیک/ویرایش هر روز و اعلان opt-in با دریافت تازهٔ مالک پیاده شد. Feature1، نام LifeGuide و مرز خصوصی نشست کودک حفظ شدند.

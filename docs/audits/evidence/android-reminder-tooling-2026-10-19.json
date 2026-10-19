@@ -36,12 +36,31 @@
       "command": "python3 -m unittest discover -s apps/lifemate/tool -p 'test_native_reminders_android_test.py' -v",
       "output": "Ran 21 tests in 0.006s; OK",
       "note": "Host/parser/safety/model tests only; no adb. Review reproduced transport-error false process-absence; strict PRESENT/ABSENT probe and regression added."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v",
+      "output": "Ran 23 tests in 0.007s; OK",
+      "note": "After actual CI failure, regression tests cover delayed HOME transition and refusal of process absence proven after alarm deadline. No adb locally."
     }
   ],
-  "androidEmulator": "UNVERIFIED — CI not executed at this checkpoint",
+  "androidEmulator": "First actual run39192545919 FAILED fixture_process_did_not_exit; retry/deadline fix pending new actual run; delivery UNVERIFIED",
   "physicalAndroid": "UNVERIFIED",
   "realServerAcknowledgement": "UNVERIFIED — fixture explicitly simulates acknowledgement",
   "safariIranRebootDozeSoundAndUserPermissionUI": "UNVERIFIED",
   "deliveredApk": "Unchanged 0.7.2+8 from CI39170095124, not the fixture APK",
-  "mergeDeployLiveChanges": "Not performed"
+  "mergeDeployLiveChanges": "Not performed",
+  "genericCi": {
+    "runId": 39192545903,
+    "sourceCommit": "7fb737d044d61b61b6b3d7bba3eba47859710ba5",
+    "status": "VERIFIED_SUCCESS",
+    "counts": {
+      "backend": 308,
+      "runtime": 41,
+      "regressions": 96,
+      "flutter": 282
+    },
+    "command": "gh run view 39192545903 --json headSha,status,conclusion; inspect completed official job logs",
+    "output": "conclusion:success; headSha:7fb737d044d61b61b6b3d7bba3eba47859710ba5"
+  }
 }

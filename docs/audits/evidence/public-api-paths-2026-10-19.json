@@ -1,0 +1,26 @@
+{
+  "scope": "Public read-only HTTP; no auth/data/DNS changes; not reachability from Iran",
+  "results": [
+    {
+      "url": "https://app.lifeguide.ir/config.json",
+      "method": "GET",
+      "tlsVerification": "enabled",
+      "status": "VERIFIED_HTTP_ERROR",
+      "httpStatus": 404
+    },
+    {
+      "url": "https://app.lifeguide.ir/api/health",
+      "method": "GET",
+      "tlsVerification": "enabled",
+      "status": "VERIFIED_HTTP_ERROR",
+      "httpStatus": 404
+    },
+    {
+      "url": "https://app.lifeguide.ir/health",
+      "method": "GET",
+      "tlsVerification": "enabled",
+      "status": "VERIFIED_HTTP_ERROR",
+      "httpStatus": 404
+    }
+  ]
+}
