@@ -1,5 +1,13 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## لایف‌گاید شخصی — ۲۰۲۶-۱۰-۱۹؛ اجرای بستهٔ مستقل
+
+مالک پس از توضیح مرز دادهٔ روی گوشی، تکمیل APK بدون API/URL را خواست و ادامه را تأیید کرد؛ **ADR0016 / D-A پذیرفته شد**. شاخهٔ `feat/standalone-weekly-planner` بستهٔ debug جدا `ir.lifeguide.app.device` را می‌سازد؛ برنامهٔ آنلاین و شناسهٔ انتشار `ir.lifeguide.app` تغییر نمی‌کنند. SQLite محلی برای برنامه/نوبت/پروفایل، تکرار/تیک/ویرایش/بایگانی و اعلان opt-in مستقل پیاده می‌شوند. هیچ ACK ساختگی، حساب یا سرور نمایشی جای اتصال قرار نمی‌گیرد.
+
+آزمون متمرکز یکپارچگی ذخیره/اعلان: **VERIFIED** با `flutter test test/standalone_coordinator_test.dart --reporter expanded`، خروجی `+2: All tests passed!`. آزمون Python گیت manifest و ابزار امن شبیه‌ساز: `python3 -m unittest discover -s tool -p '*standalone*test.py' -v`، `Ran 20 tests ... OK`. این‌ها اثبات ساخت/نصب APK نیستند. اجرای کامل Flutter، analyzer، build و پذیرش شبیه‌ساز در حال بررسی‌اند و تا receipt نهایی **UNVERIFIED** هستند. [راهنمای استفاده و محدودیت‌ها](docs/operations/PERSONAL_ANDROID.md).
+
+این بسته همگام‌سازی/نمای والد/بازیابی سرور ندارد؛ حذف داده/برنامه یا خرابی گوشی می‌تواند اطلاعات را از بین ببرد. کلید پایدار و ارتقای بدون حذف داده، دستگاه واقعی، صدا/Doze/reboot، PWA/Safari و شبکه ایران **UNVERIFIED** هستند. گزارش‌های پایین تاریخی‌اند؛ وضعیت PROPOSED قبلی ADR0016 با انتخاب فعلی جایگزین شد. هیچ merge/deploy/DNS/schema زنده تغییر نکرده است.
+
 ## اعلان Android در شبیه‌ساز — ۲۰۲۶-۱۰-۱۹؛ APIآنلاین هنوز مانع تحویل است
 
 [PR36](https://github.com/davoodmehraban89/LifeMate/pull/36)، شاخهٔ `test/android-reminder-acceptance`، فقط ابزار آزمون و مستندات است. Flutter/Android عملیاتی، Backend و APKتحویلی0.7.2+8 تغییر نکرده‌اند. fixture فقط debug، رکورد ساختگی و تأییدسرور صریحاً شبیه‌سازی‌شده دارد؛ دستگاه فیزیکی/بستهٔ نصب‌شده را رد می‌کند و APKآن توزیع نمی‌شود.

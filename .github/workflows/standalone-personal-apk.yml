@@ -1,0 +1,85 @@
+name: LifeGuide personal Android APK (device-only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/standalone-personal-apk.yml'
+      - 'apps/lifemate/lib/standalone/**'
+      - 'apps/lifemate/lib/standalone_main.dart'
+      - 'apps/lifemate/test/standalone*'
+      - 'apps/lifemate/tool/*standalone*'
+      - 'apps/lifemate/android/**'
+      - 'apps/lifemate/pubspec*'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lifeguide-personal-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  personal-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: apps/lifemate
+    env:
+      ORG_GRADLE_PROJECT_lifeguideDevicePlanner: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: subosito/flutter-action@v2
+        with: {flutter-version: '3.47.6', channel: stable, cache: true}
+      - run: flutter pub get
+      - name: Verify personal edition and test-tool safety
+        run: |
+          dart format --output=none --set-exit-if-changed lib/standalone lib/standalone_main.dart test/standalone* tool/standalone_acceptance_fixture.dart
+          flutter analyze
+          flutter test
+          python3 -m unittest discover -s tool -p '*standalone*test.py' -v
+      - name: Build actual user APK (no fixture and no INTERNET permission)
+        run: |
+          flutter build apk --debug --target=lib/standalone_main.dart --dart-define=LIFEGUIDE_STANDALONE=true --build-name=0.7.2-personal.1 --build-number=9
+          cp build/app/outputs/flutter-apk/app-debug.apk build/LifeGuide.apk
+          mkdir -p exports
+          python3 tool/check_standalone_apk.py build/LifeGuide.apk > exports/standalone-apk-manifest.json
+          SIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
+          "$SIGNER" verify --verbose --print-certs build/LifeGuide.apk > exports/standalone-apk-signature.txt
+          sha256sum build/LifeGuide.apk > exports/standalone-apk-sha256.txt
+      - name: Build same-signature synthetic fixture (never distributed)
+        run: |
+          flutter build apk --debug --target=tool/standalone_acceptance_fixture.dart --dart-define=LIFEGUIDE_STANDALONE=true --dart-define=LG_STANDALONE_ACCEPTANCE=true --build-name=0.7.2-personal.1 --build-number=9
+          cp build/app/outputs/flutter-apk/app-debug.apk build/standalone-private-fixture.apk
+          python3 tool/check_standalone_apk.py build/standalone-private-fixture.apk
+      - name: Enable KVM for fresh synthetic emulator
+        run: |
+          test -c /dev/kvm
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Launch real user APK; verify SQLite and actual OS alarms
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-port: 5554
+          avd-name: lifeguide-personal-synthetic
+          force-avd-creation: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -wipe-data -noaudio -no-boot-anim -camera-back none
+          working-directory: apps/lifemate
+          script: python3 tool/test_standalone_android.py --serial emulator-5554 --user-apk build/LifeGuide.apk --fixture-apk build/standalone-private-fixture.apk --allow-synthetic-emulator-reset --output exports/standalone-android.json
+      - name: Deliver user APK only after acceptance passes
+        uses: actions/upload-artifact@v4
+        with:
+          name: LifeGuide-personal-Android-0.7.2-9
+          path: apps/lifemate/build/LifeGuide.apk
+          if-no-files-found: error
+      - name: Preserve sanitized verification output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LifeGuide-personal-verification
+          path: apps/lifemate/exports/standalone-*
+          if-no-files-found: warn

@@ -1,5 +1,12 @@
 # LifeGuide Changelog
 
+## Unreleased — personal Android 0.7.2-personal.1/code9 (Backend unchanged0.7.2)
+
+- Initial device-only debug edition in separate package; no URL, contacts, login, network permission or fake server acknowledgment.
+- Transactional private SQLite profile, recurring weekly plans with per-day times, stable occurrence IDs, independent ticks/edits/archives and durable restart behavior.
+- Explicit opt-in native reminder port from committed device rows, generic lock-screen message, persisted OFF choice, 28-day/128-reminder coverage and visible timing limitations.
+- Actual user-APK first-launch plus isolated SQLite/OS-alarm fixture acceptance gates; physical device, signing continuity and online family use remain UNVERIFIED.
+
 ## 0.7.2 — 2026-10-18 — نامزد آزمون برنامهٔ هفتگی (منتشرنشده)
 
 - برنامهٔ خصوصی روزانه، روزدرمیان و هفتگی با ساعت مستقل هر روز، پایان صریح، نوبت‌های واقعی PostgreSQL و تیک/ویرایش مستقل.
