@@ -56,7 +56,7 @@
       "note": "Exact Android15 Intent.java source validates -f0x10008000. Virtualmodel first rejected old nonexistent namedoption, then passed afterfix. No local adb."
     }
   ],
-  "androidEmulator": "Third actualrun39194206345 FAILED adb_command_failed. Nonexistent named CLIflag identified and replaced with documented numeric-f0x10008000. Fourth actual run pending; notification acceptance UNVERIFIED.",
+  "androidEmulator": "VERIFIED: actual API35 run39194965252 PASS onc1a22bdd63ce9f7bb6300740d113fabb7cdcd8d6; earlier3failed runs retained",
   "physicalAndroid": "UNVERIFIED",
   "realServerAcknowledgement": "UNVERIFIED — fixture explicitly simulates acknowledgement",
   "safariIranRebootDozeSoundAndUserPermissionUI": "UNVERIFIED",
@@ -81,5 +81,6 @@
     "status": "VERIFIED_SUCCESS",
     "command": "gh run view39193398238 --json headSha,status,conclusion; inspect official completed logs",
     "output": "conclusion:success; Backend308, runtime41, regression96, Flutter282"
-  }
+  },
+  "finalEvidence": "android-reminder-ci-final-2026-10-19.json"
 }

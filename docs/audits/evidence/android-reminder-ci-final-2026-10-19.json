@@ -1,0 +1,107 @@
+{
+  "date": "2026-10-19",
+  "status": "VERIFIED",
+  "testedSourceCommit": "c1a22bdd63ce9f7bb6300740d113fabb7cdcd8d6",
+  "scope": "Synthetic API35 emulator using unchanged production native reminder port; no API/identity/real child data",
+  "commands": [
+    {
+      "command": "gh run view39194965252 --json headSha,status,conclusion; gh run view39194965252 --log",
+      "output": "headSha:c1a22bdd63ce9f7bb6300740d113fabb7cdcd8d6;status:completed;conclusion:success;sanitized receipt result:PASS"
+    },
+    {
+      "command": "gh run view39194965236 --json headSha,status,conclusion; gh run view39194965236 --log",
+      "output": "headSha:c1a22bdd63ce9f7bb6300740d113fabb7cdcd8d6;status:completed;conclusion:success;backend308pass;runtime41pass;regression96pass;282tests passed;No issues found;v2 signature:true"
+    }
+  ],
+  "nativeRun": {
+    "id": 39194965252,
+    "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/39194965252",
+    "receipt": {
+      "schemaVersion": 1,
+      "result": "PASS",
+      "scope": "synthetic API 35 emulator only",
+      "currentPhase": "complete",
+      "simulatedServerAcknowledgement": true,
+      "limitations": {
+        "physicalDevice": "UNVERIFIED",
+        "reboot": "UNVERIFIED",
+        "Doze": "UNVERIFIED",
+        "soundOrVibration": "UNVERIFIED",
+        "permissionConsentUI": "UNVERIFIED",
+        "realServerAcknowledgement": "UNVERIFIED",
+        "signedRelease": "UNVERIFIED"
+      },
+      "checks": {
+        "emulatorAndFreshInstallGates": "PASS",
+        "inspectDoesNotActivate": "PASS",
+        "processAbsentBeforeAlarm": "PASS",
+        "notificationAfterProcessDeath": "PASS",
+        "notificationContent": {
+          "titleMatches": true,
+          "genericBodyMatches": true,
+          "privateCanaryAbsent": true
+        },
+        "notificationChannel": "lifeguide_personal_plan_v1",
+        "relaunchPreservesDeliveredStateAndPost": "PASS",
+        "suppressClearsDeliveredPost": "PASS",
+        "cancelBeforeDeadlineHasNoOSPost": "PASS",
+        "deniedExactAccessReportsApproximate": "PASS",
+        "approximateAlarmDeliveryTiming": "UNVERIFIED",
+        "offClearsNativeStateAndPosts": "PASS"
+      },
+      "apk": {
+        "sha256": "72940b3b294d6eeb096c36766d561fbca03fe0a7f9578897a944ce0577b0f62f",
+        "package": "ir.lifeguide.app",
+        "debuggable": true,
+        "targetSdkVersion": 36
+      },
+      "lastProcessState": "ABSENT",
+      "processExit": {
+        "confirmedAbsent": true,
+        "ordinaryKillAttempts": 3
+      }
+    },
+    "artifactMetadataReportedByGitHub": {
+      "id": 12161681824,
+      "name": "LifeGuide-synthetic-emulator-reminder-receipt",
+      "digest": "sha256:6455647488b02d90d0ef25dff87ebf96a3b0a46e59bde98a7cfedccd501f4f75",
+      "expired": false
+    },
+    "artifactZipDownloadedAndDigestRecomputed": "UNVERIFIED; source is official completed job log, not an extracted ZIP"
+  },
+  "genericRun": {
+    "id": 39194965236,
+    "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/39194965236",
+    "backendTests": 308,
+    "runtimeRoleTests": 41,
+    "regressions": 96,
+    "flutterTests": 282,
+    "allJobs": "success"
+  },
+  "failedRunsRetained": [
+    39192545919,
+    39193398410,
+    39194206345
+  ],
+  "supersededGenericRun": {
+    "id": 39194206352,
+    "result": "cancelled by newer source; not counted as green"
+  },
+  "localHostTests": 25,
+  "deliveredApk": {
+    "path": "LifeGuide-weekly-0.7.2/LifeGuide.apk",
+    "changed": false,
+    "sha256VerifiedLocally": "c46d54bb281f71a2e6cf693c34862ce315df01daba2c7a982eaceba81fbf3e28",
+    "version": "0.7.2+8 debug; not the fixture APK"
+  },
+  "remaining": {
+    "physicalAndroid": "UNVERIFIED",
+    "approximateDeliveryTiming": "UNVERIFIED",
+    "rebootDozeSoundConsentUI": "UNVERIFIED",
+    "actualServerAcknowledgement": "UNVERIFIED; simulated fixture",
+    "independentPrivateChildIdentity": "not delivered; no policy change",
+    "publicApiConnection": "UNVERIFIED; three public config/health paths returned404",
+    "SafariIran": "UNVERIFIED"
+  },
+  "mergeDeployLiveChanges": "not performed"
+}
