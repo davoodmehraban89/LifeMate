@@ -72,7 +72,7 @@ def certificate_digest(apk):
     try:
         result = subprocess.run([signer, "verify", "--print-certs", str(apk)],
             capture_output=True, text=True, timeout=30, check=False)
-        values = re.findall(r"(?m)^Signer #\d+ certificate SHA-256 digest: ([0-9a-fA-F]{64})\s*$", result.stdout)
+        values = re.findall(r"(?m)^(?:Signer #\d+|V[1-4](?:\.\d+)? Signer:) certificate SHA-256 digest: ([0-9a-fA-F]{64})\s*$", result.stdout)
         require(result.returncode == 0 and len(values) == 1, "apk_signature_rejected")
         return values[0].lower()
     except (OSError, subprocess.SubprocessError):

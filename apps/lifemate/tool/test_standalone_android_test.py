@@ -12,6 +12,23 @@ from xml.sax.saxutils import escape
 import test_standalone_android as subject
 
 
+class CertificateTest(unittest.TestCase):
+    def test_sdk36_v2_output_and_legacy_single_signer(self):
+        from subprocess import CompletedProcess
+        for prefix in ('V2 Signer:', 'Signer #1'):
+            output = prefix + ' certificate SHA-256 digest: ' + 'a' * 64 + '\n'
+            with self.subTest(prefix=prefix), patch.object(subject.shutil, 'which', return_value='/synthetic/apksigner'), patch.object(subject.subprocess, 'run', return_value=CompletedProcess([], 0, output, '')):
+                self.assertEqual(subject.certificate_digest(Path('/synthetic/never-read.apk')), 'a' * 64)
+
+    def test_bad_or_multiple_certificates_or_failed_verification_rejected(self):
+        from subprocess import CompletedProcess
+        valid = 'V2 Signer: certificate SHA-256 digest: ' + 'a' * 64 + '\n'
+        for code, output in ((1, valid), (0, ''), (0, valid + valid), (0, valid.replace('certificate', 'public key'))):
+            with self.subTest(code=code, output=output), patch.object(subject.shutil, 'which', return_value='/synthetic/apksigner'), patch.object(subject.subprocess, 'run', return_value=CompletedProcess([], code, output, '')):
+                with self.assertRaisesRegex(subject.AcceptanceError, 'apk_signature_rejected'):
+                    subject.certificate_digest(Path('/synthetic/never-read.apk'))
+
+
 class FakeAdb:
     def __init__(self, overrides=None):
         self.calls = []
