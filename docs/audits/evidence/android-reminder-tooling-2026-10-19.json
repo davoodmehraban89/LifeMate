@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-19",
+  "scope": "Emulator acceptance tooling only; no production changes",
+  "base": "3ce8f2e8bad0128960a4eaa15d6e71718036bc76",
+  "verification": [
+    {
+      "status": "VERIFIED",
+      "command": "PUB_CACHE=/tmp/lifeguide-acceptance-pub-cache flutter pub get --offline",
+      "output": "Got dependencies!",
+      "note": "First attempt with original cache failed errno28; task-local /tmp cache succeeded."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "flutter test test/native_reminder_fixture_test.dart --reporter expanded",
+      "output": "5 tests passed; initial RED: missing fixture file/symbols, exit1"
+    },
+    {
+      "status": "VERIFIED",
+      "command": "flutter test --reporter expanded",
+      "output": "01:12 +282: All tests passed!",
+      "log": "lg-acceptance-flutter.log"
+    },
+    {
+      "status": "VERIFIED",
+      "command": "dart format --output=none --set-exit-if-changed lib test tool/native_reminder_fixture.dart",
+      "output": "Formatted 90 files (0 changed) in 0.90 seconds."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "flutter analyze",
+      "output": "No issues found! (ran in 11.6s)",
+      "note": "Initial avoid_relative_lib_imports lint fixed; production lib unchanged."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p 'test_native_reminders_android_test.py' -v",
+      "output": "Ran 21 tests in 0.006s; OK",
+      "note": "Host/parser/safety/model tests only; no adb. Review reproduced transport-error false process-absence; strict PRESENT/ABSENT probe and regression added."
+    }
+  ],
+  "androidEmulator": "UNVERIFIED — CI not executed at this checkpoint",
+  "physicalAndroid": "UNVERIFIED",
+  "realServerAcknowledgement": "UNVERIFIED — fixture explicitly simulates acknowledgement",
+  "safariIranRebootDozeSoundAndUserPermissionUI": "UNVERIFIED",
+  "deliveredApk": "Unchanged 0.7.2+8 from CI39170095124, not the fixture APK",
+  "mergeDeployLiveChanges": "Not performed"
+}
