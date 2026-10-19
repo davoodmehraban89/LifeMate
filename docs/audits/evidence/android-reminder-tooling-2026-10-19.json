@@ -42,9 +42,15 @@
       "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v",
       "output": "Ran 23 tests in 0.007s; OK",
       "note": "After actual CI failure, regression tests cover delayed HOME transition and refusal of process absence proven after alarm deadline. No adb locally."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v",
+      "output": "Ran25 tests in0.010s; OK",
+      "note": "Retained-task initialroute regression; task reset only on isolated fixture; sanitized retained-log diagnostics. No local adb."
     }
   ],
-  "androidEmulator": "First actual run39192545919 FAILED fixture_process_did_not_exit; retry/deadline fix pending new actual run; delivery UNVERIFIED",
+  "androidEmulator": "Second actual run39193398410 proved process absence but FAILED waiting_schedule_marker. New/clear-task fix pending actual rerun; notification acceptance UNVERIFIED.",
   "physicalAndroid": "UNVERIFIED",
   "realServerAcknowledgement": "UNVERIFIED — fixture explicitly simulates acknowledgement",
   "safariIranRebootDozeSoundAndUserPermissionUI": "UNVERIFIED",
@@ -62,5 +68,12 @@
     },
     "command": "gh run view 39192545903 --json headSha,status,conclusion; inspect completed official job logs",
     "output": "conclusion:success; headSha:7fb737d044d61b61b6b3d7bba3eba47859710ba5"
+  },
+  "genericCiRetry": {
+    "runId": 39193398238,
+    "sourceCommit": "837f32337aa1ee33dc6757bed515c94805824e2b",
+    "status": "VERIFIED_SUCCESS",
+    "command": "gh run view39193398238 --json headSha,status,conclusion; inspect official completed logs",
+    "output": "conclusion:success; Backend308, runtime41, regression96, Flutter282"
   }
 }

@@ -1,0 +1,41 @@
+{
+  "status": "VERIFIED_FAILURE",
+  "runId": 39193398410,
+  "sourceCommit": "837f32337aa1ee33dc6757bed515c94805824e2b",
+  "command": "gh run view 39193398410 --log-failed",
+  "source": "Sanitized receipt extracted from official completed job log; artifact ZIP not verified",
+  "artifactZipIntegrity": "UNVERIFIED",
+  "receipt": {
+    "schemaVersion": 1,
+    "result": "FAIL",
+    "scope": "synthetic API 35 emulator only",
+    "currentPhase": "waiting_schedule_marker",
+    "simulatedServerAcknowledgement": true,
+    "limitations": {
+      "physicalDevice": "UNVERIFIED",
+      "reboot": "UNVERIFIED",
+      "Doze": "UNVERIFIED",
+      "soundOrVibration": "UNVERIFIED",
+      "permissionConsentUI": "UNVERIFIED",
+      "realServerAcknowledgement": "UNVERIFIED",
+      "signedRelease": "UNVERIFIED"
+    },
+    "checks": {
+      "emulatorAndFreshInstallGates": "PASS",
+      "inspectDoesNotActivate": "PASS"
+    },
+    "apk": {
+      "sha256": "43f3f18264431832f1652f75322bda1cb36cdf59c82f21948ab4d42bbec66d57",
+      "package": "ir.lifeguide.app",
+      "debuggable": true,
+      "targetSdkVersion": 36
+    },
+    "lastProcessState": "ABSENT",
+    "processExit": {
+      "confirmedAbsent": true,
+      "ordinaryKillAttempts": 4
+    },
+    "error": "fixture_marker_timeout"
+  },
+  "interpretation": "Ordinary process death now proven after4 attempts. Waiting schedule marker timed out. Retained-task original Intent is a source-supported hypothesis; actual notification delivery remains UNVERIFIED."
+}

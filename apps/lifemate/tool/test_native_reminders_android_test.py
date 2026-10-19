@@ -52,6 +52,8 @@ class SyntheticEmulator(FakeAdb):
         self.background_delay = 0
         self.background_ready_at = 0
         self.pid_states = []
+        self.restore_retained_task = False
+        self.retained_route = None
 
     def clock(self):
         return self.elapsed
@@ -121,7 +123,10 @@ class SyntheticEmulator(FakeAdb):
                     f"  android.text=String ({body})\n")
         if parts[:3] == ("shell", "am", "start"):
             self.alive = True
-            route = urlparse(parts[-1])
+            fresh_task = "--activity-new-task" in parts and "--activity-clear-task" in parts
+            if not self.restore_retained_task or fresh_task or self.retained_route is None:
+                self.retained_route = parts[-1]
+            route = urlparse(self.retained_route)
             mode = route.path.removeprefix("/")
             query = parse_qs(route.query)
             self.modes.append(mode)
@@ -373,6 +378,47 @@ class LifecycleTest(unittest.TestCase):
         commands = " ".join(" ".join(parts) for parts in adb.calls)
         for forbidden in ("force-stop", "kill-server", "uninstall", "logcat -c"):
             self.assertNotIn(forbidden, commands)
+
+    def test_new_mode_replaces_retained_task_initial_route(self):
+        adb = SyntheticEmulator()
+        adb.restore_retained_task = True
+        receipt = self.harness(adb).run()
+        self.assertEqual(receipt["result"], "PASS")
+        self.assertEqual(adb.modes, ["inspect", "schedule", "inspect", "suppress",
+                                     "schedule", "suppress", "schedule", "off"])
+        for parts in adb.calls:
+            if parts[:3] == ("shell", "am", "start"):
+                self.assertIn("--activity-new-task", parts)
+                self.assertIn("--activity-clear-task", parts)
+                self.assertIn(subject.PACKAGE + "/.MainActivity", parts)
+
+    def test_marker_timeout_reports_only_known_modes_and_error_boolean(self):
+        class StaleFixtureLogs(SyntheticEmulator):
+            def command(self, *parts, allow_failure=False):
+                if parts[0] == "logcat":
+                    self.calls.append(parts)
+                    return "\n".join([
+                        subject.MARKER + json.dumps({"nonce": "0123456789abcdef",
+                            "mode": "inspect", "untrusted": subject.CANARY}),
+                        subject.MARKER + json.dumps({"nonce": "0123456789abcdef",
+                            "mode": "private-user-task"}),
+                        "LG_NATIVE_REMINDER_FIXTURE_ERROR private-error-details",
+                    ])
+                return super().command(*parts, allow_failure=allow_failure)
+
+        adb = StaleFixtureLogs()
+        harness = self.harness(adb)
+        harness.install_fixture()
+        with self.assertRaisesRegex(subject.AcceptanceError, "fixture_marker_timeout"):
+            harness.launch("schedule")
+        self.assertEqual(harness.receipt["currentPhase"], "waiting_schedule_marker")
+        self.assertEqual(harness.receipt["fixtureLogObservationScope"], "retained_logcat_buffer")
+        self.assertEqual(harness.receipt["observedFixtureModes"], ["inspect"])
+        self.assertIs(harness.receipt["fixtureErrorSeen"], True)
+        serialized = json.dumps(harness.receipt)
+        for forbidden in (subject.CANARY, "private-user-task", "private-error-details",
+                          "0123456789abcdef"):
+            self.assertNotIn(forbidden, serialized)
 
     def test_process_claim_fails_when_pid_remains(self):
         adb = SyntheticEmulator()

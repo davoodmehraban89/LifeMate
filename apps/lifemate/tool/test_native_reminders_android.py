@@ -312,19 +312,40 @@ class Harness:
         if mode == "schedule":
             route += "&delay=45"
         self.receipt["currentPhase"] = "waiting_" + mode + "_marker"
-        output = self.adb.shell("am", "start", "-W", "-n", PACKAGE + "/.MainActivity",
+        # A killed singleTop activity can retain its old route in task history.
+        # Recreate only this fixture's task so Flutter main gets the new intent.
+        output = self.adb.shell("am", "start", "-W", "--activity-new-task",
+                                "--activity-clear-task", "-n", PACKAGE + "/.MainActivity",
                                 "--es", "route", route)
         require("Error" not in output and "Exception" not in output,
                 "fixture_activity_launch_failed")
         until = self.clock() + 30
+        observed_modes = set()
+        fixture_error_seen = False
         while True:
             logs = self.adb.command("logcat", "-d", "-v", "brief", "-s", "flutter:I")
             for line in logs.splitlines():
+                if "LG_NATIVE_REMINDER_FIXTURE_ERROR" in line:
+                    fixture_error_seen = True
+                if MARKER in line:
+                    try:
+                        logged = json.loads(line.split(MARKER, 1)[1])
+                    except ValueError:
+                        logged = None
+                    if (isinstance(logged, dict) and isinstance(logged.get("mode"), str)
+                            and logged["mode"] in MODES):
+                        observed_modes.add(logged["mode"])
                 marker = fixture_marker(line, nonce, mode)
                 if marker is not None:
                     self.receipt["currentPhase"] = "after_" + mode + "_marker"
                     return marker
-            require(self.clock() < until, "fixture_marker_timeout")
+            if self.clock() >= until:
+                # Retained logs may include prior launches. These are diagnostic
+                # observations, not evidence that this launch ran any old mode.
+                self.receipt["fixtureLogObservationScope"] = "retained_logcat_buffer"
+                self.receipt["observedFixtureModes"] = sorted(observed_modes)
+                self.receipt["fixtureErrorSeen"] = fixture_error_seen
+                raise AcceptanceError("fixture_marker_timeout")
             self.sleep(0.5)
 
     def preferences(self):
