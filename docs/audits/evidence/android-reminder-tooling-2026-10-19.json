@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-19",
+  "scope": "Emulator acceptance tooling only; no production changes",
+  "base": "3ce8f2e8bad0128960a4eaa15d6e71718036bc76",
+  "verification": [
+    {
+      "status": "VERIFIED",
+      "command": "PUB_CACHE=/tmp/lifeguide-acceptance-pub-cache flutter pub get --offline",
+      "output": "Got dependencies!",
+      "note": "First attempt with original cache failed errno28; task-local /tmp cache succeeded."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "flutter test test/native_reminder_fixture_test.dart --reporter expanded",
+      "output": "5 tests passed; initial RED: missing fixture file/symbols, exit1"
+    },
+    {
+      "status": "VERIFIED",
+      "command": "flutter test --reporter expanded",
+      "output": "01:12 +282: All tests passed!",
+      "log": "lg-acceptance-flutter.log"
+    },
+    {
+      "status": "VERIFIED",
+      "command": "dart format --output=none --set-exit-if-changed lib test tool/native_reminder_fixture.dart",
+      "output": "Formatted 90 files (0 changed) in 0.90 seconds."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "flutter analyze",
+      "output": "No issues found! (ran in 11.6s)",
+      "note": "Initial avoid_relative_lib_imports lint fixed; production lib unchanged."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p 'test_native_reminders_android_test.py' -v",
+      "output": "Ran 21 tests in 0.006s; OK",
+      "note": "Host/parser/safety/model tests only; no adb. Review reproduced transport-error false process-absence; strict PRESENT/ABSENT probe and regression added."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v",
+      "output": "Ran 23 tests in 0.007s; OK",
+      "note": "After actual CI failure, regression tests cover delayed HOME transition and refusal of process absence proven after alarm deadline. No adb locally."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v",
+      "output": "Ran25 tests in0.010s; OK",
+      "note": "Retained-task initialroute regression; task reset only on isolated fixture; sanitized retained-log diagnostics. No local adb."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v",
+      "output": "25 tests OK after numeric-fix and precise starting/waiting phase labels",
+      "note": "Exact Android15 Intent.java source validates -f0x10008000. Virtualmodel first rejected old nonexistent namedoption, then passed afterfix. No local adb."
+    }
+  ],
+  "androidEmulator": "VERIFIED: actual API35 run39194965252 PASS onc1a22bdd63ce9f7bb6300740d113fabb7cdcd8d6; earlier3failed runs retained",
+  "physicalAndroid": "UNVERIFIED",
+  "realServerAcknowledgement": "UNVERIFIED — fixture explicitly simulates acknowledgement",
+  "safariIranRebootDozeSoundAndUserPermissionUI": "UNVERIFIED",
+  "deliveredApk": "Unchanged 0.7.2+8 from CI39170095124, not the fixture APK",
+  "mergeDeployLiveChanges": "Not performed",
+  "genericCi": {
+    "runId": 39192545903,
+    "sourceCommit": "7fb737d044d61b61b6b3d7bba3eba47859710ba5",
+    "status": "VERIFIED_SUCCESS",
+    "counts": {
+      "backend": 308,
+      "runtime": 41,
+      "regressions": 96,
+      "flutter": 282
+    },
+    "command": "gh run view 39192545903 --json headSha,status,conclusion; inspect completed official job logs",
+    "output": "conclusion:success; headSha:7fb737d044d61b61b6b3d7bba3eba47859710ba5"
+  },
+  "genericCiRetry": {
+    "runId": 39193398238,
+    "sourceCommit": "837f32337aa1ee33dc6757bed515c94805824e2b",
+    "status": "VERIFIED_SUCCESS",
+    "command": "gh run view39193398238 --json headSha,status,conclusion; inspect official completed logs",
+    "output": "conclusion:success; Backend308, runtime41, regression96, Flutter282"
+  },
+  "finalEvidence": "android-reminder-ci-final-2026-10-19.json"
+}

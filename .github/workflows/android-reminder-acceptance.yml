@@ -1,0 +1,63 @@
+name: LifeGuide Android reminder acceptance (synthetic emulator only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/android-reminder-acceptance.yml'
+      - 'apps/lifemate/tool/*native_reminder*'
+      - 'apps/lifemate/test/native_reminder_fixture_test.dart'
+      - 'apps/lifemate/lib/local_reminders.dart'
+      - 'apps/lifemate/android/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lifeguide-native-reminders-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  synthetic-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/lifemate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: subosito/flutter-action@v2
+        with: {flutter-version: '3.47.6', channel: stable, cache: true}
+      - run: flutter pub get
+      - name: Check test-tool safety boundaries
+        run: |
+          python3 -m unittest discover -s tool -p 'test_native_reminders_android_test.py' -v
+          dart format --output=none --set-exit-if-changed tool/native_reminder_fixture.dart test/native_reminder_fixture_test.dart
+          flutter test test/native_reminder_fixture_test.dart
+      - name: Build isolated emulator fixture (never distributed)
+        run: flutter build apk --debug --target=tool/native_reminder_fixture.dart --dart-define=LG_NATIVE_REMINDER_FIXTURE=true
+      - name: Enable KVM for disposable emulator
+        run: |
+          test -c /dev/kvm
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Exercise actual AlarmManager and NotificationManager
+        # Pinned v2 commit; no app/server credentials or external test data.
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-port: 5554
+          avd-name: lifeguide-synthetic-reminders
+          force-avd-creation: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -wipe-data -noaudio -no-boot-anim -camera-back none
+          working-directory: apps/lifemate
+          script: python3 tool/test_native_reminders_android.py --serial emulator-5554 --apk build/app/outputs/flutter-apk/app-debug.apk --allow-synthetic-emulator-reset --output exports/native-reminders-android.json
+      - name: Upload sanitized receipt only (no fixture APK or raw device dumps)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LifeGuide-synthetic-emulator-reminder-receipt
+          path: apps/lifemate/exports/native-reminders-android.json
+          if-no-files-found: warn

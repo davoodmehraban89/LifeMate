@@ -1,0 +1,41 @@
+{
+  "status": "VERIFIED_FAILURE",
+  "runId": 39194206345,
+  "sourceCommit": "586fa3cb72ebee5240e1d656abd6bfb1d6ea9933",
+  "command": "gh run view39194206345 --log-failed",
+  "source": "Sanitized receipt extracted from official completed job log; artifact ZIP not verified",
+  "artifactZipIntegrity": "UNVERIFIED",
+  "receipt": {
+    "schemaVersion": 1,
+    "result": "FAIL",
+    "scope": "synthetic API 35 emulator only",
+    "currentPhase": "waiting_inspect_marker",
+    "simulatedServerAcknowledgement": true,
+    "limitations": {
+      "physicalDevice": "UNVERIFIED",
+      "reboot": "UNVERIFIED",
+      "Doze": "UNVERIFIED",
+      "soundOrVibration": "UNVERIFIED",
+      "permissionConsentUI": "UNVERIFIED",
+      "realServerAcknowledgement": "UNVERIFIED",
+      "signedRelease": "UNVERIFIED"
+    },
+    "checks": {
+      "emulatorAndFreshInstallGates": "PASS"
+    },
+    "apk": {
+      "sha256": "dad4f1c4dab33feda67f6cadd2c59ff9a258ee80964df43e0ef364b69bda896c",
+      "package": "ir.lifeguide.app",
+      "debuggable": true,
+      "targetSdkVersion": 36
+    },
+    "lastProcessState": "ABSENT",
+    "processExit": {
+      "confirmedAbsent": true,
+      "ordinaryKillAttempts": 1
+    },
+    "error": "adb_command_failed"
+  },
+  "interpretation": "Failure awaiting first inspect. Proposed --activity-new-task is absent from Android15 Intent.parseCommandArgs; -f Integer.decode is supported. Numeric NEW_TASK|CLEAR_TASK is0x10008000. Production app unchanged; actual notification acceptance still UNVERIFIED.",
+  "reference": "https://github.com/aosp-mirror/platform_frameworks_base/blob/android-15.0.0_r1/core/java/android/content/Intent.java"
+}

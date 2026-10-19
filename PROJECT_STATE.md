@@ -1,5 +1,17 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## اعلان Android در شبیه‌ساز — ۲۰۲۶-۱۰-۱۹؛ APIآنلاین هنوز مانع تحویل است
+
+[PR36](https://github.com/davoodmehraban89/LifeMate/pull/36)، شاخهٔ `test/android-reminder-acceptance`، فقط ابزار آزمون و مستندات است. Flutter/Android عملیاتی، Backend و APKتحویلی0.7.2+8 تغییر نکرده‌اند. fixture فقط debug، رکورد ساختگی و تأییدسرور صریحاً شبیه‌سازی‌شده دارد؛ دستگاه فیزیکی/بستهٔ نصب‌شده را رد می‌کند و APKآن توزیع نمی‌شود.
+
+**VERIFIED درc1a22bd:** اجرای واقعی API35 در [CI39194965252](https://github.com/davoodmehraban89/LifeMate/actions/runs/39194965252) موفق: نبود پردازش پیش از موعد، اعلان OSپس ازبستن، متن عمومی/نبود canaryخصوصی، حفظ اعلان/وضعیت deliveredپس از بازکردن مجدد، حذف اعلان نمایش‌داده‌شده، لغو آینده بدون اعلان، وضعیت تقریبی پس از لغو مجوز exact و خاموش‌کردن. CIعمومی39194965236 نیز موفق با Backend308، role41، regression96، Flutter282، analyzeclean و buildوب/Androiddebug. hostمحلی25تست موفق؛ بازبینی مستقل انجام شد. [دستور، خروجی و حدوداعتبار](docs/audits/evidence/android-reminder-ci-final-2026-10-19.json).
+
+سه اجرای ناموفق اول و اصلاحات ابزار حفظ شدند: بستن عادی/تأخیر رفتن Activityبه پس‌زمینه، taskبا Intentقبلی، و گزینهٔ خط‌فرمان نامعتبر. هیچ شکست با حذف کنترل، force-stop یا اعلان دستی سبز نشد؛ numeric `-f 0x10008000`مطابق parserرسمیAndroid15است. CIعمومی سوم به‌دلیل commitبعدی cancelledشد و موفق گزارش نمی‌شود. [راهنما](docs/operations/ANDROID_REMINDER_ACCEPTANCE.md).
+
+**مانع عملیاتی:** APIبخش سروریِ همین محصول است و مسئولیت آماده‌کردن/تنظیم نشانی آن با تیم فنی است؛ مالک نباید APIبخرد یاURLحدسی وارد کند. داشتن دامنه/دیتابیس به‌تنهایی اجرای Backendنیست. GETباTLSمعتبر در19اکتبر روی `app.lifeguide.ir/config.json`،`/api/health` و`/health` هر سه404داد؛ [گواه خواندنی](docs/audits/evidence/public-api-paths-2026-10-19.json). سرور عمومی و ورود خصوصی مستقل کودک برای این APKتأیید نشده‌اند. [گزینه‌های تحویل اولیه ADR0016](docs/decisions/0016-initial-child-planner-delivery.md) هنوز PROPOSEDاند؛ درخواست ادامه یا سؤال APIانتخاب سیاستی محسوب نشده است.
+
+**UNVERIFIED:** گوشی واقعی، نصب/ارتقا، صدا/لرزش، Doze/reboot، رضایت واقعیUI، تحویل زمانی حالت approximate، ACKواقعی سرور، Safariوایران. هیچ merge،deploy،DNS،تغییرسیاست یا دادهٔ واقعی استفاده نشده است. این نتیجه تکمیل آزمون اعلان در شبیه‌ساز است؛ بهره‌برداری آنلاین کودک هنوز آماده نیست.
+
 ## برنامهٔ هفته و اعلان Android — ۲۰۲۶-۱۰-۱۸؛ هنوز آمادهٔ بهره‌برداری کودک نیست
 
 مالک اجرای بستهٔ برنامهٔ شخصی را تأیید کرد. API مستقل در [PR34](https://github.com/davoodmehraban89/LifeMate/pull/34) و Flutter/Android وابسته در [PR35](https://github.com/davoodmehraban89/LifeMate/pull/35) آماده شد؛ هیچ merge/deploy انجام نشد. نوبت‌های واقعی PostgreSQL، تکرار و ساعت‌های مستقل، صف پایدار، تیک/ویرایش هر روز و اعلان opt-in با دریافت تازهٔ مالک پیاده شد. Feature1، نام LifeGuide و مرز خصوصی نشست کودک حفظ شدند.
