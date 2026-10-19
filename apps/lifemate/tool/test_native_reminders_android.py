@@ -311,14 +311,17 @@ class Harness:
         route = "/" + mode + "?nonce=" + nonce
         if mode == "schedule":
             route += "&delay=45"
-        self.receipt["currentPhase"] = "waiting_" + mode + "_marker"
+        self.receipt["currentPhase"] = "starting_" + mode + "_activity"
         # A killed singleTop activity can retain its old route in task history.
         # Recreate only this fixture's task so Flutter main gets the new intent.
-        output = self.adb.shell("am", "start", "-W", "--activity-new-task",
-                                "--activity-clear-task", "-n", PACKAGE + "/.MainActivity",
+        # Intent.parseCommandArgs accepts -f; NEW_TASK has no named CLI option.
+        # 0x10008000 = FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK.
+        output = self.adb.shell("am", "start", "-W", "-f", "0x10008000",
+                                "-n", PACKAGE + "/.MainActivity",
                                 "--es", "route", route)
         require("Error" not in output and "Exception" not in output,
                 "fixture_activity_launch_failed")
+        self.receipt["currentPhase"] = "waiting_" + mode + "_marker"
         until = self.clock() + 30
         observed_modes = set()
         fixture_error_seen = False

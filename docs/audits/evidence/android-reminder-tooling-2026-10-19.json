@@ -48,9 +48,15 @@
       "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v",
       "output": "Ran25 tests in0.010s; OK",
       "note": "Retained-task initialroute regression; task reset only on isolated fixture; sanitized retained-log diagnostics. No local adb."
+    },
+    {
+      "status": "VERIFIED",
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v",
+      "output": "25 tests OK after numeric-fix and precise starting/waiting phase labels",
+      "note": "Exact Android15 Intent.java source validates -f0x10008000. Virtualmodel first rejected old nonexistent namedoption, then passed afterfix. No local adb."
     }
   ],
-  "androidEmulator": "Second actual run39193398410 proved process absence but FAILED waiting_schedule_marker. New/clear-task fix pending actual rerun; notification acceptance UNVERIFIED.",
+  "androidEmulator": "Third actualrun39194206345 FAILED adb_command_failed. Nonexistent named CLIflag identified and replaced with documented numeric-f0x10008000. Fourth actual run pending; notification acceptance UNVERIFIED.",
   "physicalAndroid": "UNVERIFIED",
   "realServerAcknowledgement": "UNVERIFIED — fixture explicitly simulates acknowledgement",
   "safariIranRebootDozeSoundAndUserPermissionUI": "UNVERIFIED",

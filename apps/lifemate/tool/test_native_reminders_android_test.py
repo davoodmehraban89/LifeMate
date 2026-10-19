@@ -122,8 +122,13 @@ class SyntheticEmulator(FakeAdb):
                     f"  android.title=String ({subject.COMPANION})\n"
                     f"  android.text=String ({body})\n")
         if parts[:3] == ("shell", "am", "start"):
+            # Android 15 Intent.parseCommandArgs has -f and clear-task, but
+            # rejects the nonexistent --activity-new-task named option.
+            if "--activity-new-task" in parts:
+                raise subject.AcceptanceError("adb_command_failed")
             self.alive = True
-            fresh_task = "--activity-new-task" in parts and "--activity-clear-task" in parts
+            flags = int(parts[parts.index("-f") + 1], 0) if "-f" in parts else 0
+            fresh_task = flags & 0x10008000 == 0x10008000
             if not self.restore_retained_task or fresh_task or self.retained_route is None:
                 self.retained_route = parts[-1]
             route = urlparse(self.retained_route)
@@ -388,8 +393,8 @@ class LifecycleTest(unittest.TestCase):
                                      "schedule", "suppress", "schedule", "off"])
         for parts in adb.calls:
             if parts[:3] == ("shell", "am", "start"):
-                self.assertIn("--activity-new-task", parts)
-                self.assertIn("--activity-clear-task", parts)
+                self.assertNotIn("--activity-new-task", parts)
+                self.assertEqual(parts[parts.index("-f") + 1], "0x10008000")
                 self.assertIn(subject.PACKAGE + "/.MainActivity", parts)
 
     def test_marker_timeout_reports_only_known_modes_and_error_boolean(self):
