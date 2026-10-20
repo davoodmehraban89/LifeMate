@@ -146,7 +146,10 @@ def check_notification_record(dump, key):
     record = matches[0]
     titles = re.findall(r"android\.title=String \(([^\n]*)\)", record)
     bodies = re.findall(r"android\.text=String \(([^\n]*)\)", record)
-    require(bool(titles) and all(t == COMPANION for t in titles), "fixture_notification_title_mismatch")
+    # Android dumps the private notification first and then its publicVersion.
+    # The latter deliberately uses the product name on the lock screen.
+    require(bool(titles) and titles[0] == COMPANION and
+            all(t == "LifeGuide" for t in titles[1:]), "fixture_notification_title_mismatch")
     require(bool(bodies) and all(b == GENERIC_BODY for b in bodies), "fixture_notification_body_mismatch")
     require(CANARY not in record, "fixture_notification_contains_private_canary")
     require(re.search(r"(?:channel=|mId=['\"]?)" + re.escape(CHANNEL) + r"(?=['\"\s,)])", record),
@@ -317,7 +320,7 @@ class Harness:
         self.fixture_installed = True
         self.adb.shell("pm", "grant", PACKAGE, "android.permission.POST_NOTIFICATIONS")
         self.adb.shell("cmd", "appops", "set", PACKAGE, "SCHEDULE_EXACT_ALARM", "allow")
-        self.receipt["checks"]["fixtureUpgradePreservesFreshUserData"] = "PASS"
+        self.receipt["checks"]["ownedFreshInstallFixtureUpgrade"] = "PASS"
 
     def launch(self, mode):
         require(self.fixture_installed and mode in MODES, "fixture_not_ready")

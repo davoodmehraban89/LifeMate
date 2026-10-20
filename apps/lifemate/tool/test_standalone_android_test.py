@@ -187,6 +187,18 @@ class ParsingTest(unittest.TestCase):
             with self.subTest(update=update), self.assertRaises(subject.AcceptanceError):
                 subject.fixture_marker(subject.MARKER + json.dumps(marker), marker["nonce"], "seed")
 
+    def test_public_lock_screen_version_has_separate_generic_title(self):
+        key = '0|' + subject.PACKAGE + '|1|lifeguide-plan:' + '22222222-2222-4222-8222-222222222222' + '|10001'
+        primary = (f'NotificationRecord(pkg={subject.PACKAGE} key={key}: Notification(channel={subject.CHANNEL}))\n'
+            f'android.title=String ({subject.COMPANION})\nandroid.text=String ({subject.GENERIC_BODY})\n')
+        public = f'publicVersion\nandroid.title=String (LifeGuide)\nandroid.text=String ({subject.GENERIC_BODY})\n'
+        self.assertTrue(subject.check_notification_record(primary + public, key)['titleMatches'])
+        for bad in (primary.replace(subject.COMPANION, 'wrong') + public,
+                    primary + public.replace('LifeGuide)', 'wrong)'),
+                    primary + public.replace(subject.GENERIC_BODY, subject.CANARY)):
+            with self.assertRaises(subject.AcceptanceError):
+                subject.check_notification_record(bad, key)
+
     def test_notification_parser_accepts_only_owned_uuid_tag(self):
         identifier = "33333333-3333-4333-8333-333333333333"
         key = f"0|{subject.PACKAGE}|1|lifeguide-plan:{identifier}|10123"
