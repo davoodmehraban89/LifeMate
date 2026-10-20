@@ -1,12 +1,14 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
-## لایف‌گاید شخصی — ۲۰۲۶-۱۰-۱۹؛ اجرای بستهٔ مستقل
+## لایف‌گاید شخصی — ۲۰۲۶-۱۰-۲۰؛ APK اولیه بدون URL آمادهٔ آزمون گوشی
 
-مالک پس از توضیح مرز دادهٔ روی گوشی، تکمیل APK بدون API/URL را خواست و ادامه را تأیید کرد؛ **ADR0016 / D-A پذیرفته شد**. شاخهٔ `feat/standalone-weekly-planner` بستهٔ debug جدا `ir.lifeguide.app.device` را می‌سازد؛ برنامهٔ آنلاین و شناسهٔ انتشار `ir.lifeguide.app` تغییر نمی‌کنند. SQLite محلی برای برنامه/نوبت/پروفایل، تکرار/تیک/ویرایش/بایگانی و اعلان opt-in مستقل پیاده می‌شوند. هیچ ACK ساختگی، حساب یا سرور نمایشی جای اتصال قرار نمی‌گیرد.
+[PR37](https://github.com/davoodmehraban89/LifeMate/pull/37)، شاخهٔ `feat/standalone-weekly-planner`، کد آزموده‌شده `3e36dfd4f01d51e11816c0f97d1abda4266f1945`. طبق انتخاب پذیرفته‌شدهٔ D-A در ADR0016، APK جدا با نام «لایف‌گاید شخصی»، شناسهٔ `ir.lifeguide.app.device` و نسخه `0.7.2-personal.1/code9` بدون URL/ورود/سرور اجرا می‌شود. شناسه و مجوزهای نسخهٔ آنلاین تغییر نکرده‌اند. SQLite خصوصی و تراکنشی مرجع همین بسته است؛ برنامهٔ یک‌باره/روزانه/روزدرمیان/هفتگی با ساعت مستقل، تیک/ویرایش/بایگانی هر نوبت، نام همراه و چهار تم واقعی دارد. هیچ ACK سرور یا حساب نمایشی ندارد.
 
-آزمون متمرکز یکپارچگی ذخیره/اعلان: **VERIFIED** با `flutter test test/standalone_coordinator_test.dart --reporter expanded`، خروجی `+2: All tests passed!`. آزمون Python گیت manifest و ابزار امن شبیه‌ساز: `python3 -m unittest discover -s tool -p '*standalone*test.py' -v`، `Ran 20 tests ... OK`. این‌ها اثبات ساخت/نصب APK نیستند. اجرای کامل Flutter، analyzer، build و پذیرش شبیه‌ساز در حال بررسی‌اند و تا receipt نهایی **UNVERIFIED** هستند. [راهنمای استفاده و محدودیت‌ها](docs/operations/PERSONAL_ANDROID.md).
+**VERIFIED:** [CI اختصاصی39480587450](https://github.com/davoodmehraban89/LifeMate/actions/runs/39480587450) موفق: Flutter314، Python23، analyze clean، build دو APK جدا و manifest بدون INTERNET. APK واقعی کاربر ابتدا روی API35 باز و تصویرش مستقل مشاهده شد؛ سپس fixture هم‌امضا و هرگز توزیع‌نشده با DB ساختگی جدا، SQL مستقل بعد از close/reopen، ماندگاری/ساعت‌های مختلف/تکرار/تیک/بایگانی، اعلان OS پس از نبود پردازش، متن عمومی بدون canary خصوصی، لغو قبل از موعد و خاموش‌کردن را پاس کرد. [گواه کامل با دو شکست قبلی و اصلاح ابزار](docs/audits/evidence/personal-android-2026-10-20.json).
 
-این بسته همگام‌سازی/نمای والد/بازیابی سرور ندارد؛ حذف داده/برنامه یا خرابی گوشی می‌تواند اطلاعات را از بین ببرد. کلید پایدار و ارتقای بدون حذف داده، دستگاه واقعی، صدا/Doze/reboot، PWA/Safari و شبکه ایران **UNVERIFIED** هستند. گزارش‌های پایین تاریخی‌اند؛ وضعیت PROPOSED قبلی ADR0016 با انتخاب فعلی جایگزین شد. هیچ merge/deploy/DNS/schema زنده تغییر نکرده است.
+**VERIFIED:** CI عمومی39480587202 موفق؛ Backend308، identity41، regression96، Flutter314، analyze و buildوب/Android. فایل APK کاربر از اتصال رسمی دریافت شد؛ digest ZIP، hash APK، manifest باینری و امضای v2 با ApkVerifier محلی تطبیق داده شدند. [فایل آزمون نصب](https://github.com/davoodmehraban89/LifeMate/actions/runs/39480587450/artifacts/12292340083)، [راهنما](docs/operations/PERSONAL_ANDROID.md). این APK debug برای آزمون اولیه است، نه release امضاشدهٔ مالک.
+
+**UNVERIFIED/محدود:** گوشی فیزیکی، صدا/لرزش، Doze/reboot، UI رضایت واقعی، ارتقا با حفظ کلید، Safari/PWA و شبکه ایران. داده فقط روی همین گوشی است؛ همگام‌سازی، نمای والد، خروجی/backup و بازیابی سرور ندارد. برای اختلاف امضا هرگز برنامه/داده را پاک نکنید. آزمون جداگانهٔ کانال آنلاین در تلاش اول39480587033 با `adb_command_unavailable` شکست خورد؛ تلاش دوم بدون تغییر کد واقعاً موفق شد و هر دو نتیجه در گواه حفظ شده‌اند. هیچ merge/deploy/DNS/schema زنده یا دادهٔ واقعی استفاده نشده است. گزارش‌های زیر تاریخی‌اند؛ PROPOSED قبلی ADR0016 با انتخاب فعلی جایگزین شده است.
 
 ## اعلان Android در شبیه‌ساز — ۲۰۲۶-۱۰-۱۹؛ APIآنلاین هنوز مانع تحویل است
 

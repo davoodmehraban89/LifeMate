@@ -1,0 +1,351 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-20",
+  "product": "LifeGuide personal device planner",
+  "branch": "feat/standalone-weekly-planner",
+  "pr": "https://github.com/davoodmehraban89/LifeMate/pull/37",
+  "runtimeSourceCommit": "3e36dfd4f01d51e11816c0f97d1abda4266f1945",
+  "scope": "Initial device-only debug Android package; not online-family acceptance",
+  "commands": [
+    {
+      "command": "flutter analyze",
+      "where": "local 2026-10-19",
+      "output": "No issues found! (ran in 4.9s)",
+      "status": "VERIFIED"
+    },
+    {
+      "command": "flutter test --reporter expanded",
+      "where": "local before two extra review regression tests",
+      "output": "01:40 +312: All tests passed!",
+      "status": "VERIFIED"
+    },
+    {
+      "command": "flutter test test/standalone_ui_test.dart --reporter expanded",
+      "where": "local after review corrections",
+      "output": "00:13 +8: All tests passed!",
+      "status": "VERIFIED"
+    },
+    {
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*standalone*test.py' -v",
+      "where": "local 2026-10-20, commit3e36dfd",
+      "output": "Ran 23 tests in 0.020s; OK",
+      "status": "VERIFIED"
+    },
+    {
+      "command": "dart format --output=none --set-exit-if-changed <14 personal Dart files>",
+      "where": "local 2026-10-19",
+      "output": "Formatted 14 files (0 changed) in 0.08 seconds.",
+      "status": "VERIFIED"
+    },
+    {
+      "command": "python3 scripts/check-tracked-secrets.py",
+      "where": "local 2026-10-20",
+      "output": "Tracked-file credential/artifact scan passed; this is not a complete secret audit.",
+      "status": "VERIFIED"
+    }
+  ],
+  "previousFailures": [
+    {
+      "run": 39258859583,
+      "source": "b45727194140f573b4f8716042fc77ff31b9fca2",
+      "receipt": {
+        "schemaVersion": 1,
+        "result": "FAIL",
+        "syntheticDataOnly": true,
+        "scope": "fresh API35 emulator; actual isolated SQLite and native notification",
+        "currentPhase": "preflight",
+        "limitations": {
+          "physicalDevice": "UNVERIFIED",
+          "reboot": "UNVERIFIED",
+          "Doze": "UNVERIFIED",
+          "soundOrVibration": "UNVERIFIED",
+          "permissionConsentUI": "UNVERIFIED",
+          "Safari": "UNVERIFIED",
+          "signedRelease": "UNVERIFIED",
+          "onlineFamilyOrSynchronization": "UNVERIFIED"
+        },
+        "checks": {},
+        "error": "apk_signature_rejected"
+      },
+      "fix": "apksigner SDK36 reports V2 Signer: rather than legacy Signer #1; accepted strict verified single-certificate output with regression and retained signature equality gate."
+    },
+    {
+      "run": 39271967838,
+      "source": "553a218ccdc268178e2ef6d09a52e3011e6e62aa",
+      "receipt": {
+        "schemaVersion": 1,
+        "result": "FAIL",
+        "syntheticDataOnly": true,
+        "scope": "fresh API35 emulator; actual isolated SQLite and native notification",
+        "currentPhase": "after_seed_marker",
+        "limitations": {
+          "physicalDevice": "UNVERIFIED",
+          "reboot": "UNVERIFIED",
+          "Doze": "UNVERIFIED",
+          "soundOrVibration": "UNVERIFIED",
+          "permissionConsentUI": "UNVERIFIED",
+          "Safari": "UNVERIFIED",
+          "signedRelease": "UNVERIFIED",
+          "onlineFamilyOrSynchronization": "UNVERIFIED"
+        },
+        "checks": {
+          "emulatorAndFreshInstallGates": "PASS",
+          "actualUserApkFirstLaunchScreenshot": "PASS",
+          "fixtureUpgradePreservesFreshUserData": "PASS",
+          "profilePersists": "PASS",
+          "weeklyDifferentTimes": "PASS",
+          "onceAndEveryTwoDays": "PASS",
+          "rawSqlAfterClose": "PASS",
+          "processAbsentBeforeAlarm": "PASS",
+          "notificationAfterProcessDeath": "PASS"
+        },
+        "apks": {
+          "user": {
+            "sha256": "e89080a6f6e570d9abe87472a86a0c945c50fd95e511080d228b96ccfe4deb45",
+            "package": "ir.lifeguide.app.device",
+            "label": "لایف‌گاید شخصی",
+            "debuggable": true,
+            "internetPermission": false,
+            "targetSdkVersion": 36
+          },
+          "fixtureNeverDistribute": {
+            "sha256": "e659ea86511681d429638e0c8652352d677f121bb67d012efa23ee0b73cbec1f",
+            "package": "ir.lifeguide.app.device",
+            "label": "لایف‌گاید شخصی",
+            "debuggable": true,
+            "internetPermission": false,
+            "targetSdkVersion": 36
+          }
+        },
+        "certificateSha256": "23fc8d413972a52371415473bdf02fe10810c20ab00b079cda601bb8c6f1be42",
+        "userFirstLaunch": {
+          "processAlive": true,
+          "ordinaryLaunchNoExtras": true,
+          "screenshotSha256": "58ace298a0ce3655e6008c60ebe12d06b857b09720c554330ed45f810f9dea44",
+          "screenshotFile": "standalone-user-first-launch.png",
+          "urlPromptDetected": false,
+          "localWelcomeText": "UNVERIFIED"
+        },
+        "lastProcessState": "ABSENT",
+        "processExit": {
+          "confirmedAbsent": true,
+          "ordinaryKillAttempts": 5
+        },
+        "error": "fixture_notification_title_mismatch"
+      },
+      "fix": "The OS dump includes the intentionally generic publicVersion title LifeGuide after the private companion title. Check primary and public titles separately, preserve canary/body/channel checks. Renamed fresh fixture upgrade receipt to avoid implying upgrade with actual user data."
+    }
+  ],
+  "independentReview": {
+    "mode": "read-only source review; did not run tests/build",
+    "findingsFixed": [
+      "Reconcile fresh SQLite on resume without racing an in-flight write",
+      "Restore from original SQLite after a failed profile write",
+      "Close details after archiving whole plan"
+    ],
+    "remaining": "Debug signing continuity and real-device upgrade remain UNVERIFIED; never uninstall to resolve a signature conflict."
+  },
+  "limitations": {
+    "physicalDevice": "UNVERIFIED",
+    "soundOrVibration": "UNVERIFIED",
+    "Doze": "UNVERIFIED",
+    "reboot": "UNVERIFIED",
+    "realPermissionConsentUI": "UNVERIFIED",
+    "signatureContinuityOrUpgrade": "UNVERIFIED",
+    "SafariOrPWA": "UNVERIFIED",
+    "IranReachability": "UNVERIFIED",
+    "signedRelease": "UNVERIFIED",
+    "onlineFamilyOrSync": "UNVERIFIED",
+    "serverRestoreOrExport": "NOT_IMPLEMENTED_IN_DEVICE_EDITION"
+  },
+  "liveChanges": {
+    "merge": false,
+    "deploy": false,
+    "DNS": false,
+    "realDataUsed": false
+  },
+  "finalCI": {
+    "run": 39480587450,
+    "sourceCommit": "3e36dfd4f01d51e11816c0f97d1abda4266f1945",
+    "conclusion": "success",
+    "job": 118827781423,
+    "status": "VERIFIED",
+    "commands": [
+      "flutter analyze",
+      "flutter test",
+      "python3 -m unittest discover -s tool -p '*standalone*test.py' -v",
+      "flutter build apk --debug --target=lib/standalone_main.dart --dart-define=LIFEGUIDE_STANDALONE=true --build-name=0.7.2-personal.1 --build-number=9",
+      "python3 tool/check_standalone_apk.py build/LifeGuide.apk",
+      "apksigner verify --verbose --print-certs build/LifeGuide.apk",
+      "python3 tool/test_standalone_android.py --serial emulator-5554 --user-apk build/LifeGuide.apk --fixture-apk build/standalone-private-fixture.apk --allow-synthetic-emulator-reset --output exports/standalone-android.json"
+    ],
+    "outputs": [
+      "No issues found! (ran in 7.5s)",
+      "314 tests passed.",
+      "Ran 23 tests in 0.012s; OK",
+      "Built build/app/outputs/flutter-apk/app-debug.apk",
+      "{\"result\": \"PASS\", \"error\": null}"
+    ]
+  },
+  "genericCI": {
+    "run": 39480587202,
+    "conclusion": "success",
+    "status": "VERIFIED",
+    "outputs": {
+      "backend": "tests308/pass308/fail0",
+      "runtimeIdentity": "tests41/pass41/fail0",
+      "runtimeRegression": "tests96/pass96/fail0",
+      "flutter": "314 tests passed; No issues found; Built build/web; Built build/app/outputs/flutter-apk/app-debug.apk",
+      "security": "Tracked-file credential/artifact scan passed; naming507 classified"
+    }
+  },
+  "onlineReminderRegression": {
+    "previousVerifiedRun": 39271967000,
+    "previousSource": "553a218ccdc268178e2ef6d09a52e3011e6e62aa",
+    "latestRun": 39480587033,
+    "attempt1": {
+      "result": "FAIL",
+      "currentPhase": "starting_inspect_activity",
+      "error": "adb_command_unavailable",
+      "interpretation": "A transport/command failure, not a passing verification. Exact cause UNVERIFIED. Native runtime source unchanged from the previous success."
+    },
+    "attempt2": {
+      "conclusion": "success",
+      "job": 118831817676,
+      "status": "VERIFIED",
+      "nativeRuntimeChangedBetweenAttempts": false
+    }
+  },
+  "android": {
+    "schemaVersion": 1,
+    "result": "PASS",
+    "syntheticDataOnly": true,
+    "scope": "fresh API35 emulator; actual isolated SQLite and native notification",
+    "currentPhase": "complete",
+    "limitations": {
+      "physicalDevice": "UNVERIFIED",
+      "reboot": "UNVERIFIED",
+      "Doze": "UNVERIFIED",
+      "soundOrVibration": "UNVERIFIED",
+      "permissionConsentUI": "UNVERIFIED",
+      "Safari": "UNVERIFIED",
+      "signedRelease": "UNVERIFIED",
+      "onlineFamilyOrSynchronization": "UNVERIFIED"
+    },
+    "checks": {
+      "emulatorAndFreshInstallGates": "PASS",
+      "actualUserApkFirstLaunchScreenshot": "PASS",
+      "ownedFreshInstallFixtureUpgrade": "PASS",
+      "onceAndEveryTwoDays": "PASS",
+      "weeklyDifferentTimes": "PASS",
+      "profilePersists": "PASS",
+      "rawSqlAfterClose": "PASS",
+      "processAbsentBeforeAlarm": "PASS",
+      "notificationAfterProcessDeath": "PASS",
+      "notificationContent": {
+        "titleMatches": true,
+        "genericBodyMatches": true,
+        "privateCanaryAbsent": true
+      },
+      "relaunchReadOnlyPreservesNativeGeneration": "PASS",
+      "independentEditAndTick": "PASS",
+      "archivePersists": "PASS",
+      "archiveBeforeDeadlineHasNoOSPost": "PASS",
+      "offClearsNativeState": "PASS"
+    },
+    "apks": {
+      "user": {
+        "sha256": "c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e",
+        "package": "ir.lifeguide.app.device",
+        "label": "لایف‌گاید شخصی",
+        "debuggable": true,
+        "internetPermission": false,
+        "targetSdkVersion": 36
+      },
+      "fixtureNeverDistribute": {
+        "sha256": "a596d129df188014c6353c5cdfd72eceb5b7d88c46822771eda56f6089b7ff25",
+        "package": "ir.lifeguide.app.device",
+        "label": "لایف‌گاید شخصی",
+        "debuggable": true,
+        "internetPermission": false,
+        "targetSdkVersion": 36
+      }
+    },
+    "certificateSha256": "4ef990d647fc98ac41113d5dbe7ee476ba80bf95b71b5f219b7863fa95263391",
+    "userFirstLaunch": {
+      "processAlive": true,
+      "ordinaryLaunchNoExtras": true,
+      "screenshotSha256": "252cd8f83ab901a4808face5b6e00a269f7702cf7ce2bdfdfcaa4b8d726bad35",
+      "screenshotFile": "standalone-user-first-launch.png",
+      "urlPromptDetected": false,
+      "localWelcomeText": "UNVERIFIED"
+    },
+    "lastProcessState": "ABSENT",
+    "processExit": {
+      "confirmedAbsent": true,
+      "ordinaryKillAttempts": 1
+    }
+  },
+  "manifest": {
+    "result": "PASS",
+    "package": "ir.lifeguide.app.device",
+    "label": "لایف‌گاید شخصی",
+    "versionName": "0.7.2-personal.1",
+    "versionCode": 9,
+    "debuggable": true,
+    "allowBackup": false,
+    "usesCleartextTraffic": false,
+    "internetPermission": false,
+    "permissions": [
+      "android.permission.POST_NOTIFICATIONS",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
+      "android.permission.SCHEDULE_EXACT_ALARM",
+      "ir.lifeguide.app.device.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+    ],
+    "minSdkVersion": 24,
+    "targetSdkVersion": 36,
+    "sha256": "c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e",
+    "limitations": "Debug initial personal edition; signature and actual lifecycle checked separately."
+  },
+  "artifact": {
+    "id": 12292340083,
+    "zipSha256": "a2e9be4993303a58452a6c1f2a4deb825417ba398fdb68075ca95d3710436c00",
+    "bytes": 173725160,
+    "apkSha256": "c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e",
+    "verificationArtifactId": 12291484074,
+    "verificationZipSha256": "5091775ea5eff91485e17aa80fe54bec91625704db02038a697a9e19da9de829",
+    "userArtifactMatchesFirstLaunchApk": true,
+    "differsFromNeverDistributedFixture": true,
+    "architectures": [
+      "arm64-v8a",
+      "armeabi-v7a",
+      "x86_64"
+    ]
+  },
+  "localDownloadedApkVerification": {
+    "command": "java -cp /workspace/scratch/apksig-8.11.1.jar /workspace/scratch/VerifyApk.java /tmp/lg-final-apk/LifeGuide.apk",
+    "output": [
+      "Verified: true",
+      "v1: false",
+      "v2: true",
+      "v3: false",
+      "Certificate subject: C=US, O=Android, CN=Android Debug",
+      "Certificate SHA256: 4ef990d647fc98ac41113d5dbe7ee476ba80bf95b71b5f219b7863fa95263391"
+    ],
+    "status": "VERIFIED"
+  },
+  "manualScreenshotReview": {
+    "file": "personal-user-first-launch-2026-10-20.png",
+    "sha256": "252cd8f83ab901a4808face5b6e00a269f7702cf7ce2bdfdfcaa4b8d726bad35",
+    "status": "VERIFIED",
+    "observed": "Root visually inspected the actual user APK screenshot: native Persian onboarding, empty local name/group form, device-only notice, no URL/OTP/server setup or fixture screen. Automated AX welcome-text check remains UNVERIFIED in the untouched runner receipt."
+  },
+  "delivery": {
+    "localPath": "/tmp/lg-final-apk/LifeGuide.apk",
+    "localFile": "VERIFIED regular file;173725160bytes; SHA256 equals actual user APK receipt",
+    "workspaceCopy": "FAILED: ENOSPC. Normal copy, resource-capability copy and streamed copy all failed before any data was written; task-created incomplete destination removed by the copy tool. No existing user data, artifacts or caches deleted.",
+    "sourceRecovery": "Tracked runtime source preserved in /workspace/LifeGuide-standalone-weekly at3e36dfd, branch and evidence documentation on GitHub PR37. New documentation committed separately; no redundant runtime rerun claimed.",
+    "durableDownload": "https://github.com/davoodmehraban89/LifeMate/actions/runs/39480587450/artifacts/12292340083",
+    "note": "The direct local download path is temporary. GitHub artifact is the recovery copy; archive contains only the actual user LifeGuide.apk. It may require owner GitHub login."
+  }
+}

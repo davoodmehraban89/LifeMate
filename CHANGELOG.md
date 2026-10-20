@@ -6,6 +6,7 @@
 - Transactional private SQLite profile, recurring weekly plans with per-day times, stable occurrence IDs, independent ticks/edits/archives and durable restart behavior.
 - Explicit opt-in native reminder port from committed device rows, generic lock-screen message, persisted OFF choice, 28-day/128-reminder coverage and visible timing limitations.
 - Actual user-APK first-launch plus isolated SQLite/OS-alarm fixture acceptance gates; physical device, signing continuity and online family use remain UNVERIFIED.
+- VERIFIED on runtime3e36dfd: CI39480587450, Flutter314/Python23, SQLite/actual OS-alarm lifecycle, independent downloaded manifest/v2 signature; [receipt](docs/audits/evidence/personal-android-2026-10-20.json).
 
 ## 0.7.2 — 2026-10-18 — نامزد آزمون برنامهٔ هفتگی (منتشرنشده)
 

@@ -2,6 +2,12 @@
 
 این بسته طبق انتخاب D-A در ADR0016 برای استفادهٔ اولیهٔ شخصی روی یک گوشی است. API، URL، ورود، اینترنت و حساب آزمایشی نمی‌خواهد. برنامهٔ آنلاین خانواده تغییر نکرده است. این بسته نسخهٔ کامل خانوادگی یا انتشار رسمی نیست.
 
+## خروجی واقعی این تحویل
+
+**VERIFIED:** کد `3e36dfd4f01d51e11816c0f97d1abda4266f1945`، [CI39480587450](https://github.com/davoodmehraban89/LifeMate/actions/runs/39480587450) موفق؛ Flutter314، Python23، analyze clean و پذیرش SQLite/AlarmManager/NotificationManager واقعی روی شبیه‌ساز API35. [APK کاربر](https://github.com/davoodmehraban89/LifeMate/actions/runs/39480587450/artifacts/12292340083)، [گواه کامل و شکست‌های اولیه](../audits/evidence/personal-android-2026-10-20.json). fixture توزیع نشده است. تصویر واقعی نخستین اجرا مستقل بررسی شد و URL ندارد؛ بررسی خودکار متن AX در receipt همچنان UNVERIFIED است.
+
+APK دانلودشده173725160bytes، SHA256 `c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e`؛ امضای v2 مستقل محلی VERIFIED، گواهی debug `4ef990d647fc98ac41113d5dbe7ee476ba80bf95b71b5f219b7863fa95263391`. کتابخانهٔ Android برای arm64-v8a/armeabi-v7a/x86_64 موجود است. manifest واقعی INTERNET ندارد و backup/cleartext هر دو خاموش‌اند. فقط همین APK واقعی کاربر برای نصب است؛ fixture هرگز تحویل نشود.
+
 ## رفتار قابل بررسی
 
 - نام دلخواه و گروه پروفایل محلی؛ گروه، مجوز یا نقش خانوادگی نیست.
