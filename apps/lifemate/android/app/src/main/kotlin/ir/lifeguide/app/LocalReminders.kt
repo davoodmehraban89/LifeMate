@@ -45,10 +45,16 @@ internal object LocalReminders {
         }
         failedClosed = false
     }
-    private fun leased(s: JSONObject, now: Long = System.currentTimeMillis()) =
-        s.optString("scope").isNotEmpty() && s.optString("generation").isNotEmpty() &&
+    private fun leased(c: Context, s: JSONObject, now: Long = System.currentTimeMillis()): Boolean {
+        val maxLease = when (s.optString("leaseKind")) {
+            "" -> MAX_LEASE
+            DevicePlannerReminders.LEASE_KIND -> if (DevicePlannerReminders.enabled(c) && DevicePlannerReminders.validScope(s.optString("scope"))) DevicePlannerReminders.MAX_LEASE else 0L
+            else -> 0L
+        }
+        return s.optString("scope").isNotEmpty() && s.optString("generation").isNotEmpty() &&
         s.optLong("issuedAtEpochMs") <= now && s.optLong("validUntilEpochMs") > now &&
-        s.optLong("validUntilEpochMs") - s.optLong("issuedAtEpochMs") in 1..MAX_LEASE
+        s.optLong("validUntilEpochMs") - s.optLong("issuedAtEpochMs") in 1..maxLease
+    }
     fun permission(c: Context) =
         (Build.VERSION.SDK_INT < 33 || c.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) &&
         notifications(c).areNotificationsEnabled() &&
@@ -95,21 +101,31 @@ internal object LocalReminders {
         store(c, JSONObject(s.toString()).put("generation", UUID.randomUUID().toString()).put("deliveryExpired", true).put("reminders", JSONArray()))
     }
     @Synchronized fun activate(c: Context, args: Map<*, *>) {
+        activate(c, args, false)
+    }
+    @Synchronized fun activateDevicePlanner(c: Context, args: Map<*, *>) {
+        require(DevicePlannerReminders.enabled(c))
+        activate(c, args, true)
+    }
+    private fun activate(c: Context, args: Map<*, *>, devicePlanner: Boolean) {
         val scope = args["scope"] as? String ?: throw IllegalArgumentException()
         val until = (args["validUntilEpochMs"] as? Number)?.toLong() ?: throw IllegalArgumentException()
         val now = System.currentTimeMillis()
         require(scope.isNotEmpty() && scope.length <= 1024 && !controls.containsMatchIn(scope))
-        require(until > now && until - now <= MAX_LEASE)
+        require(!devicePlanner || DevicePlannerReminders.validScope(scope))
+        require(until > now && until - now <= if (devicePlanner) DevicePlannerReminders.MAX_LEASE else MAX_LEASE)
         val old = read(c)
-        val rows = if (old != null && old.optString("scope") == scope && leased(old, now)) old.optJSONArray("reminders") ?: JSONArray() else JSONArray()
+        val kind = if (devicePlanner) DevicePlannerReminders.LEASE_KIND else ""
+        val rows = if (old != null && old.optString("scope") == scope && old.optString("leaseKind") == kind && leased(c, old, now)) old.optJSONArray("reminders") ?: JSONArray() else JSONArray()
         val next = JSONObject().put("scope", scope).put("generation", UUID.randomUUID().toString()).put("issuedAtEpochMs", now)
             .put("validUntilEpochMs", until).put("reminders", rows)
+        if (devicePlanner) next.put("leaseKind", kind)
         cancel(c, old)
         try { store(c, next); schedule(c, next) } catch (error: Exception) { deactivate(c); throw error }
     }
     @Synchronized fun replace(c: Context, args: Map<*, *>) {
         val old = read(c) ?: throw IllegalStateException("No reminder scope")
-        require(old.optString("scope") == args["scope"] && leased(old))
+        require(old.optString("scope") == args["scope"] && leased(c, old))
         val raw = args["reminders"] as? List<*> ?: throw IllegalArgumentException()
         require(raw.size <= 128)
         val ids = mutableSetOf<String>()
@@ -156,7 +172,7 @@ internal object LocalReminders {
         alarms(c).setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, alarm)
     }
     private fun schedule(c: Context, s: JSONObject) {
-        if (!leased(s) || !permission(c)) return
+        if (!leased(c, s) || !permission(c)) return
         channel(c)
         val rows = s.optJSONArray("reminders") ?: JSONArray()
         val now = System.currentTimeMillis()
@@ -170,12 +186,12 @@ internal object LocalReminders {
     }
     @Synchronized fun restore(c: Context) {
         val state = read(c) ?: return
-        if (!leased(state) || !permission(c)) { expire(c, state); return }
+        if (!leased(c, state) || !permission(c)) { expire(c, state); return }
         schedule(c, state)
     }
     @Synchronized fun status(c: Context): Map<String, Any?> {
         var state = read(c)
-        if (state != null && (!leased(state) || !permission(c))) { expire(c, state); state = read(c) }
+        if (state != null && (!leased(c, state) || !permission(c))) { expire(c, state); state = read(c) }
         val rows = state?.optJSONArray("reminders") ?: JSONArray()
         val now = System.currentTimeMillis()
         var count = 0
@@ -190,7 +206,7 @@ internal object LocalReminders {
         if (parts.size != 2) return
         val state = read(c) ?: return
         if (parts[0] != state.optString("generation")) return
-        if (!leased(state) || !permission(c) || parts[1] == "expiry") { expire(c, state); return }
+        if (!leased(c, state) || !permission(c) || parts[1] == "expiry") { expire(c, state); return }
         val rows = state.optJSONArray("reminders") ?: return
         val now = System.currentTimeMillis()
         for (i in 0 until rows.length()) {
@@ -225,6 +241,10 @@ internal object LocalReminders {
 class LocalReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         try {
+            if (BuildConfig.DEVICE_PLANNER_ONLY && !DevicePlannerReminders.enabled(context)) {
+                LocalReminders.deactivate(context)
+                return
+            }
             when (intent.action) {
                 Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED, Intent.ACTION_TIME_CHANGED,
                 Intent.ACTION_TIMEZONE_CHANGED, AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED -> LocalReminders.restore(context)

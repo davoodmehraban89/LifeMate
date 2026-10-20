@@ -1,5 +1,15 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## لایف‌گاید شخصی — ۲۰۲۶-۱۰-۲۰؛ APK اولیه بدون URL آمادهٔ آزمون گوشی
+
+[PR37](https://github.com/davoodmehraban89/LifeMate/pull/37)، شاخهٔ `feat/standalone-weekly-planner`، کد آزموده‌شده `3e36dfd4f01d51e11816c0f97d1abda4266f1945`. طبق انتخاب پذیرفته‌شدهٔ D-A در ADR0016، APK جدا با نام «لایف‌گاید شخصی»، شناسهٔ `ir.lifeguide.app.device` و نسخه `0.7.2-personal.1/code9` بدون URL/ورود/سرور اجرا می‌شود. شناسه و مجوزهای نسخهٔ آنلاین تغییر نکرده‌اند. SQLite خصوصی و تراکنشی مرجع همین بسته است؛ برنامهٔ یک‌باره/روزانه/روزدرمیان/هفتگی با ساعت مستقل، تیک/ویرایش/بایگانی هر نوبت، نام همراه و چهار تم واقعی دارد. هیچ ACK سرور یا حساب نمایشی ندارد.
+
+**VERIFIED:** [CI اختصاصی39480587450](https://github.com/davoodmehraban89/LifeMate/actions/runs/39480587450) موفق: Flutter314، Python23، analyze clean، build دو APK جدا و manifest بدون INTERNET. APK واقعی کاربر ابتدا روی API35 باز و تصویرش مستقل مشاهده شد؛ سپس fixture هم‌امضا و هرگز توزیع‌نشده با DB ساختگی جدا، SQL مستقل بعد از close/reopen، ماندگاری/ساعت‌های مختلف/تکرار/تیک/بایگانی، اعلان OS پس از نبود پردازش، متن عمومی بدون canary خصوصی، لغو قبل از موعد و خاموش‌کردن را پاس کرد. [گواه کامل با دو شکست قبلی و اصلاح ابزار](docs/audits/evidence/personal-android-2026-10-20.json).
+
+**VERIFIED:** CI عمومی39480587202 موفق؛ Backend308، identity41، regression96، Flutter314، analyze و buildوب/Android. فایل APK کاربر از اتصال رسمی دریافت شد؛ digest ZIP، hash APK، manifest باینری و امضای v2 با ApkVerifier محلی تطبیق داده شدند. [فایل آزمون نصب](https://github.com/davoodmehraban89/LifeMate/actions/runs/39480587450/artifacts/12292340083)، [راهنما](docs/operations/PERSONAL_ANDROID.md). این APK debug برای آزمون اولیه است، نه release امضاشدهٔ مالک.
+
+**UNVERIFIED/محدود:** گوشی فیزیکی، صدا/لرزش، Doze/reboot، UI رضایت واقعی، ارتقا با حفظ کلید، Safari/PWA و شبکه ایران. داده فقط روی همین گوشی است؛ همگام‌سازی، نمای والد، خروجی/backup و بازیابی سرور ندارد. برای اختلاف امضا هرگز برنامه/داده را پاک نکنید. آزمون جداگانهٔ کانال آنلاین در تلاش اول39480587033 با `adb_command_unavailable` شکست خورد؛ تلاش دوم بدون تغییر کد واقعاً موفق شد و هر دو نتیجه در گواه حفظ شده‌اند. هیچ merge/deploy/DNS/schema زنده یا دادهٔ واقعی استفاده نشده است. گزارش‌های زیر تاریخی‌اند؛ PROPOSED قبلی ADR0016 با انتخاب فعلی جایگزین شده است.
+
 ## اعلان Android در شبیه‌ساز — ۲۰۲۶-۱۰-۱۹؛ APIآنلاین هنوز مانع تحویل است
 
 [PR36](https://github.com/davoodmehraban89/LifeMate/pull/36)، شاخهٔ `test/android-reminder-acceptance`، فقط ابزار آزمون و مستندات است. Flutter/Android عملیاتی، Backend و APKتحویلی0.7.2+8 تغییر نکرده‌اند. fixture فقط debug، رکورد ساختگی و تأییدسرور صریحاً شبیه‌سازی‌شده دارد؛ دستگاه فیزیکی/بستهٔ نصب‌شده را رد می‌کند و APKآن توزیع نمی‌شود.

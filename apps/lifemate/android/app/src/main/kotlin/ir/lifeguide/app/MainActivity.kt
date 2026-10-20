@@ -6,16 +6,23 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private var localReminderChannel: LocalReminderChannel? = null
+    private var devicePlannerReminderChannel: DevicePlannerReminderChannel? = null
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         localReminderChannel?.onPermissionResult(requestCode)
+        devicePlannerReminderChannel?.onPermissionResult(requestCode)
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        localReminderChannel = LocalReminderChannel(this)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lifeguide/local_reminders")
-            .setMethodCallHandler(localReminderChannel)
+        if (!BuildConfig.DEVICE_PLANNER_ONLY) {
+            localReminderChannel = LocalReminderChannel(this)
+            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lifeguide/local_reminders")
+                .setMethodCallHandler(localReminderChannel)
+        }
+        devicePlannerReminderChannel = DevicePlannerReminderChannel(this)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lifeguide/device_planner_reminders")
+            .setMethodCallHandler(devicePlannerReminderChannel)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lifeguide/local_write_guard")
             .setMethodCallHandler { call, result ->
                 when (call.method) {

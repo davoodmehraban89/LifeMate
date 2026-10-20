@@ -4,6 +4,10 @@
 
 این شاخه یک **نامزد آزمون آنلاین با داده ساختگی** است. نسخه کامل عملیاتی یا منتشرشده نیست. پذیرش Android/iPhone/Safari واقعی و دسترسی بدون VPN داخل ایران **UNVERIFIED** است. Backend موجود و Feature 1 ایران حفظ شده‌اند؛ حالت بدون ورودِ محلی جای سیستم چندکاربره نیست.
 
+## بستهٔ اولیهٔ شخصی Android — بدون URL
+
+«لایف‌گاید شخصی» نسخه `0.7.2-personal.1/code9` با SQLite واقعی و برنامهٔ هفته/تکرار/تیک/یادآوری، بدون URL و ورود باز می‌شود. شناسهٔ جدا `.device` و manifest بدون INTERNET دارد؛ همگام‌سازی خانواده و بازیابی سرور ندارد. **VERIFIED:** [CI اختصاصی](https://github.com/davoodmehraban89/LifeMate/actions/runs/39480587450) با Flutter314/Python23 و پذیرش واقعی SQLite/اعلان روی شبیه‌ساز API35 موفق شد؛ APK دانلودشده با hash/manifest/امضای مستقل برابر است. [راهنما و محدودیت داده](docs/operations/PERSONAL_ANDROID.md)، [دستورها و خروجی‌ها](docs/audits/evidence/personal-android-2026-10-20.json). گوشی واقعی، صدا/Doze/reboot و ارتقای بدون حذف داده **UNVERIFIED** هستند. حذف برنامهٔ قبلی لازم نیست؛ داده‌ای برای رفع اختلاف امضا پاک نشود.
+
 ## برنامهٔ هفتگی0.7.2 — نامزد آزمون، منتشرنشده
 
 نمای هفته، تکرار روزانه/روزدرمیان و ساعت مستقل هر روز، تیک مستقل نوبت‌ها و پورت اعلان Android روی API واقعی اضافه شده است. **VERIFIED محلی:** Backend308/308، Flutter277/277، analyze بدون مشکل و build وب موفق؛ [شواهد](docs/audits/evidence/weekly-planner-local-2026-10-18.json). APK debug0.7.2+8 واقعاً ساخته و manifest/hash بررسی شد؛ [CI و فایل](docs/audits/evidence/weekly-planner-ci-apk-2026-10-18.json). نصب/اعلان روی گوشی و بهره‌برداری خصوصی کودک هنوز UNVERIFIED/مسدود است. [راهنمای بسته و سناریوی گوشی](docs/operations/WEEKLY_PLANNER_ANDROID.md)، [تصمیم باز مسیر تحویل](docs/decisions/0016-initial-child-planner-delivery.md). هیچ merge/deploy/DNS یا schema زنده تغییر نکرده است.
