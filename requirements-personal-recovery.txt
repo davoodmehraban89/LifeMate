@@ -1,0 +1,2 @@
+# Host-only synthetic recovery QA; install before disconnecting from the network.
+cryptography==50.0.0
