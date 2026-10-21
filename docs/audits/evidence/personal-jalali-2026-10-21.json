@@ -1,0 +1,138 @@
+{
+  "date": "2026-10-21",
+  "runtimeSourceCommit": "c5cb3084f665cb5b1546447e34e35963e5ea5597",
+  "branch": "fix/personal-jalali-dates",
+  "pr": "https://github.com/davoodmehraban89/LifeMate/pull/39",
+  "scope": "Personal-edition Persian calendar presentation and selection only. No schema, native alarm, permission, server or privacy change.",
+  "commands": [
+    {
+      "command": "flutter test test/standalone_ui_test.dart test/standalone_store_test.dart --reporter expanded",
+      "scope": "baseline3429196",
+      "status": "VERIFIED",
+      "output": "00:09 +21: All tests passed!"
+    },
+    {
+      "command": "flutter test --reporter expanded",
+      "scope": "finalsource",
+      "status": "VERIFIED",
+      "output": "01:24 +328: All tests passed!"
+    },
+    {
+      "command": "flutter analyze",
+      "scope": "finalsource",
+      "status": "VERIFIED",
+      "output": "No issues found! (ran in 6.9s)"
+    },
+    {
+      "command": "flutter test test/standalone_date_picker_test.dart --reporter expanded",
+      "status": "VERIFIED",
+      "output": "00:01 +4: All tests passed!"
+    },
+    {
+      "command": "LIFEGUIDE_UI_EVIDENCE_DIR=<local-output> flutter test test/standalone_ui_test.dart --reporter expanded",
+      "status": "VERIFIED",
+      "output": "00:11 +11: All tests passed!"
+    },
+    {
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*standalone*test.py' -v",
+      "status": "VERIFIED",
+      "output": [
+        "----------------------------------------------------------------------",
+        "Ran 23 tests in 0.016s",
+        "",
+        "OK"
+      ]
+    },
+    {
+      "command": "dart format --output=none --set-exit-if-changed <six changed Dart files>",
+      "status": "VERIFIED",
+      "output": "Formatted 6 files (0 changed) in 0.03 seconds."
+    },
+    {
+      "command": "python3 scripts/check-tracked-secrets.py",
+      "status": "VERIFIED",
+      "output": "Tracked-file credential/artifact scan passed; this is not a complete secret audit."
+    },
+    {
+      "command": "python3 scripts/audit-naming.py",
+      "status": "VERIFIED",
+      "output": "Wrote 517 classified rows; 0 display-name review items. Generated inventory was not included in this focused change."
+    },
+    {
+      "command": "flutter build bundle --debug --target=lib/standalone_main.dart --dart-define=LIFEGUIDE_STANDALONE=true --target-platform=android-arm64",
+      "status": "VERIFIED_FAILED",
+      "output": "Target build_hooks failed: Error: Android SDK could not be found.\nFailed to build bundle.",
+      "exitCode": 1
+    }
+  ],
+  "acceptance": {
+    "dateReferences": "2024-03-20/2025-03-20/2025-03-21/2026-10-20/2027-03-21; Persian month/day/year including1406",
+    "realSqlite": "UI selects1406-01-01; independent read-only SQL after store closes reads2027-03-21; reopens same planID and Gregorian date",
+    "boundaries": "leap Esfand30 to nonleap29; month31 to30; partial month endpoints; existing2020/2100 clamps",
+    "responsive": "320px/200percent text opens and scrolls year/month/day; confirms and cancels without writing plan",
+    "unchanged": "SQLite migration/schema, ISO keys, recurrence weekdays, local alarm timestamps, Android permissions, online product identity"
+  },
+  "previousFailures": [
+    {
+      "phase": "offline dependency setup",
+      "result": "FAILED: sqflite_common_ffi absent in cache",
+      "resolution": "Normal flutter pub get succeeded with existing lock; only shamsi_date was later added."
+    },
+    {
+      "phase": "RED week UI",
+      "result": "Expected exactly1 Persian-calendar label; found0 before feature."
+    },
+    {
+      "phase": "RED formatter references",
+      "result": "7 failed against prior Gregorian formatting before Jalali conversion."
+    },
+    {
+      "phase": "RED picker flows",
+      "result": "2 failed: Persian picker title absent before replacement."
+    },
+    {
+      "phase": "picker test tool",
+      "result": "No element: lazy dropdown had not built Farvardin/day1",
+      "resolution": "Scroll actual dropdown before selecting; no production gate weakened."
+    },
+    {
+      "phase": "boundary test harness",
+      "result": "4 failed because test harness omitted GlobalCupertinoLocalizations; date assertions had passed",
+      "resolution": "Use same localization delegates as app;4 pass."
+    },
+    {
+      "phase": "widget screenshot",
+      "result": "Material icon font missing in first test capture; icons appeared as squares",
+      "resolution": "Load bundled MaterialIcons in test harness; rerun11UI tests and visually inspect corrected image."
+    }
+  ],
+  "review": {
+    "independentReadOnly": "No concrete code defect found;2 boundary/accessibility coverage findings addressed with actual picker tests. No physical/build acceptance by reviewer."
+  },
+  "artifact": {
+    "file": "docs/audits/evidence/personal-jalali-picker-2026-10-21.png",
+    "sha256": "1ebef4e8189eb8e8c5486123a4239db9fdcf6a3c277243c031c617052ed6e824",
+    "kind": "Actual Flutter widget-test rendering with synthetic data; not emulator or physical-device screenshot."
+  },
+  "ciAtLastRead": {
+    "command": "gh run list --repo davoodmehraban89/LifeMate --branch fix/personal-jalali-dates --limit5 --json databaseId,name,status,conclusion,headSha",
+    "generic": 39541418486,
+    "personalAndroid": 39541418453,
+    "status": "IN_PROGRESS / UNVERIFIED result"
+  },
+  "unverified": [
+    "New APK build/install/upgrade",
+    "Physical phone, sound/vibration, Doze/reboot",
+    "Safari/iPhone and Iran reachability",
+    "Stable signing continuity with previously delivered debug APK",
+    "Server-family synchronization and backup/export are not added",
+    "Backend tests NOT_RUN: no backend files changed"
+  ],
+  "actionsNotTaken": [
+    "merge",
+    "deploy",
+    "DNS/live database changes",
+    "real child data",
+    "APK redistribution as a safe upgrade"
+  ]
+}

@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifemate/standalone/app.dart';
@@ -18,6 +20,9 @@ void main() {
     sqfliteFfiInit();
     await (FontLoader('LifeGuidePersian')
           ..addFont(rootBundle.load('assets/fonts/LifeGuidePersian.ttf')))
+        .load();
+    await (FontLoader('MaterialIcons')
+          ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf')))
         .load();
   });
   setUp(() async {
@@ -50,10 +55,12 @@ void main() {
   Future<void> open(WidgetTester tester,
       {Future<void> Function(StandaloneStore)? before,
       Future<void> Function(StandaloneStore)? after}) async {
-    await tester.pumpWidget(StandaloneApp(
-        openStore: () async => store,
-        onBeforePlansChange: before,
-        onPlansChanged: after));
+    await tester.pumpWidget(RepaintBoundary(
+        key: const Key('personal-test-surface'),
+        child: StandaloneApp(
+            openStore: () async => store,
+            onBeforePlansChange: before,
+            onPlansChanged: after)));
     await idle(tester);
   }
 
@@ -165,6 +172,122 @@ void main() {
       expect(items.last.completed, isFalse);
       expect(
           find.text('برای این روز هنوز برنامه‌ای ننوشته‌ای.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets(
+      'personal week shows Persian calendar without rewriting stored days',
+      (tester) async {
+    await tester.runAsync(() async {
+      await seedDaily();
+      final original = (await store.listPlans()).single;
+      await open(tester);
+      await tap(
+          tester,
+          find.descendant(
+              of: find.byType(NavigationBar), matching: find.text('هفته')));
+      expect(find.text('تاریخ‌ها شمسی‌اند.'), findsOneWidget);
+      expect(find.textContaining('میلادی'), findsNothing);
+      expect((await store.listPlans()).single.startDate, original.startDate);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets(
+      'Persian picker saves next-year date and keeps ISO SQLite after reopen',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    await tester.runAsync(() async {
+      await profile();
+      await open(tester);
+      await tap(tester, find.text('برنامهٔ تازه'));
+      await tester.enterText(
+          find.byKey(const Key('plan-title')), 'نوروز ساختگی');
+      await tap(tester, find.textContaining('تاریخ:'));
+      expect(find.text('انتخاب تاریخ شمسی'), findsOneWidget);
+      await tap(tester, find.byKey(const Key('personal-date-year')));
+      await tap(tester, find.text('۱۴۰۶').last);
+      await tap(tester, find.byKey(const Key('personal-date-month')));
+      await tester.scrollUntilVisible(find.text('فروردین'), -150,
+          scrollable: find.byType(Scrollable).last);
+      await tap(tester, find.text('فروردین').last);
+      await tap(tester, find.byKey(const Key('personal-date-day')));
+      await tester.scrollUntilVisible(find.text('۱'), -150,
+          scrollable: find.byType(Scrollable).last);
+      await tap(tester, find.text('۱').last);
+      final evidence = Platform.environment['LIFEGUIDE_UI_EVIDENCE_DIR'];
+      if (evidence != null) {
+        final boundary = tester.renderObject<RenderRepaintBoundary>(
+            find.byKey(const Key('personal-test-surface')));
+        final image = await boundary.toImage(pixelRatio: 2);
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        await Directory(evidence).create(recursive: true);
+        await File('$evidence/personal-jalali-picker.png')
+            .writeAsBytes(bytes!.buffer.asUint8List());
+        image.dispose();
+      }
+      await tap(tester, find.text('انتخاب تاریخ'));
+      expect(find.text('تاریخ: ۱ فروردین ۱۴۰۶ شمسی'), findsOneWidget);
+      await tap(tester, find.text('ذخیرهٔ برنامه'));
+      final original = (await store.listPlans()).single;
+      await tester.pumpWidget(const SizedBox());
+      await store.close();
+      final independent = await databaseFactoryFfiNoIsolate.openDatabase(path,
+          options: OpenDatabaseOptions(readOnly: true, singleInstance: false));
+      expect((await independent.query('local_plans')).single['start_date'],
+          '2027-03-21');
+      await independent.close();
+      store = await StandaloneStore.open(
+          path: path, factory: databaseFactoryFfiNoIsolate);
+      await open(tester);
+      expect((await store.listPlans()).single.id, original.id);
+      expect((await store.listPlans()).single.startDate, DateTime(2027, 3, 21));
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('Persian picker confirms and cancels at320px and200percent text',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 900);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+      tester.platformDispatcher.clearTextScaleFactorTestValue();
+    });
+    await tester.runAsync(() async {
+      await profile();
+      await open(tester);
+      await tap(tester, find.text('برنامهٔ تازه'));
+      await tap(tester, find.textContaining('تاریخ:'));
+      expect(find.text('انتخاب تاریخ شمسی'), findsOneWidget);
+      await tap(tester, find.byKey(const Key('personal-date-year')));
+      await tap(tester, find.text('۱۴۰۶').last);
+      await tap(tester, find.byKey(const Key('personal-date-month')));
+      await tester.scrollUntilVisible(find.text('فروردین'), -150,
+          scrollable: find.byType(Scrollable).last);
+      await tap(tester, find.text('فروردین').last);
+      await tap(tester, find.byKey(const Key('personal-date-day')));
+      await tester.scrollUntilVisible(find.text('۱'), -150,
+          scrollable: find.byType(Scrollable).last);
+      await tap(tester, find.text('۱').last);
+      await tap(tester, find.text('انتخاب تاریخ'));
+      expect(find.text('تاریخ: ۱ فروردین ۱۴۰۶ شمسی'), findsOneWidget);
+      final originalLabel =
+          tester.widget<Text>(find.textContaining('تاریخ:')).data;
+      await tap(tester, find.textContaining('تاریخ:'));
+      await tap(tester, find.byKey(const Key('personal-date-year')));
+      await tap(tester, find.text('۱۴۰۵').last);
+      await tap(tester, find.text('انصراف').last);
+      expect(find.text(originalLabel!), findsOneWidget);
+      expect(await store.listPlans(), isEmpty);
       expect(tester.takeException(), isNull);
     });
   });
