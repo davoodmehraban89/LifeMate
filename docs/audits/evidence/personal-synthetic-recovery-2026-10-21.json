@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-21",
+  "sourceCommit": "29fa2c7247847c4eadb7792daaa91379dd0f2367",
+  "branch": "feat/personal-encrypted-recovery",
+  "pr": 44,
+  "approval": "ADR0018 option B preparation and synthetic tests only; no real data/device/key/publication authorization",
+  "scope": "host-only synthetic encrypted SQLite recovery QA",
+  "localRuntime": {
+    "python": "3.12.14",
+    "cryptography": "50.0.0",
+    "sqlite": "3.53.1"
+  },
+  "localChecks": [
+    {
+      "command": "python3 -m unittest discover -s scripts/tests -p 'test_recovery*.py' -q",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "outputExcerpt": "Ran 55 tests in 3.934s\n\nOK"
+    },
+    {
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -q",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "outputExcerpt": "Ran 60 tests in 0.046s\n\nOK"
+    },
+    {
+      "command": "python3 scripts/personal_recovery_cli.py demo --directory /tmp/lifeguide-recovery-demo-reviewed-20261021 --acknowledge-synthetic-only",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "receipt": {
+        "canonicalSnapshotSha256": "f64bf8f30e41dc4eddca18629f2ca950839fdb11f489c85889a40500739c06f9",
+        "checks": {
+          "fullFieldRoundTripAfterCloseReopen": "PASS",
+          "independentSqlIntegrityAndCounts": "PASS",
+          "invalidCredentialRejectedBeforeOutput": "PASS",
+          "repeatRestoreRefusedWithoutOverwrite": "PASS",
+          "sourceBytesUnchanged": "PASS",
+          "tamperingRejected": "PASS"
+        },
+        "counts": {
+          "local_occurrences": 4,
+          "local_plans": 4,
+          "local_profiles": 1,
+          "local_weekly_slots": 3
+        },
+        "limitations": {
+          "WindowsAndUsb": "UNVERIFIED",
+          "androidSideBySide": "UNVERIFIED",
+          "ownerSigningKey": "UNVERIFIED",
+          "physicalDeviceOrOwnerData": "UNVERIFIED",
+          "powerLossDurability": "UNVERIFIED",
+          "subsequentSignedAppUpgrade": "UNVERIFIED"
+        },
+        "result": "PASS",
+        "schemaVersion": 1,
+        "scope": "host SQLite v1 encrypted recovery rehearsal; no device or owner data",
+        "syntheticOnly": true
+      }
+    },
+    {
+      "command": "python3 scripts/check-tracked-secrets.py",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "limitation": "tracked files and high-confidence patterns only; not a whole-history audit"
+    },
+    {
+      "command": "python3 scripts/audit-naming.py --check",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "outputExcerpt": "Naming audit passed: 539 retained text occurrences classified; binary fonts/icons excluded."
+    },
+    {
+      "command": "git diff --cached --check",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "outputExcerpt": ""
+    }
+  ],
+  "ci": {
+    "conclusion": "success",
+    "databaseId": 39673314234,
+    "headSha": "29fa2c7247847c4eadb7792daaa91379dd0f2367",
+    "status": "completed",
+    "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/39673314234"
+  },
+  "ciLogExcerpt": [
+    "host-synthetic-recovery\tRun recovery refusal, integrity and filesystem tests\t2026-10-21T20:47:29.0079431Z Ran 55 tests in 4.204s",
+    "host-synthetic-recovery\tRun existing APK and Android host guards\t2026-10-21T20:47:29.2620700Z Ran 60 tests in 0.047s",
+    "host-synthetic-recovery\tRehearse actual synthetic SQLite close and reopen\t2026-10-21T20:47:29.8096031Z {\"canonicalSnapshotSha256\": \"f64bf8f30e41dc4eddca18629f2ca950839fdb11f489c85889a40500739c06f9\", \"checks\": {\"fullFieldRoundTripAfterCloseReopen\": \"PASS\", \"independentSqlIntegrityAndCounts\": \"PASS\", \"invalidCredentialRejectedBeforeOutput\": \"PASS\", \"repeatRestoreRefusedWithoutOverwrite\": \"PASS\", \"sourceBytesUnchanged\": \"PASS\", \"tamperingRejected\": \"PASS\"}, \"counts\": {\"local_occurrences\": 4, \"local_plans\": 4, \"local_profiles\": 1, \"local_weekly_slots\": 3}, \"limitations\": {\"WindowsAndUsb\": \"UNVERIFIED\", \"androidSideBySide\": \"UNVERIFIED\", \"ownerSigningKey\": \"UNVERIFIED\", \"physicalDeviceOrOwnerData\": \"UNVERIFIED\", \"powerLossDurability\": \"UNVERIFIED\", \"subsequentSignedAppUpgrade\": \"UNVERIFIED\"}, \"result\": \"PASS\", \"schemaVersion\": 1, \"scope\": \"host SQLite v1 encrypted recovery rehearsal; no device or owner data\", \"syntheticOnly\": true}",
+    "host-synthetic-recovery\tCheck tracked artifacts and naming\t2026-10-21T20:47:29.9825723Z Tracked-file credential/artifact scan passed; this is not a complete secret audit.",
+    "host-synthetic-recovery\tCheck tracked artifacts and naming\t2026-10-21T20:47:30.1704782Z Naming audit passed: 539 retained text occurrences classified; binary fonts/icons excluded."
+  ],
+  "independentReview": {
+    "status": "VERIFIED_REVIEW",
+    "initialFindings": [
+      "P2 FIFO input blocked before type validation",
+      "P2 source path changed between validation and SQLite reopening"
+    ],
+    "resolutions": [
+      "nonblocking nofollow descriptor with identity checks and unbuffered header gate",
+      "bounded source bytes deserialized only in memory; schema/version/marker rechecked"
+    ],
+    "rerun": "55 tests PASS plus both original reproductions refuse; no remaining blockers found within closed synthetic fixture scope"
+  },
+  "redGreenObserved": [
+    "archive tests failed before module implementation; then16 PASS",
+    "snapshot missing implementation and race/WAL/header regressions failed before fixes; then20 PASS",
+    "filesystem FIFO/regular-file swap/header callback tests failed before fix; then12 PASS",
+    "CLI initial missing-module failure followed by7 PASS; no claim this alone proved behavior RED"
+  ],
+  "limitations": {
+    "WindowsAndUsb": "UNVERIFIED",
+    "androidSideBySide": "UNVERIFIED",
+    "ownerSigningKey": "UNVERIFIED",
+    "physicalDeviceOrOwnerData": "UNVERIFIED",
+    "powerLossDurability": "UNVERIFIED",
+    "subsequentSignedAppUpgrade": "UNVERIFIED"
+  },
+  "nonClaims": [
+    "no new APK or installation identity in this PR",
+    "no owner signing key or actual upgrade compatibility",
+    "no owner/child data or phone operations",
+    "no live network service, merge, deploy or DNS changes"
+  ]
+}

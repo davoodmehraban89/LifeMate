@@ -1,0 +1,43 @@
+name: LifeGuide synthetic recovery QA
+on:
+  push:
+    branches: [feat/personal-encrypted-recovery, test/personal-recovery-acceptance]
+  pull_request:
+    paths:
+      - scripts/personal_recovery/**
+      - scripts/personal_recovery_cli.py
+      - scripts/tests/test_recovery*.py
+      - requirements-personal-recovery.txt
+      - .github/workflows/personal-recovery-qa.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host-synthetic-recovery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install pinned host QA dependency
+        run: python -m pip install -r requirements-personal-recovery.txt
+      - name: Run recovery refusal, integrity and filesystem tests
+        run: python -m unittest discover -s scripts/tests -p 'test_recovery*.py' -v
+      - name: Run existing APK and Android host guards
+        run: python -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v
+      - name: Rehearse actual synthetic SQLite close and reopen
+        shell: bash
+        run: |
+          python scripts/personal_recovery_cli.py demo --directory "$RUNNER_TEMP/synthetic-recovery" --acknowledge-synthetic-only > "$RUNNER_TEMP/recovery-verification.json"
+          cat "$RUNNER_TEMP/recovery-verification.json"
+      - name: Check tracked artifacts and naming
+        run: |
+          python scripts/check-tracked-secrets.py
+          python scripts/audit-naming.py --check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LifeGuide-synthetic-recovery-verification
+          path: ${{ runner.temp }}/recovery-verification.json
+          if-no-files-found: error
+          retention-days: 14
+      # Deliberately no upload of SQLite, archive, passphrase or APK files.

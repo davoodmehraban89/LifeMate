@@ -33,3 +33,12 @@ deployment/tls/*
 
 __pycache__/
 *.pyc
+
+# Owner data and local synthetic recovery runs never belong in Git.
+*.lgrf
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+.venv-recovery/
