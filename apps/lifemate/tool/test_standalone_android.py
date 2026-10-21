@@ -136,25 +136,37 @@ def active_fixture_keys(output):
     return keys
 
 
-def notification_settings_visible(output):
-    """Accept only the fixed channel title owned by Android's settings app.
-
-    Read synthetic UIAutomator output in memory; never publish its raw XML.
-    Diagnostic prefixes are allowed, malformed/oversized/DTD dumps are not.
-    """
+def _settings_hierarchy(output):
     if not isinstance(output, str) or len(output) > 65536 or '<!' in output:
-        return False
+        return None
     if output.count('<hierarchy') != 1 or output.count('</hierarchy>') != 1:
-        return False
+        return None
     start, end = output.index('<hierarchy'), output.index('</hierarchy>')
     try:
         root = ET.fromstring(output[start:end + len('</hierarchy>')])
     except ET.ParseError:
-        return False
-    return root.tag == 'hierarchy' and any(
+        return None
+    return root if root.tag == 'hierarchy' else None
+
+
+def notification_settings_summary(output):
+    """Booleans/counts only; never publish arbitrary UI labels or XML."""
+    root = _settings_hierarchy(output)
+    nodes = list(root.iter('node')) if root is not None else []
+    return {
+        'outputChars': min(len(output), 65537) if isinstance(output, str) else 0,
+        'validHierarchy': root is not None,
+        'systemSettingsNodePresent': any(n.get('package') == 'com.android.settings' for n in nodes),
+        'channelTitlePresent': any(n.get('text') == 'یادآوری برنامهٔ شخصی' for n in nodes),
+        'verified': any(
         node.get('package') == 'com.android.settings' and
         node.get('text') == 'یادآوری برنامهٔ شخصی'
-        for node in root.iter('node'))
+        for node in nodes)}
+
+
+def notification_settings_visible(output):
+    """Keep the strict same-node system-package/fixed-channel assertion."""
+    return notification_settings_summary(output)['verified']
 
 
 def check_notification_record(dump, key):
@@ -433,18 +445,60 @@ class Harness:
                 return
             self.sleep(min(1, until - self.clock()))
 
+    def settings_dump(self):
+        self._ready()
+        require(self.fixture_installed and self.user_launched, 'fixture_not_ready')
+        # /dev/tty may be absent when adb shell has no PTY. Use a unique file
+        # owned by this already-gated synthetic run, read it, and remove it.
+        path = '/data/local/tmp/lifeguide-settings-' + secrets.token_hex(8) + '.xml'
+        try:
+            self.adb.shell('uiautomator', 'dump', path, allow_failure=True)
+            return self.adb.shell('cat', path, allow_failure=True)
+        finally:
+            self.adb.shell('rm', '-f', path)
+
+    def capture_settings_screenshot(self):
+        self._ready()
+        require(self.fixture_installed and self.user_launched, 'fixture_not_ready')
+        try:
+            capture = subprocess.run(['adb', '-s', self.serial, 'exec-out', 'screencap', '-p'],
+                capture_output=True, timeout=30, check=False)
+            png = capture.stdout
+            require(capture.returncode == 0 and 24 <= len(png) <= 16 * 1024 * 1024 and
+                png[:8] == b'\x89PNG\r\n\x1a\n' and png[12:16] == b'IHDR', 'settings_screenshot_failed')
+            width, height = struct.unpack('>II', png[16:24])
+            require(100 <= width <= 4096 and 100 <= height <= 4096, 'settings_screenshot_failed')
+            path = self.screenshot.with_name('standalone-notification-settings.png')
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(png)
+            self.receipt['settingsScreenshot'] = {'status': 'VERIFIED_CAPTURE',
+                'file': path.name, 'sha256': hashlib.sha256(png).hexdigest()}
+        except (AcceptanceError, OSError, subprocess.SubprocessError):
+            self.receipt['settingsScreenshot'] = {'status': 'UNVERIFIED'}
+
     def verify_notification_settings(self):
         settings = self.launch('settings')
         self.assert_status(settings, active=False, count=0)
         self.assert_database(settings, CHECKS)
         self.receipt['currentPhase'] = 'native_notification_settings'
+        legacy = self.adb.shell('uiautomator', 'dump', '/dev/tty', allow_failure=True)
+        observation = {'legacyTty': notification_settings_summary(legacy)}
+        self.receipt['settingsObservation'] = observation
         until = self.clock() + 20
         while True:
-            ui = self.adb.shell('uiautomator', 'dump', '/dev/tty', allow_failure=True)
+            ui = self.settings_dump()
+            observation['file'] = notification_settings_summary(ui)
             if notification_settings_visible(ui):
                 break
-            require(self.clock() < until, 'notification_settings_screen_not_verified')
+            if self.clock() >= until:
+                self.capture_settings_screenshot()
+                raise AcceptanceError('notification_settings_screen_not_verified')
             self.sleep(0.5)
+        # Repeat the legacy probe on the now-confirmed stable screen so initial
+        # UI readiness is not confused with the dump transport hypothesis.
+        legacy_after = self.adb.shell('uiautomator', 'dump', '/dev/tty', allow_failure=True)
+        observation['legacyTtyAfterFile'] = notification_settings_summary(legacy_after)
+        self.capture_settings_screenshot()
         require(self.preferences() is None and not self.active_keys(),
                 'settings_changed_off_native_state')
         self.adb.shell('input', 'keyevent', 'KEYCODE_BACK')

@@ -1,5 +1,12 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## شکست پذیرش صفحهٔ صدا و ابزار مشاهده — ۲۰۲۶-۱۰-۲۱
+
+PR42/48940b3: عمومی39660443665 موفق باFlutter332/Backend308؛ شخصی39660443764 در `native_notification_settings` با `notification_settings_screen_not_verified` شکست خورد. guard اجرا نشد؛ شکست به امضا نسبت داده نمی‌شود. SQL/اعلان/OFF قبلی PASSبودند. [receipt شکست](docs/audits/evidence/personal-native-settings-failed-2026-10-21.json).
+
+در followup فقط ابزار Python، مشاهدهٔ `/dev/tty` را با فایل موقت متعلق به AVD تازه مقایسه و summary بی‌متن/تصویر ساختگی ثبت می‌کند؛ همان شرط دقیق عنوان+package حفظ شد. فایلXML در finally حذف می‌شود. RED2 سپس66تست ابزار موفق؛ **علت TTY و نتیجهٔ Android جدید UNVERIFIED** تا اجرای CI. محصول/DB/Kotlin/امضا/قفل upload و دادهٔ واقعی تغییر نکردند. [گواه و حدود اعتبار](docs/audits/evidence/personal-native-settings-2026-10-21.json).
+
+
 ## پذیرش مستقل تنظیمات صدای Android — ۲۰۲۶-۱۰-۲۱؛ فقط ابزار آزمون
 
 در شاخهٔ `test/personal-notification-settings` بر PR41/76efe36، fixture debug با DB ساختگی جدا، تنظیمات کانال ثابت Android را از port واقعی باز می‌کند؛ میزبان UIAutomator، برگشت، SQL مستقل و باقی‌ماندن OFF/نبود اعلان را می‌سنجد. source محصول/DB پیش‌فرض/امضا و قفل تحویل PR40 تغییر نکردند. [طراحی و گزارش](docs/audits/2026-10-21-personal-native-settings-acceptance.md).

@@ -247,6 +247,8 @@ class SyntheticEmulator(FakeAdb):
         self.late_kill = False
         self.settings_visible = False
         self.settings_matches = True
+        self.pipe_dump_empty = False
+        self.dump_files = {}
         self.identifier = "33333333-3333-4333-8333-333333333333"
 
     def clock(self):
@@ -276,10 +278,19 @@ class SyntheticEmulator(FakeAdb):
         if parts == ('shell', 'input', 'keyevent', 'KEYCODE_BACK'):
             self.settings_visible = False
             return ''
-        if parts == ('shell', 'uiautomator', 'dump', '/dev/tty'):
+        if parts[:3] == ('shell', 'uiautomator', 'dump'):
             title = 'یادآوری برنامهٔ شخصی' if self.settings_matches else 'Other channel'
-            return ('<hierarchy><node package="com.android.settings" text="' + title +
-                    '" /></hierarchy>') if self.settings_visible else ''
+            xml = ('<hierarchy><node package="com.android.settings" text="' + title +
+                   '" /></hierarchy>') if self.settings_visible else ''
+            if parts[3] == '/dev/tty':
+                return '' if self.pipe_dump_empty else xml
+            self.dump_files[parts[3]] = xml
+            return 'UI hierchary dumped to: ' + parts[3]
+        if parts[:2] == ('shell', 'cat'):
+            return self.dump_files.get(parts[2], '')
+        if parts[:3] == ('shell', 'rm', '-f'):
+            self.dump_files.pop(parts[3], None)
+            return ''
         if parts == ("shell", "am", "kill", subject.PACKAGE):
             if self.late_kill and self.state and self.state["reminders"]:
                 self.sleep(60)
@@ -355,10 +366,38 @@ class LifecycleTest(unittest.TestCase):
         harness.adb.shell("am", "start", "-W", "-f", "0x10008000", "-n", subject.COMPONENT)
         harness.user_launched = True
 
+    def png_result(self):
+        import struct
+        png = b'\x89PNG\r\n\x1a\n' + b'\0\0\0\rIHDR' + struct.pack('>II', 1080, 1920)
+        return type('Result', (), {'returncode': 0, 'stdout': png})()
+
+    def test_non_tty_dump_is_read_then_removed_without_losing_the_strict_check(self):
+        adb = SyntheticEmulator()
+        adb.pipe_dump_empty = True
+        harness = self.harness(adb)
+        error = None
+        with patch.object(harness, 'first_user_launch', side_effect=lambda: self.first_launch(harness)), \
+             patch.object(subject.subprocess, 'run', return_value=self.png_result()):
+            try:
+                receipt = harness.run()
+            except subject.AcceptanceError as failed:
+                error = str(failed)
+        self.assertIsNone(error, 'Empty non-PTY dump must not prevent independent file verification')
+        self.assertEqual(receipt['checks']['nativeNotificationSettingsWhileOff'], 'PASS')
+        self.assertFalse(receipt['settingsObservation']['legacyTty']['verified'])
+        self.assertTrue(receipt['settingsObservation']['file']['verified'])
+        self.assertIn('legacyTtyAfterFile', receipt['settingsObservation'])
+        self.assertFalse(receipt['settingsObservation']['legacyTtyAfterFile']['verified'])
+        self.assertFalse(adb.dump_files)
+        for call in adb.calls:
+            if call[:3] == ('shell', 'rm', '-f'):
+                self.assertRegex(call[3], r'^/data/local/tmp/lifeguide-settings-[0-9a-f]{16}\.xml$')
+
     def test_full_mode_sequence_and_sanitized_receipt(self):
         adb = SyntheticEmulator()
         harness = self.harness(adb)
-        with patch.object(harness, "first_user_launch", side_effect=lambda: self.first_launch(harness)):
+        with patch.object(harness, "first_user_launch", side_effect=lambda: self.first_launch(harness)), \
+             patch.object(subject.subprocess, 'run', return_value=self.png_result()):
             receipt = harness.run()
         self.assertEqual(receipt["result"], "PASS")
         self.assertEqual(adb.modes, ["seed", "inspect", "change", "cancel", "off", "settings", "inspect"])
@@ -419,11 +458,13 @@ class LifecycleTest(unittest.TestCase):
         adb = SyntheticEmulator()
         adb.settings_matches = False
         harness = self.harness(adb)
-        with patch.object(harness, "first_user_launch", side_effect=lambda: self.first_launch(harness)):
+        with patch.object(harness, "first_user_launch", side_effect=lambda: self.first_launch(harness)), \
+             patch.object(subject.subprocess, 'run', return_value=self.png_result()):
             with self.assertRaisesRegex(subject.AcceptanceError, 'notification_settings_screen_not_verified'):
                 harness.run()
         self.assertNotIn('nativeNotificationSettingsWhileOff', harness.receipt['checks'])
         self.assertEqual(harness.receipt['result'], 'FAIL')
+        self.assertFalse(adb.dump_files)
 
 
 class NotificationSettingsTest(unittest.TestCase):
@@ -459,6 +500,17 @@ class NotificationSettingsTest(unittest.TestCase):
         mixed = ('<hierarchy><node package="com.android.settings" text="Other" />'
                  '<node package="unrelated.app" text="یادآوری برنامهٔ شخصی" /></hierarchy>')
         self.assertFalse(check(mixed))
+
+    def test_diagnostic_summary_is_bounded_and_does_not_publish_ui_labels(self):
+        summarize = getattr(subject, 'notification_settings_summary', None)
+        self.assertTrue(callable(summarize), 'Sanitized native-screen diagnostics are missing')
+        summary = summarize(self.xml())
+        self.assertTrue(summary['verified'])
+        self.assertTrue(summary['systemSettingsNodePresent'])
+        self.assertFalse(summarize('')['validHierarchy'])
+        serialized = json.dumps(summarize(self.xml(title='SYNTHETIC_PRIVATE_TASK_CANARY')))
+        self.assertNotIn('SYNTHETIC_PRIVATE_TASK_CANARY', serialized)
+        self.assertNotIn('<hierarchy', serialized)
 
 
 if __name__ == "__main__":
