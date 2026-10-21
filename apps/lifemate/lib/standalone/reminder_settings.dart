@@ -60,7 +60,7 @@ class _StandaloneReminderSettingsState extends State<StandaloneReminderSettings>
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             const Text(
-                'با اجازهٔ تو، نام همراهت و یک پیام عمومی نمایش داده می‌شود. عنوان خصوصی برنامه روی اعلان نمی‌آید. اینترنت و سرور لازم نیست.'),
+                'وقتی زمان برنامه‌ات برسد، همراهت یادت می‌اندازد. با اجازهٔ تو، نام همراه و یک پیام عمومی نمایش داده می‌شود؛ عنوان خصوصی برنامه روی اعلان نمی‌آید. اینترنت و سرور لازم نیست.'),
             const SizedBox(height: 16),
             if (widget.coordinator.error != null)
               Card(
@@ -87,7 +87,19 @@ class _StandaloneReminderSettingsState extends State<StandaloneReminderSettings>
               ),
               Text(state.permissionGranted
                   ? 'مجوز اعلان: داده شده'
-                  : 'مجوز اعلان: داده نشده؛ برای اجازه دادن، اعلان را روشن کن.'),
+                  : 'مجوز اعلان: داده نشده. اجازهٔ اعلان را از تنظیمات اندروید بررسی کن.'),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                  key: const Key('personal-notification-system-settings'),
+                  style:
+                      OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+                  onPressed: _busy
+                      ? null
+                      : () => _run(widget.coordinator.openNotificationSettings),
+                  icon: const Icon(Icons.volume_up_outlined),
+                  label: const Text('تنظیم صدا و اعلان در اندروید')),
+              const Text(
+                  'صدایی را انتخاب کن که دوست داری. تنظیم صدا و لرزش در اندروید انجام می‌شود؛ پس از برگشت، اجازهٔ اعلان دوباره بررسی می‌شود.'),
               const SizedBox(height: 12),
               Text('یادآوری آیندهٔ زمان‌بندی‌شده: ${state.scheduledCount}'),
               Text(state.timing == 'exact'

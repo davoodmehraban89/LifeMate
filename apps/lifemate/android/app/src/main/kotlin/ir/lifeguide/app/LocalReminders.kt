@@ -69,6 +69,19 @@ internal object LocalReminders {
                 setSound(Settings.System.DEFAULT_NOTIFICATION_URI, null)
             })
     }
+    // Explicit user navigation only: no permission, consent or alarm mutation.
+    fun openNotificationSettings(activity: Activity) {
+        channel(activity)
+        val details = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.parse("package:${activity.packageName}"))
+        val target = if (Build.VERSION.SDK_INT >= 26) {
+            Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
+                .putExtra(Settings.EXTRA_CHANNEL_ID, CHANNEL)
+        } else details
+        try { activity.startActivity(target) }
+        catch (_: android.content.ActivityNotFoundException) { activity.startActivity(details) }
+    }
     private fun pending(c: Context, generation: String, id: String) = PendingIntent.getBroadcast(c, 0,
         Intent(c, LocalReminderReceiver::class.java).apply {
             action = ACTION

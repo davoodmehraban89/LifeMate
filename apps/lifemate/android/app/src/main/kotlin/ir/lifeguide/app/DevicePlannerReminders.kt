@@ -122,6 +122,11 @@ internal class DevicePlannerReminderChannel(private val activity: Activity) : Me
                         activity.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST)
                     } else result.success(DevicePlannerReminders.status(activity))
                 }
+                "openNotificationSettings" -> {
+                    require(call.arguments == null)
+                    LocalReminders.openNotificationSettings(activity)
+                    result.success(true)
+                }
                 "requestExactAlarmAccess" -> {
                     if (Build.VERSION.SDK_INT >= 31 && !LocalReminders.exact(activity)) {
                         activity.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:${activity.packageName}")))

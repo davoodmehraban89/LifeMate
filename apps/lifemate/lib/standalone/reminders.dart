@@ -326,6 +326,14 @@ final class StandaloneReminderPort {
     return _serial(_deactivate);
   }
 
+  /// Opens Android's controls only; it never grants consent or reschedules.
+  Future<void> openNotificationSettings() async {
+    if (!_native) {
+      throw UnsupportedError('Android notification settings unavailable.');
+    }
+    await _write('openNotificationSettings');
+  }
+
   Future<void> cancelOnStorageFailure({String? profileId}) =>
       suspendUntilReconcile(profileId: profileId);
 

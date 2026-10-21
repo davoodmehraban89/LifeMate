@@ -1,5 +1,18 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## اولویت آفلاین و حفظ دادهٔ آپدیت — ۲۰۲۶-۱۰-۲۱؛ APK جدید تحویل نشده
+
+مالک صریحاً تکمیل همین نسخهٔ شخصی روی گوشی را پیش از ادامهٔ آنلاین خواست. [ADR0017](docs/decisions/0017-offline-first-and-update-continuity.md) این ترتیب و معیار ارتقای همان نصب را ثبت می‌کند؛ روش تازهٔ انتقال/پشتیبان داده هنوز انتخاب نشده است. دادهٔ واقعی کودک، آنلاین/AI/دسترسی والد، merge/deploy/DNS تغییر نکردند.
+
+**VERIFIED از گواه APKهای تحویلی/CI:** فایل قبلی در CI39480587450 و فایل PR39 در CI39541418453 هر دو package شخصی/code9 اما certificate متفاوت دارند. CI39541418453 و39541418486 واقعاً موفق شدند؛ موفقیت build، ارتقای نصب قبلی را اثبات نمی‌کند. موجودبودن کلید خصوصی قبلی **UNVERIFIED** است. [PR40](https://github.com/davoodmehraban89/LifeMate/pull/40)، `a21eba1`، کنترل fail-closed امضا/version و قفل upload APK را اضافه می‌کند؛ آزمون فعلی fixture در DB جدا، پذیرش exact-old→new/default-DB نیست. [گواه و کنترل تحویل](docs/operations/PERSONAL_UPDATE_GUARD.md).
+
+[PR41](https://github.com/davoodmehraban89/LifeMate/pull/41)، شاخهٔ `fix/personal-notification-controls`، منبع `111b793b03a0342d130a1dd3c833ceea200d4ea9` بر PR40: دکمهٔ تنظیم صدا/اعلان Android، بازگشت به تنظیمات همان app در صورت نبود Activity و خطای فارسی بدون دست‌زدن به برنامه/انتخاب/زمان‌بندی قبلی. بازگشت از settings مجوز را دوباره می‌خواند. لحن همراه و حداقل لمس۴۸؛ عنوان خصوصی روی اعلان اضافه نشد.
+
+**VERIFIED محلی:** Flutter332 روی49702e8؛ پس از اصلاح صرفاً lint در111b793، تست متمرکز4 و analyze clean؛ Python60؛ format19/0تغییر. عرض۳۲۰ و متن۲۰۰٪، ماندنOFF و حفظ اعلان فعال هنگام خطا آزموده شدند. SQLite واقعی است؛ مرز Android در این تست‌ها mock است. [دستور/خروجی و شکست‌ها](docs/audits/evidence/personal-notification-controls-2026-10-21.json)، [شرح بسته](docs/audits/2026-10-21-personal-notification-controls.md).
+
+**UNVERIFIED/BLOCKED:** نتیجهٔ CI منبع جدید تا آخرین خواندن pending/in-progress؛ Intent واقعی/OEM، صدا/لرزش/باتری/reboot، گوشی، ارتقای همان نصب با حفظ داده، export/restore و کلید قبلی. APK جدید به‌عنوان آپدیت ارائه نمی‌شود؛ **نسخهٔ موجود حذف یا clear-data نشود**. گام بعد: رفع مانع امضا/طرح حفظ داده، پذیرش دقیق ارتقا، سپس آزمون گوشی و تحویل محدود آفلاین؛ کار آنلاین پس از تکمیل این بسته ادامه می‌یابد.
+
+
 ## تاریخ شمسی برنامه‌ریز شخصی — ۲۰۲۶-۱۰-۲۱؛ اصلاح منبع، بدون ارتقای APK نصب‌شده
 
 [PR39](https://github.com/davoodmehraban89/LifeMate/pull/39)، شاخهٔ `fix/personal-jalali-dates`، منبع `c5cb3084f665cb5b1546447e34e35963e5ea5597`. پس از تحویل [کتابچهٔ ۱۲صفحه‌ای/برنامهٔ شش‌بسته‌ای در PR38](https://github.com/davoodmehraban89/LifeMate/pull/38)، نمایش و انتخاب تاریخ خانه/هفته/نوبت/تکرار شمسی شد؛ سال ثابت نیست. SQLite/ISO، روز هفته، زمان اعلان، مجوز و نسخهٔ آنلاین تغییر نکردند؛ migration یا انتقال داده اجرا نشد.

@@ -107,5 +107,20 @@ class StandaloneReminderCoordinator extends ChangeNotifier {
         await refresh(store);
       });
 
+  /// A settings-screen failure is not a storage failure. Keep the existing
+  /// choice and schedule; lifecycle resume performs the authoritative refresh.
+  Future<void> openNotificationSettings() async {
+    try {
+      await _port.openNotificationSettings();
+      error = null;
+    } catch (_) {
+      error =
+          'تنظیمات اعلان باز نشد. از تنظیمات گوشی، بخش اعلان‌های لایف‌گاید را باز کن.';
+      rethrow;
+    } finally {
+      notifyListeners();
+    }
+  }
+
   Future<void> cancelOnStorageFailure() => _port.cancelOnStorageFailure();
 }
