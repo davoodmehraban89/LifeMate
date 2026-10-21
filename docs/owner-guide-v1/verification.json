@@ -1,0 +1,242 @@
+{
+  "generatedAt": "2026-10-21T03:45:04.139Z",
+  "scope": "owner booklet only; no app tests/build/deploy",
+  "sourceHead": "34291961a45b15cf398789a666cb3c5e63935e33",
+  "historicalEvidence": {
+    "runtimeSource": "3e36dfd4f01d51e11816c0f97d1abda4266f1945",
+    "documentationBaseline": "3429196",
+    "personalCI": "39480587450",
+    "genericCI": "39480587202",
+    "rerunForThisDocumentationHead": false
+  },
+  "checks": {
+    "content": {
+      "pages": 12,
+      "forms": 0,
+      "remoteMedia": 0,
+      "fictionalExamples": true,
+      "actualScreenshot": "docs/audits/evidence/personal-user-first-launch-2026-10-20.png"
+    },
+    "embeddedFonts": [
+      true,
+      true
+    ],
+    "minimumTextPx": 12,
+    "controls": [
+      {
+        "id": "prev",
+        "width": 56.671875,
+        "height": 48
+      },
+      {
+        "id": "next",
+        "width": 58.71875,
+        "height": 48
+      },
+      {
+        "id": "menu",
+        "width": 71.984375,
+        "height": 48
+      },
+      {
+        "id": "large",
+        "width": 78.015625,
+        "height": 48
+      },
+      {
+        "id": "print",
+        "width": 97.3125,
+        "height": 48
+      }
+    ],
+    "navigation": "PASS: contents open/link/close and previous/next handlers",
+    "responsive": [
+      {
+        "width": 320,
+        "normal": "PASS",
+        "text200PercentToggle": "PASS"
+      },
+      {
+        "width": 360,
+        "normal": "PASS",
+        "text200PercentToggle": "PASS"
+      },
+      {
+        "width": 390,
+        "normal": "PASS",
+        "text200PercentToggle": "PASS"
+      }
+    ],
+    "printBounds": [
+      {
+        "page": "p1",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 963.15625,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p2",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 946.90625,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p3",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 980.78125,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p4",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 1005.390625,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p5",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 956.390625,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p6",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 947.9375,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p7",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 867.390625,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p8",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 841.1875,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p9",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 854.609375,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p10",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 947.59375,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p11",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 750.8125,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      },
+      {
+        "page": "p12",
+        "width": 794,
+        "height": 1122,
+        "contentBottom": 859.40625,
+        "footerTop": 1061.40625,
+        "footerBottom": 1096,
+        "overflow": false
+      }
+    ],
+    "illustrationChildren": [
+      {
+        "page": "p1",
+        "overflow": []
+      },
+      {
+        "page": "p3",
+        "overflow": []
+      },
+      {
+        "page": "p4",
+        "overflow": []
+      },
+      {
+        "page": "p5",
+        "overflow": []
+      },
+      {
+        "page": "p6",
+        "overflow": []
+      },
+      {
+        "page": "p7",
+        "overflow": []
+      },
+      {
+        "page": "p8",
+        "overflow": []
+      },
+      {
+        "page": "p9",
+        "overflow": []
+      }
+    ],
+    "pdfPages": 12,
+    "offline": {
+      "pages": 12,
+      "imagesLoaded": true,
+      "fontsLoaded": true,
+      "navigation": true,
+      "requests": 0
+    },
+    "externalRequests": [],
+    "browserErrors": [],
+    "status": "PASS",
+    "raster": {
+      "method": "pdftoppm -png -r 96",
+      "pages": 12,
+      "overview": "overview.png",
+      "source": "LifeGuide-Owner-Guide-v1.pdf"
+    }
+  },
+  "limitations": [
+    "No new physical Android, Safari, Iran-network, video-playback, API, hosting, SMS, backup/restore or signed-release acceptance.",
+    "No comprehensive independent educational/legal audit of this regenerated booklet; focused source/layout reading is not specialist acceptance.",
+    "All future examples are proposals; ADR0015 remains PROPOSED."
+  ],
+  "artifactSha256": {
+    "index.html": "c36059c3afef6792c4cf56dff5323038b91fc75839d42ce941509b20351be4b8",
+    "LifeGuide-Owner-Guide-v1.pdf": "cbbd22b799b5c40a461f707874db838fc16bed9384fc851ddfb71b9137b6554c",
+    "overview.png": "70bfcf6f2dd7115c223ee379e2c26c5eddbdb20e09b5c9cd27aec06b3b9bfc5a"
+  }
+}
