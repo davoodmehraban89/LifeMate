@@ -1,5 +1,11 @@
 # LifeGuide Changelog
 
+## Unreleased — personal planner Persian calendar (Backend unchanged0.7.2)
+
+- Persian date labels and year/month/day selection in the personal planner; ISO SQLite keys, recurrence weekdays and alarm times remain unchanged. No new APK version or safe-upgrade claim.
+- Local Flutter328, boundary/accessibility picker tests and independent SQLite reopen verification; Android bundle build failed locally because Android SDK is unavailable. See [evidence and limits](docs/audits/evidence/personal-jalali-2026-10-21.json).
+
+
 ## Unreleased — personal Android 0.7.2-personal.1/code9 (Backend unchanged0.7.2)
 
 - Initial device-only debug edition in separate package; no URL, contacts, login, network permission or fake server acknowledgment.
