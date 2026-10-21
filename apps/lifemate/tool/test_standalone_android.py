@@ -34,7 +34,7 @@ GENERIC_BODY = "برای دیدن برنامهٔ شخصی، لایف‌گاید 
 CHANNEL = "lifeguide_personal_plan_v1"
 CANARY = "SYNTHETIC_PRIVATE_TASK_CANARY"
 MARKER = "LG_STANDALONE_ACCEPTANCE "
-MODES = {"seed", "inspect", "change", "cancel", "off"}
+MODES = {"seed", "inspect", "change", "cancel", "off", "settings"}
 CHECKS = {"rawSqlAfterClose", "profilePersists", "weeklyDifferentTimes",
           "onceAndEveryTwoDays", "independentEditAndTick", "archivePersists"}
 PREFERENCES = "shared_prefs/lifeguide_local_reminders_v1.xml"
@@ -134,6 +134,27 @@ def active_fixture_keys(output):
         keys.append(key)
     require(len(keys) <= 1, "unexpected_fixture_notification")
     return keys
+
+
+def notification_settings_visible(output):
+    """Accept only the fixed channel title owned by Android's settings app.
+
+    Read synthetic UIAutomator output in memory; never publish its raw XML.
+    Diagnostic prefixes are allowed, malformed/oversized/DTD dumps are not.
+    """
+    if not isinstance(output, str) or len(output) > 65536 or '<!' in output:
+        return False
+    if output.count('<hierarchy') != 1 or output.count('</hierarchy>') != 1:
+        return False
+    start, end = output.index('<hierarchy'), output.index('</hierarchy>')
+    try:
+        root = ET.fromstring(output[start:end + len('</hierarchy>')])
+    except ET.ParseError:
+        return False
+    return root.tag == 'hierarchy' and any(
+        node.get('package') == 'com.android.settings' and
+        node.get('text') == 'یادآوری برنامهٔ شخصی'
+        for node in root.iter('node'))
 
 
 def check_notification_record(dump, key):
@@ -412,6 +433,29 @@ class Harness:
                 return
             self.sleep(min(1, until - self.clock()))
 
+    def verify_notification_settings(self):
+        settings = self.launch('settings')
+        self.assert_status(settings, active=False, count=0)
+        self.assert_database(settings, CHECKS)
+        self.receipt['currentPhase'] = 'native_notification_settings'
+        until = self.clock() + 20
+        while True:
+            ui = self.adb.shell('uiautomator', 'dump', '/dev/tty', allow_failure=True)
+            if notification_settings_visible(ui):
+                break
+            require(self.clock() < until, 'notification_settings_screen_not_verified')
+            self.sleep(0.5)
+        require(self.preferences() is None and not self.active_keys(),
+                'settings_changed_off_native_state')
+        self.adb.shell('input', 'keyevent', 'KEYCODE_BACK')
+        inspected = self.launch('inspect')
+        self.assert_status(inspected, active=False, count=0)
+        self.assert_database(inspected, CHECKS)
+        require(self.preferences() is None and not self.active_keys(),
+                'settings_return_changed_off_native_state')
+        self.receipt['checks']['nativeNotificationSettingsWhileOff'] = 'PASS'
+        self.receipt['checks']['sqliteAfterNotificationSettings'] = 'PASS'
+
     def run(self):
         self.install_user()
         self.first_user_launch()
@@ -454,6 +498,7 @@ class Harness:
         self.assert_status(off, active=False, count=0)
         require(self.preferences() is None and not self.active_keys(), "off_did_not_clear_native_state")
         self.receipt["checks"]["offClearsNativeState"] = "PASS"
+        self.verify_notification_settings()
         self.receipt["currentPhase"], self.receipt["result"] = "complete", "PASS"
         return self.receipt
 

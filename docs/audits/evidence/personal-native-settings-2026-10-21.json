@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-21",
+  "branch": "test/personal-notification-settings",
+  "base": "76efe36169ce4e34deee8e218399f5a51d3e0e3f",
+  "scope": "Developer-only isolated fixture/runner extension; product lib/Kotlin/default DB and APK delivery hold unchanged.",
+  "sourceFiles": {
+    "apps/lifemate/tool/standalone_acceptance_fixture.dart": "7cb4b5e433b4a90b0ee456bbf4eb50f6854fa33fdab73277c9a265d594c815a2",
+    "apps/lifemate/tool/test_standalone_android.py": "71dae413d3d02dc9bd728de160ad38fc48da58b0789fdcade4329df28ddd3607",
+    "apps/lifemate/tool/test_standalone_android_test.py": "999bb5a92fad0ab5e7fa8f3219a1c2ef2cd5ef67e6776424f4e809bcb0c47308"
+  },
+  "commands": [
+    {
+      "command": "python3 -B -m unittest discover -s apps/lifemate/tool -p '*standalone*test.py' -v",
+      "phase": "baseline",
+      "status": "VERIFIED",
+      "output": "Ran 35 tests in 0.019s; OK"
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p '*standalone*test.py' -v",
+      "phase": "RED",
+      "status": "VERIFIED_EXPECTED_FAILURE",
+      "output": "FAILED (failures=4)",
+      "reason": "Missing native-settings checker and missing settings/inspect orchestration."
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p '*standalone*test.py' -v",
+      "phase": "GREEN",
+      "status": "VERIFIED",
+      "output": "Ran 39 tests in 0.021s; OK"
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p '*test.py' -v",
+      "status": "VERIFIED",
+      "output": "Ran 64 tests in 0.068s; OK"
+    },
+    {
+      "command": "flutter test --reporter expanded",
+      "status": "VERIFIED",
+      "output": "01:29 +332: All tests passed!"
+    },
+    {
+      "command": "flutter analyze",
+      "status": "VERIFIED",
+      "output": "No issues found! (ran in 2.4s)"
+    },
+    {
+      "command": "dart format --output=none --set-exit-if-changed apps/lifemate/tool/standalone_acceptance_fixture.dart",
+      "status": "VERIFIED",
+      "output": "Formatted 1 file (0 changed) in 0.01 seconds."
+    }
+  ],
+  "review": "Independent read-only review found no blocking safety/data/consent defect. Reviewer did not execute native test.",
+  "hostTestLimitation": "XML parser rejection is real host code; orchestration uses an explicit synthetic Android model. Neither is OS execution evidence.",
+  "newNativeScenario": "UNVERIFIED until CI receipt contains nativeNotificationSettingsWhileOff and sqliteAfterNotificationSettings PASS.",
+  "preservedGates": [
+    "explicit emulator serial",
+    "fresh API35/qemu/hardware/product",
+    "actual APK manifest and same signer",
+    "no existing package",
+    "no physical device/reset/uninstall",
+    "fixture separate DB",
+    "disabled user APK upload"
+  ],
+  "independentlyObservedParentCi": {
+    "genericPR41": {
+      "run": 39545684951,
+      "source": "76efe36",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "onlineNotificationPR41": {
+      "run": 39545685044,
+      "source": "76efe36",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "personalPR41": {
+      "run": 39545684895,
+      "status": "in_progress",
+      "newSettingsMode": "Not present in this parent source"
+    }
+  },
+  "signingInvestigation": {
+    "secretNamesRequest": "HTTP403 Resource not accessible by integration; no values requested",
+    "localSigningPathSearch": "2 copies of public SDK test fixture only; contents not read",
+    "originalPrivateKeyAvailability": "UNVERIFIED"
+  },
+  "unverified": [
+    "New native settings mode execution",
+    "Physical phone sound/vibration, DND, Doze, reboot and OEM fallback",
+    "Exact previously delivered APK -> candidate/default product DB upgrade",
+    "Original signing-key availability",
+    "No new backup/export/restore implementation",
+    "Full-history secret scan NOT_RUN",
+    "Backend tests locally NOT_RUN: no backend change"
+  ],
+  "actionsNotTaken": [
+    "merge",
+    "deploy",
+    "DNS/live data change",
+    "real child data read or upload",
+    "signing-key creation/export",
+    "APK handoff",
+    "uninstall or clear-data"
+  ]
+}

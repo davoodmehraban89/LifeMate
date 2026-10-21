@@ -245,6 +245,8 @@ class SyntheticEmulator(FakeAdb):
         self.background_delay = 0
         self.background_ready = 0
         self.late_kill = False
+        self.settings_visible = False
+        self.settings_matches = True
         self.identifier = "33333333-3333-4333-8333-333333333333"
 
     def clock(self):
@@ -271,6 +273,13 @@ class SyntheticEmulator(FakeAdb):
         if parts == ("shell", "input", "keyevent", "KEYCODE_HOME"):
             self.background_ready = self.elapsed + self.background_delay
             return ""
+        if parts == ('shell', 'input', 'keyevent', 'KEYCODE_BACK'):
+            self.settings_visible = False
+            return ''
+        if parts == ('shell', 'uiautomator', 'dump', '/dev/tty'):
+            title = 'یادآوری برنامهٔ شخصی' if self.settings_matches else 'Other channel'
+            return ('<hierarchy><node package="com.android.settings" text="' + title +
+                    '" /></hierarchy>') if self.settings_visible else ''
         if parts == ("shell", "am", "kill", subject.PACKAGE):
             if self.late_kill and self.state and self.state["reminders"]:
                 self.sleep(60)
@@ -314,6 +323,8 @@ class SyntheticEmulator(FakeAdb):
                 self.posted = False
             elif mode == "off":
                 self.enabled, self.posted, self.state = False, False, None
+            elif mode == 'settings':
+                self.settings_visible = True
             status = {"supported": True, "permissionGranted": True,
                 "active": self.state is not None, "enabled": self.enabled,
                 "activeScope": subject.SCOPE if self.state else None,
@@ -350,7 +361,9 @@ class LifecycleTest(unittest.TestCase):
         with patch.object(harness, "first_user_launch", side_effect=lambda: self.first_launch(harness)):
             receipt = harness.run()
         self.assertEqual(receipt["result"], "PASS")
-        self.assertEqual(adb.modes, ["seed", "inspect", "change", "cancel", "off"])
+        self.assertEqual(adb.modes, ["seed", "inspect", "change", "cancel", "off", "settings", "inspect"])
+        self.assertEqual(receipt["checks"]["nativeNotificationSettingsWhileOff"], "PASS")
+        self.assertEqual(receipt["checks"]["sqliteAfterNotificationSettings"], "PASS")
         self.assertIsNone(adb.state)
         self.assertFalse(adb.posted)
         self.assertGreater(adb.elapsed, 95)
@@ -401,6 +414,51 @@ class LifecycleTest(unittest.TestCase):
             with self.assertRaisesRegex(subject.AcceptanceError, "process_absence_missed_alarm_deadline"):
                 harness.run()
         self.assertNotIn("processAbsentBeforeAlarm", harness.receipt["checks"])
+
+    def test_wrong_native_settings_screen_cannot_claim_acceptance(self):
+        adb = SyntheticEmulator()
+        adb.settings_matches = False
+        harness = self.harness(adb)
+        with patch.object(harness, "first_user_launch", side_effect=lambda: self.first_launch(harness)):
+            with self.assertRaisesRegex(subject.AcceptanceError, 'notification_settings_screen_not_verified'):
+                harness.run()
+        self.assertNotIn('nativeNotificationSettingsWhileOff', harness.receipt['checks'])
+        self.assertEqual(harness.receipt['result'], 'FAIL')
+
+
+class NotificationSettingsTest(unittest.TestCase):
+    def checker(self):
+        function = getattr(subject, 'notification_settings_visible', None)
+        self.assertTrue(callable(function), 'Native settings screen verification is missing')
+        return function
+
+    def xml(self, package='com.android.settings', title='یادآوری برنامهٔ شخصی'):
+        return ('<?xml version="1.0" encoding="UTF-8"?>'
+                '<hierarchy rotation="0"><node package="' + package +
+                '" text="' + title + '" /></hierarchy>')
+
+    def test_only_system_settings_with_our_channel_title_is_accepted(self):
+        check = self.checker()
+        self.assertTrue(check(self.xml()))
+        self.assertTrue(check('UI hierchary dumped to: /dev/tty\n' + self.xml()))
+        for wrong in (self.xml(package=subject.PACKAGE),
+                      self.xml(title='Other channel'),
+                      self.xml(package='unrelated.app')):
+            with self.subTest(wrong=wrong):
+                self.assertFalse(check(wrong))
+
+    def test_missing_malformed_or_oversized_settings_dump_cannot_pass(self):
+        check = self.checker()
+        for wrong in ('', 'ERROR: could not get idle state', '<hierarchy>',
+                      '<!DOCTYPE x>' + self.xml(), self.xml() * 1000):
+            with self.subTest(size=len(wrong)):
+                self.assertFalse(check(wrong))
+
+    def test_unrelated_node_label_cannot_supply_the_system_title(self):
+        check = self.checker()
+        mixed = ('<hierarchy><node package="com.android.settings" text="Other" />'
+                 '<node package="unrelated.app" text="یادآوری برنامهٔ شخصی" /></hierarchy>')
+        self.assertFalse(check(mixed))
 
 
 if __name__ == "__main__":

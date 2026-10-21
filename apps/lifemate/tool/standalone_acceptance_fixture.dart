@@ -330,7 +330,14 @@ Future<Map<String, Object?>> runStandaloneFixture(String route,
     {required bool enabled, required bool debug, required bool android}) async {
   if (!enabled || !debug || !android) throw StateError('fixture_disabled');
   final uri = Uri.tryParse(route);
-  const modes = {'/seed', '/inspect', '/change', '/cancel', '/off'};
+  const modes = {
+    '/seed',
+    '/inspect',
+    '/change',
+    '/cancel',
+    '/off',
+    '/settings'
+  };
   if (uri == null ||
       uri.hasScheme ||
       uri.hasAuthority ||
@@ -370,6 +377,12 @@ Future<Map<String, Object?>> runStandaloneFixture(String route,
       _require(await _reconcile(path, port) == null);
     case '/off':
       await port.disable(profileId: (await _profile(path)).id);
+    case '/settings':
+      // Existing fixture data only; no enable/reconcile/write belongs here.
+      checks = await _audit(path);
+      final before = await port.status(profileId: (await _profile(path)).id);
+      _require(!before.enabled && !before.active && before.scheduledCount == 0);
+      await port.openNotificationSettings();
   }
   final status = await port.status(profileId: (await _profile(path)).id);
   return {
