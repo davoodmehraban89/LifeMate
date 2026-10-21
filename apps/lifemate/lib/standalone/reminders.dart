@@ -328,8 +328,9 @@ final class StandaloneReminderPort {
 
   /// Opens Android's controls only; it never grants consent or reschedules.
   Future<void> openNotificationSettings() async {
-    if (!_native)
+    if (!_native) {
       throw UnsupportedError('Android notification settings unavailable.');
+    }
     await _write('openNotificationSettings');
   }
 

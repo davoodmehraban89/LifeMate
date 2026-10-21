@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -46,15 +45,17 @@ void main() {
       if (call.method == 'openNotificationSettings' && failSettings) {
         throw PlatformException(code: 'settings_unavailable');
       }
-      if (call.method == 'setEnabled')
+      if (call.method == 'setEnabled') {
         enabled = (call.arguments as Map)['enabled'] == true;
+      }
       if (call.method == 'activate') active = true;
       if (call.method == 'deactivate') {
         active = false;
         scheduled = 0;
       }
-      if (call.method == 'replace')
+      if (call.method == 'replace') {
         scheduled = ((call.arguments as Map)['reminders'] as List).length;
+      }
       if (['status', 'requestPermission', 'requestExactAlarmAccess']
           .contains(call.method)) {
         return {
@@ -98,7 +99,9 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 10));
       await tester.pumpAndSettle();
       if (find.byType(LinearProgressIndicator).evaluate().isEmpty &&
-          coordinator.status != null) return;
+          coordinator.status != null) {
+        return;
+      }
     }
     fail('Reminder settings never finished reading actual SQLite.');
   }
