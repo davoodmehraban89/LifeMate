@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "status": "DELIVERED",
+  "package": "ir.lifeguide.app.device",
+  "versionName": "0.7.2-personal.1",
+  "versionCode": 9,
+  "certificateSha256": "4ef990d647fc98ac41113d5dbe7ee476ba80bf95b71b5f219b7863fa95263391",
+  "apkSha256": "c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e",
+  "installedDeviceVerification": "UNVERIFIED",
+  "source": {
+    "repository": "davoodmehraban89/LifeMate",
+    "runId": 39480587450,
+    "artifactId": 12292340083,
+    "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/39480587450/artifacts/12292340083"
+  }
+}

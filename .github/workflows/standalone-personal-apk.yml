@@ -9,6 +9,7 @@ on:
       - 'apps/lifemate/tool/*standalone*'
       - 'apps/lifemate/android/**'
       - 'apps/lifemate/pubspec*'
+      - 'docs/operations/personal-delivered-baseline.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -70,7 +71,14 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -wipe-data -noaudio -no-boot-anim -camera-back none
           working-directory: apps/lifemate
           script: python3 tool/test_standalone_android.py --serial emulator-5554 --user-apk build/LifeGuide.apk --fixture-apk build/standalone-private-fixture.apk --allow-synthetic-emulator-reset --output exports/standalone-android.json
-      - name: Deliver user APK only after acceptance passes
+      - name: Require compatibility with the delivered personal APK
+        run: python3 tool/check_standalone_update.py build/LifeGuide.apk > exports/standalone-update-compatibility.json
+      # Reviewed source hold: the same-run fixture above does not test the exact
+      # delivered APK -> candidate with data in the default product database.
+      # Remove only with implemented, independently verified upgrade acceptance.
+      # No workflow input, environment flag or manual dispatch bypasses this hold.
+      - name: User APK delivery blocked pending default-database upgrade acceptance
+        if: ${{ false }}
         uses: actions/upload-artifact@v4
         with:
           name: LifeGuide-personal-Android-0.7.2-9
