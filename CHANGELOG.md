@@ -1,5 +1,10 @@
 # LifeGuide Changelog
 
+## Unreleased — personal notification sound controls (Backend unchanged0.7.2)
+
+- Explicit Android channel-settings button with an app-settings fallback; launch failure preserves reminder consent and schedule. Persian companion copy, permission refresh on return, 48px target and 320px/200% text coverage.
+- Offline-first delivery criteria and signing/recovery options documented. PR40's signer/version/default-database upgrade hold stays closed; no update APK or backup/restore claim. [Commands, results and limits](docs/audits/evidence/personal-notification-controls-2026-10-21.json).
+
 ## Unreleased — personal planner Persian calendar (Backend unchanged0.7.2)
 
 - Persian date labels and year/month/day selection in the personal planner; ISO SQLite keys, recurrence weekdays and alarm times remain unchanged. No new APK version or safe-upgrade claim.

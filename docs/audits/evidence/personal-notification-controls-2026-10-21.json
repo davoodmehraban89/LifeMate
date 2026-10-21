@@ -1,0 +1,515 @@
+{
+  "date": "2026-10-21",
+  "branch": "fix/personal-notification-controls",
+  "runtimeSourceCommit": "111b793b03a0342d130a1dd3c833ceea200d4ea9",
+  "fullSuiteSourceCommit": "49702e8dc0a14bcaf4e7e5c53a0f0878fbb19f0b",
+  "pr": "https://github.com/davoodmehraban89/LifeMate/pull/41",
+  "parentPr": "https://github.com/davoodmehraban89/LifeMate/pull/40",
+  "scope": "Explicit personal notification-channel settings action only. No database, sharing, private notification text, alarm policy or server change.",
+  "commands": [
+    {
+      "command": "flutter test --reporter expanded",
+      "source": "49702e8",
+      "status": "VERIFIED",
+      "output": "01:33 +332: All tests passed!"
+    },
+    {
+      "command": "flutter test test/standalone_reminder_settings_test.dart --reporter expanded",
+      "source": "111b793b03a0342d130a1dd3c833ceea200d4ea9",
+      "status": "VERIFIED",
+      "output": "00:01 +4: All tests passed!"
+    },
+    {
+      "command": "flutter analyze",
+      "source": "111b793b03a0342d130a1dd3c833ceea200d4ea9",
+      "status": "VERIFIED",
+      "output": "No issues found! (ran in 4.0s)"
+    },
+    {
+      "command": "dart format --output=none --set-exit-if-changed apps/lifemate/lib/standalone apps/lifemate/lib/standalone_main.dart apps/lifemate/test/standalone* apps/lifemate/tool/standalone_acceptance_fixture.dart",
+      "status": "VERIFIED",
+      "output": "Formatted 19 files (0 changed) in 0.12 seconds."
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p '*test.py' -v",
+      "cwd": "apps/lifemate",
+      "status": "VERIFIED",
+      "output": "----------------------------------------------------------------------\nRan 60 tests in 0.037s\n\nOK"
+    },
+    {
+      "command": "python3 scripts/check-tracked-secrets.py",
+      "status": "VERIFIED",
+      "output": "Tracked-file credential/artifact scan passed; this is not a complete secret audit.",
+      "limitation": "Tracked files only; not full history."
+    },
+    {
+      "command": "python3 scripts/audit-naming.py --check",
+      "scope": "After staging new audit/ADR/state files",
+      "status": "VERIFIED",
+      "output": "Naming audit passed: 537 retained text occurrences classified; binary fonts/icons excluded."
+    },
+    {
+      "command": "git diff --cached --check",
+      "status": "VERIFIED",
+      "output": "No output; exit0."
+    }
+  ],
+  "acceptance": {
+    "storage": "Actual SQLite FFI engine with schema1; synthetic profile and plan.",
+    "nativeBoundary": "MethodChannel mocked explicitly; no Android Intent executed in local tests.",
+    "checks": [
+      "Opening settings does not opt in, activate or mutate saved plan ID.",
+      "PlatformException leaves existing enabled/active/scheduled state and status object intact, with a Persian error.",
+      "Lifecycle resume rereads permission and stays OFF without requesting permission.",
+      "320px and 200percent text: button at least48x48 and remains tappable with bundled Persian font."
+    ]
+  },
+  "previousFailures": [
+    {
+      "phase": "RED before implementation",
+      "output": "2 tests failed: expected exactly one button; found0.",
+      "resolution": "Implemented explicit control."
+    },
+    {
+      "phase": "first GREEN attempt",
+      "output": "2 failures: The value of a foundation debug variable was changed by the test.",
+      "resolution": "Use official TargetPlatformVariant instead of setup-scoped override;4 focused tests pass."
+    },
+    {
+      "phase": "first analysis",
+      "output": "5 issues found. (ran in 6.8s)",
+      "resolution": "Removed unnecessary import and added control-flow braces in111b793; targeted4 and analyzer rerun, clean.",
+      "limitation": "Full332 suite ran on49702e8 before these lint-only edits; full final-head CI pending."
+    }
+  ],
+  "independentReview": {
+    "status": "VERIFIED_SOURCE_REVIEW",
+    "result": "No blocking consent/data-preservation issue found. Reviewer did not run native tests. Lifecycle coverage gap addressed in the final4 local tests."
+  },
+  "ciAtLastRead": [
+    {
+      "conclusion": "",
+      "databaseId": 39545453609,
+      "headSha": "111b793b03a0342d130a1dd3c833ceea200d4ea9",
+      "name": "LifeGuide Android reminder acceptance (synthetic emulator only)",
+      "status": "pending"
+    },
+    {
+      "conclusion": "",
+      "databaseId": 39545453650,
+      "headSha": "111b793b03a0342d130a1dd3c833ceea200d4ea9",
+      "name": "LifeGuide personal Android APK (device-only)",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": "",
+      "databaseId": 39545453533,
+      "headSha": "111b793b03a0342d130a1dd3c833ceea200d4ea9",
+      "name": "LifeGuide CI",
+      "status": "queued"
+    },
+    {
+      "conclusion": "",
+      "databaseId": 39545385976,
+      "headSha": "49702e8dc0a14bcaf4e7e5c53a0f0878fbb19f0b",
+      "name": "LifeGuide Android reminder acceptance (synthetic emulator only)",
+      "status": "in_progress"
+    }
+  ],
+  "delivery": {
+    "status": "BLOCKED",
+    "reason": "Original delivered signer continuity and exact-old-APK/default-DB upgrade acceptance missing; parent guard upload hold unchanged.",
+    "newApkHandedOff": false
+  },
+  "unverified": [
+    "Native settings Intent and OEM fallback",
+    "New source Android build until CI completes",
+    "Physical phone, sound/vibration, DND, Doze and reboot",
+    "Exact delivered APK to candidate/default-database data preservation",
+    "Availability of original private signing key",
+    "Backup/export/restore not implemented",
+    "Full-history secret scan not rerun for this change",
+    "Backend tests NOT_RUN locally: no backend change",
+    "Safari/iPhone and Iran reachability"
+  ],
+  "notPerformed": [
+    "merge",
+    "deploy",
+    "DNS/live data changes",
+    "real child data access",
+    "signing-key creation or export",
+    "uninstall or clear-data",
+    "new APK delivery"
+  ],
+  "parentCiObserved": {
+    "personal": {
+      "source": "a21eba1163d7a604929570661d463a8e5b7a4092",
+      "status": "in_progress",
+      "conclusion": "",
+      "scope": "ParentPR40, not the new notification-control native code",
+      "jobs": [
+        {
+          "name": "personal-apk",
+          "status": "in_progress",
+          "conclusion": "",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-java@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run subosito/flutter-action@v2",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run flutter pub get",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify personal edition and test-tool safety",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build actual user APK (no fixture and no INTERNET permission)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build same-signature synthetic fixture (never distributed)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Enable KVM for fresh synthetic emulator",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Launch real user APK; verify SQLite and actual OS alarms",
+              "status": "in_progress",
+              "conclusion": ""
+            },
+            {
+              "name": "Require compatibility with the delivered personal APK",
+              "status": "pending",
+              "conclusion": ""
+            },
+            {
+              "name": "User APK delivery blocked pending default-database upgrade acceptance",
+              "status": "pending",
+              "conclusion": ""
+            },
+            {
+              "name": "Preserve sanitized verification output",
+              "status": "pending",
+              "conclusion": ""
+            },
+            {
+              "name": "Post Run subosito/flutter-action@v2",
+              "status": "pending",
+              "conclusion": ""
+            },
+            {
+              "name": "Post Run actions/setup-java@v4",
+              "status": "pending",
+              "conclusion": ""
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "pending",
+              "conclusion": ""
+            }
+          ]
+        }
+      ]
+    },
+    "general": {
+      "source": "a21eba1163d7a604929570661d463a8e5b7a4092",
+      "status": "completed",
+      "conclusion": "success",
+      "scope": "ParentPR40, not the new notification-control native code",
+      "jobs": [
+        {
+          "name": "security",
+          "status": "completed",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Reject tracked credentials and private artifacts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Audit product naming",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "backend",
+          "status": "completed",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Initialize containers",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify reachability smoke rejects untrusted TLS",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm ci",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Apply migrations and verify repeat run",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Import checked educational metadata and verify repeat run",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "SQL authorization matrix",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm test && npm run check && npm audit --audit-level=high",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify isolated database roles and runtime family scenario",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Backup and restore synthetic database",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Stop containers",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "flutter",
+          "status": "completed",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run subosito/flutter-action@v2",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run flutter pub get",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run flutter --version --machine",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run dart format --output=none --set-exit-if-changed lib test",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run flutter analyze",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run flutter test",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run node tool/test_web_bootstrap.mjs",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run node --test tool/test_offline_worker.mjs",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run flutter build web --release --no-web-resources-cdn --pwa-strategy=none",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run node tool/test_web_bootstrap.mjs",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Bundle local resources and reject external runtime services",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check compiled browser requests for local fonts and CanvasKit",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check exclusive web instance before session and cache access",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Preserve unsent changes across forced session expiry",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Record checked prebuilt web provenance",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify Windows checkout preserves the checked web artifact",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build test APK (debug certificate; not a release)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Inspect the actual APK manifest and debug signature",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run subosito/flutter-action@v2",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
