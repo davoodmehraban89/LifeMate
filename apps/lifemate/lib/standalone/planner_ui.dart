@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'app.dart';
 import 'model.dart';
+import 'personal_dates.dart';
+import 'personal_date_picker.dart';
 import 'settings_ui.dart';
 import 'store.dart';
 
@@ -24,8 +26,7 @@ const _weekdays = <int, String>{
   4: 'پنجشنبه',
   5: 'جمعه',
 };
-String _date(DateTime value) =>
-    '${_digits(value.year)}/${_digits(value.month)}/${_digits(value.day)} میلادی';
+String _date(DateTime value) => personalDateLabel(value);
 String _kind(StandalonePlanKind value) => switch (value) {
       StandalonePlanKind.task => 'کار',
       StandalonePlanKind.event => 'رویداد',
@@ -339,7 +340,7 @@ class _StandalonePlannerShellState extends State<StandalonePlannerShell>
             },
             icon: const Icon(Icons.chevron_left)),
       ]),
-      const Text('تاریخ‌ها میلادی‌اند.', textAlign: TextAlign.center),
+      const Text('تاریخ‌ها شمسی‌اند.', textAlign: TextAlign.center),
       const SizedBox(height: 16),
       Wrap(spacing: 8, runSpacing: 8, children: [
         for (int index = 0; index < 7; index++)
@@ -347,7 +348,7 @@ class _StandalonePlannerShellState extends State<StandalonePlannerShell>
             label: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                  '${_weekdays[_addDays(start, index).weekday]}\n${_digits(_addDays(start, index).day)}',
+                  '${_weekdays[_addDays(start, index).weekday]}\n${personalDayLabel(_addDays(start, index))}',
                   textAlign: TextAlign.center),
             ),
             selected: _addDays(start, index) == _selectedDate,
@@ -773,7 +774,7 @@ class _PlanEditorState extends State<_PlanEditor> {
     super.dispose();
   }
 
-  Future<DateTime?> _pickDate(DateTime initial) => showDatePicker(
+  Future<DateTime?> _pickDate(DateTime initial) => showPersonalDatePicker(
       context: context,
       initialDate: initial,
       firstDate: DateTime(2020),
