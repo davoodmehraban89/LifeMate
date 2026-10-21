@@ -1,0 +1,11 @@
+{
+  "dataPreservation": "UNVERIFIED",
+  "delivery": "BLOCKED",
+  "deliveryReasonCode": "default_database_upgrade_acceptance_missing",
+  "installedDeviceVerification": "UNVERIFIED",
+  "reasonCodes": [
+    "certificate_mismatch",
+    "version_code_not_incremented"
+  ],
+  "result": "BLOCKED"
+}

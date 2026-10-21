@@ -1,0 +1,169 @@
+{
+  "date": "2026-10-21",
+  "branch": "test/personal-notification-settings",
+  "base": "76efe36169ce4e34deee8e218399f5a51d3e0e3f",
+  "scope": "Developer-only isolated fixture/runner extension; product lib/Kotlin/default DB and APK delivery hold unchanged.",
+  "sourceFiles": {
+    "apps/lifemate/tool/standalone_acceptance_fixture.dart": "7cb4b5e433b4a90b0ee456bbf4eb50f6854fa33fdab73277c9a265d594c815a2",
+    "apps/lifemate/tool/test_standalone_android.py": "de611a0acda6d0877bff98bbd98226c5186a2ec3cb4500a56864660e1eb098e1",
+    "apps/lifemate/tool/test_standalone_android_test.py": "08655e000eab54a0f961a7d7ced804e28ff39084b83cc0fae10c4a21cff74315"
+  },
+  "commands": [
+    {
+      "command": "python3 -B -m unittest discover -s apps/lifemate/tool -p '*standalone*test.py' -v",
+      "phase": "baseline",
+      "status": "VERIFIED",
+      "output": "Ran 35 tests in 0.019s; OK"
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p '*standalone*test.py' -v",
+      "phase": "RED",
+      "status": "VERIFIED_EXPECTED_FAILURE",
+      "output": "FAILED (failures=4)",
+      "reason": "Missing native-settings checker and missing settings/inspect orchestration."
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p '*standalone*test.py' -v",
+      "phase": "GREEN",
+      "status": "VERIFIED",
+      "output": "Ran 39 tests in 0.021s; OK"
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p '*test.py' -v",
+      "status": "VERIFIED",
+      "output": "Ran 64 tests in 0.068s; OK"
+    },
+    {
+      "command": "flutter test --reporter expanded",
+      "status": "VERIFIED",
+      "output": "01:29 +332: All tests passed!"
+    },
+    {
+      "command": "flutter analyze",
+      "status": "VERIFIED",
+      "output": "No issues found! (ran in 2.4s)"
+    },
+    {
+      "command": "dart format --output=none --set-exit-if-changed apps/lifemate/tool/standalone_acceptance_fixture.dart",
+      "status": "VERIFIED",
+      "output": "Formatted 1 file (0 changed) in 0.01 seconds."
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p '*standalone*test.py' -v",
+      "phase": "diagnostic RED",
+      "status": "VERIFIED_EXPECTED_FAILURE",
+      "output": "Ran 41 tests; FAILED (failures=2)",
+      "reason": "Missing non-PTY file verification and missing sanitized diagnostic summary."
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p '*test.py' -v",
+      "phase": "Python-only diagnostic followup",
+      "status": "VERIFIED",
+      "output": "Ran 66 tests in 0.043s; OK"
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p 'test_standalone_android_test.py' -k non_tty -v",
+      "phase": "paired-observation RED",
+      "status": "VERIFIED_EXPECTED_FAILURE",
+      "output": "Ran 1 test; FAILED (failures=1): legacyTtyAfterFile not found before the followup."
+    },
+    {
+      "command": "python3 -B -m unittest discover -s tool -p '*test.py' -v",
+      "phase": "final paired-observation source",
+      "status": "VERIFIED",
+      "output": "Ran 66 tests in 0.028s; OK"
+    }
+  ],
+  "review": "Independent read-only review found no blocking safety defect. Its timing-confound finding was addressed by repeating the legacy probe after the strict file match. Reviewer did not run native tests.",
+  "hostTestLimitation": "XML parser rejection is real host code; orchestration uses an explicit synthetic Android model. Neither is OS execution evidence.",
+  "newNativeScenario": "VERIFIED PASS in real API35 emulator run39663527908 on1b7ab09; workflow then failed the preserved APK compatibility gate.",
+  "preservedGates": [
+    "explicit emulator serial",
+    "fresh API35/qemu/hardware/product",
+    "actual APK manifest and same signer",
+    "no existing package",
+    "no physical device/reset/uninstall",
+    "fixture separate DB",
+    "disabled user APK upload"
+  ],
+  "independentlyObservedParentCi": {
+    "genericPR41": {
+      "run": 39545684951,
+      "source": "76efe36",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "onlineNotificationPR41": {
+      "run": 39545685044,
+      "source": "76efe36",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "personalPR41": {
+      "run": 39545684895,
+      "status": "completed",
+      "newSettingsMode": "Not present in this parent source",
+      "conclusion": "failure",
+      "nativeStep": "success",
+      "compatibilityReasons": [
+        "certificate_mismatch",
+        "version_code_not_incremented"
+      ]
+    }
+  },
+  "signingInvestigation": {
+    "secretNamesRequest": "HTTP403 Resource not accessible by integration; no values requested",
+    "localSigningPathSearch": "2 copies of public SDK test fixture only; contents not read",
+    "originalPrivateKeyAvailability": "UNVERIFIED"
+  },
+  "unverified": [
+    "Physical phone sound/vibration, DND, Doze, reboot and OEM fallback",
+    "Exact previously delivered APK -> candidate/default product DB upgrade",
+    "Original signing-key availability",
+    "No new backup/export/restore implementation",
+    "Full-history secret scan NOT_RUN",
+    "Backend tests locally NOT_RUN: no backend change",
+    "Local Flutter/analyzer not repeated for Python-only followup; real source1b7ab09 CI verified332/analyze and generic failed-job-only retry completed SUCCESS after the preserved NDK archive failure. See separate CI evidence."
+  ],
+  "actionsNotTaken": [
+    "merge",
+    "deploy",
+    "DNS/live data change",
+    "real child data read or upload",
+    "signing-key creation/export",
+    "APK handoff",
+    "uninstall or clear-data"
+  ],
+  "previousNativeAttempt": {
+    "run": 39660443764,
+    "source": "48940b35082cdee5498562f6bda2898a27931b98",
+    "result": "FAIL",
+    "phase": "native_notification_settings",
+    "error": "notification_settings_screen_not_verified",
+    "receipt": "personal-native-settings-failed-2026-10-21.json",
+    "guard": "SKIPPED"
+  },
+  "parentGenericThisPr": {
+    "run": 39660443665,
+    "source": "48940b35082cdee5498562f6bda2898a27931b98",
+    "result": "SUCCESS",
+    "Flutter": 332,
+    "Backend": 308,
+    "role": 41,
+    "regression": 96,
+    "scope": "Before Python-only diagnostic followup; product/Dart/Kotlin remain identical."
+  },
+  "diagnosticHypothesis": {
+    "status": "OBSERVED_ON_SYNTHETIC_API35",
+    "hypothesis": "/dev/tty may provide no hierarchy without an adb shell PTY. Compare it with a unique emulator-local dump file under the unchanged strict title/system-package predicate. Preserve sanitized booleans/counts and a synthetic-screen PNG; do not guess or weaken acceptance.",
+    "causality": "On the real paired observation, both legacy probes produced33 characters/no valid hierarchy, while the intervening file produced18134 characters and passed the unchanged strict predicate. This separates initial UI readiness from the observed transport difference; underlying raw TTY content is not retained and physical/OEM generality is not established."
+  },
+  "diagnosticPrivacy": "Raw XML is read in memory and the unique test-owned temporary file is removed in finally. Only booleans/counts and a fresh-owned synthetic-emulator PNG enter diagnostics. No private signing-key export or child-device access.",
+  "sourceFilesScope": "Initial source48940b3 before the Python-only diagnostic followup; retained as historical hashes.",
+  "diagnosticSource": "1b7ab09b1a9d4b93b39cbba34a962d2f2cf03dac",
+  "diagnosticSourceFiles": {
+    "apps/lifemate/tool/test_standalone_android.py": "de611a0acda6d0877bff98bbd98226c5186a2ec3cb4500a56864660e1eb098e1",
+    "apps/lifemate/tool/test_standalone_android_test.py": "08655e000eab54a0f961a7d7ced804e28ff39084b83cc0fae10c4a21cff74315"
+  },
+  "ciEvidence": "personal-native-settings-ci-2026-10-21.json"
+}

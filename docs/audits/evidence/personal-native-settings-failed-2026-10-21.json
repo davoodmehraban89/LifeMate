@@ -1,0 +1,76 @@
+{
+  "run": 39660443764,
+  "source": "48940b35082cdee5498562f6bda2898a27931b98",
+  "receipt": {
+    "schemaVersion": 1,
+    "result": "FAIL",
+    "syntheticDataOnly": true,
+    "scope": "fresh API35 emulator; actual isolated SQLite and native notification",
+    "currentPhase": "native_notification_settings",
+    "limitations": {
+      "physicalDevice": "UNVERIFIED",
+      "reboot": "UNVERIFIED",
+      "Doze": "UNVERIFIED",
+      "soundOrVibration": "UNVERIFIED",
+      "permissionConsentUI": "UNVERIFIED",
+      "Safari": "UNVERIFIED",
+      "signedRelease": "UNVERIFIED",
+      "onlineFamilyOrSynchronization": "UNVERIFIED"
+    },
+    "checks": {
+      "emulatorAndFreshInstallGates": "PASS",
+      "actualUserApkFirstLaunchScreenshot": "PASS",
+      "ownedFreshInstallFixtureUpgrade": "PASS",
+      "onceAndEveryTwoDays": "PASS",
+      "profilePersists": "PASS",
+      "weeklyDifferentTimes": "PASS",
+      "rawSqlAfterClose": "PASS",
+      "processAbsentBeforeAlarm": "PASS",
+      "notificationAfterProcessDeath": "PASS",
+      "notificationContent": {
+        "titleMatches": true,
+        "genericBodyMatches": true,
+        "privateCanaryAbsent": true
+      },
+      "relaunchReadOnlyPreservesNativeGeneration": "PASS",
+      "independentEditAndTick": "PASS",
+      "archivePersists": "PASS",
+      "archiveBeforeDeadlineHasNoOSPost": "PASS",
+      "offClearsNativeState": "PASS"
+    },
+    "apks": {
+      "user": {
+        "sha256": "5c088dff673106d4b0f791048a0122d42fcafd7a104d6874ddb1b224c1b6c00a",
+        "package": "ir.lifeguide.app.device",
+        "label": "لایف‌گاید شخصی",
+        "debuggable": true,
+        "internetPermission": false,
+        "targetSdkVersion": 36
+      },
+      "fixtureNeverDistribute": {
+        "sha256": "c46a44d109b93c48a60146ebd643ec6904c22d7b0b7542c947c6edaac18eb660",
+        "package": "ir.lifeguide.app.device",
+        "label": "لایف‌گاید شخصی",
+        "debuggable": true,
+        "internetPermission": false,
+        "targetSdkVersion": 36
+      }
+    },
+    "certificateSha256": "73d74e83bf2c4e3b66f7124ff325b75bec57f8af1a7c770381fb0dcf88ad0985",
+    "userFirstLaunch": {
+      "processAlive": true,
+      "ordinaryLaunchNoExtras": true,
+      "screenshotSha256": "c2ccabdf9f1c93c8e3fe788342abcbdcd93668c26392baf0b7820f33d023c998",
+      "screenshotFile": "standalone-user-first-launch.png",
+      "urlPromptDetected": false,
+      "localWelcomeText": "UNVERIFIED"
+    },
+    "lastProcessState": "ABSENT",
+    "processExit": {
+      "confirmedAbsent": true,
+      "ordinaryKillAttempts": 4
+    },
+    "error": "notification_settings_screen_not_verified"
+  },
+  "interpretation": "Original OS scenario failed; compatibility guard was skipped. The channel-settings UI cause is unknown because raw UI/image diagnostics were absent. No signer-failure attribution for this run."
+}

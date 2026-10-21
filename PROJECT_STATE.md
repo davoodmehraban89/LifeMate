@@ -1,5 +1,14 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## پذیرش native تنظیمات شخصی موفق؛ تحویل APK مسدود — ۲۰۲۶-۱۰-۲۱
+
+[PR42](https://github.com/davoodmehraban89/LifeMate/pull/42)، منبع اجرایی `1b7ab09b1a9d4b93b39cbba34a962d2f2cf03dac`: گام OS در شخصی39663527908 واقعاً PASS شد؛ صفحهٔ کانال ثابت Android، Back، حفظ OFF/صفر اعلان و SQL مستقل پس از بازگشایی تأیید شدند. probeهای TTY پیش/پس هر دو33کاراکتر/XMLنامعتبر؛ فایل18134کاراکتر و title+systempackage روی همان node موفق بود. PNG ساختگی مستقل بازبینی شد؛ XML خام منتشر نشد. [گواه CI و تصویر](docs/audits/2026-10-21-personal-native-settings-acceptance.md)، [receipt خام PASS](docs/audits/evidence/personal-native-settings-pass-2026-10-21.json).
+
+کل workflow شخصی پس از PASS پذیرش در guard با `certificate_mismatch` و `version_code_not_incremented` شکست خورد؛ `default_database_upgrade_acceptance_missing` و uploadمسدود حفظ‌اند. صدای شنیدنی/OEM/گوشی/Doze/reboot، کلید قبلی و ارتقای دقیق نصب موجود با DB محصول **UNVERIFIED** هستند. هیچ APK تازه‌ای تحویل نشد؛ نصب موجود حذف یا clear-data نشود. محصول/DB/Kotlin/امضا/گیت تغییر نکردند؛ آماده‌سازی مسیر حفظ داده جداست و این نتیجه مجوز انتقال واقعی/merge/deploy نیست.
+
+
+شکست اولیه48940b3/39660443764 در `native_notification_settings` با `notification_settings_screen_not_verified` و guardاجرانشده [حفظ است](docs/audits/evidence/personal-native-settings-failed-2026-10-21.json)؛ عمومی آن39660443665 موفق بود. followup Python پس از RED2 و RED1،66تست ابزار را پاس کرد. تلاش اول عمومی39663527874 روی1b7ab09 پس از Flutter332/Backend308/role41/regression96 و analyze clean در آماده‌سازی NDK با `Error on ZipFile unknown archive` شکست خورد. هماهنگ‌کننده فقط Flutter ناموفق را تکرار کرد؛ **تلاش دوم واقعاً SUCCESS** با Flutter332/worker4، buildوب/Android و manifest/v2signature موفق است؛ backend/security قبلی موفق حفظ شدند. [تاریخچهٔ دقیق هر دو تلاش](docs/audits/evidence/personal-native-settings-ci-2026-10-21.json).
+
 ## اولویت آفلاین و حفظ دادهٔ آپدیت — ۲۰۲۶-۱۰-۲۱؛ APK جدید تحویل نشده
 
 مالک صریحاً تکمیل همین نسخهٔ شخصی روی گوشی را پیش از ادامهٔ آنلاین خواست. [ADR0017](docs/decisions/0017-offline-first-and-update-continuity.md) این ترتیب و معیار ارتقای همان نصب را ثبت می‌کند؛ روش تازهٔ انتقال/پشتیبان داده هنوز انتخاب نشده است. دادهٔ واقعی کودک، آنلاین/AI/دسترسی والد، merge/deploy/DNS تغییر نکردند.

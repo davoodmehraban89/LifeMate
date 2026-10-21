@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-21",
+  "branch": "test/personal-notification-settings",
+  "implementationSource": "1b7ab09b1a9d4b93b39cbba34a962d2f2cf03dac",
+  "scope": "Synthetic API35 emulator acceptance of the real personal notification-settings port; no product/default DB/signing/delivery-gate change.",
+  "evidenceRetrieval": {
+    "provider": "Official connected GitHub artifact download and official gh CLI",
+    "apkDownloaded": false,
+    "rawXmlPublished": false,
+    "realDeviceOrChildDataUsed": false,
+    "signedDownloadUrlsRetained": false
+  },
+  "personal": {
+    "runId": 39663527908,
+    "attempt": 1,
+    "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/39663527908",
+    "workflowConclusion": "failure",
+    "nativeAcceptanceStep": {
+      "name": "Launch real user APK; verify SQLite and actual OS alarms",
+      "conclusion": "success",
+      "selectedOutput": "2026-10-21T19:48:23.5751962Z {\"result\": \"PASS\", \"error\": null}",
+      "receipt": "personal-native-settings-pass-2026-10-21.json",
+      "currentPhase": "complete"
+    },
+    "compatibilityStep": {
+      "name": "Require compatibility with the delivered personal APK",
+      "conclusion": "failure",
+      "receipt": "personal-native-settings-update-blocked-2026-10-21.json",
+      "reasonCodes": [
+        "certificate_mismatch",
+        "version_code_not_incremented"
+      ],
+      "deliveryReasonCode": "default_database_upgrade_acceptance_missing"
+    },
+    "apkDelivery": "BLOCKED; no user or fixture APK artifact uploaded",
+    "verificationArtifact": {
+      "id": 12375074129,
+      "name": "LifeGuide-personal-verification",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/39663527908/artifacts/12375074129",
+      "zipSha256": "57ae4403d0a010c5836d9dabb4f5a7966bcbd806f0465ab4d1f8eb131a2385c8",
+      "downloadedZipDigestMatchesGitHub": true,
+      "containsApk": false
+    }
+  },
+  "pairedSettingsObservation": {
+    "legacyTty": {
+      "outputChars": 33,
+      "validHierarchy": false,
+      "systemSettingsNodePresent": false,
+      "channelTitlePresent": false,
+      "verified": false
+    },
+    "file": {
+      "outputChars": 18134,
+      "validHierarchy": true,
+      "systemSettingsNodePresent": true,
+      "channelTitlePresent": true,
+      "verified": true
+    },
+    "legacyTtyAfterFile": {
+      "outputChars": 33,
+      "validHierarchy": false,
+      "systemSettingsNodePresent": false,
+      "channelTitlePresent": false,
+      "verified": false
+    }
+  },
+  "interpretation": "The fixed-title and system-package predicate passed using the emulator-local file. Legacy TTY output was 33 characters with no valid hierarchy both before and after that match. This confirms an observation-path difference on this fresh API35 emulator; no raw legacy string or universal PTY/OEM cause is claimed.",
+  "screenshot": {
+    "file": "personal-native-settings-screen-2026-10-21.png",
+    "originalArtifactFile": "standalone-notification-settings.png",
+    "sha256": "43729cd8ca25bade742785bf042206cca84481265cf6ead0e42c885529c1fe80",
+    "copiedBytesMatchReceipt": true,
+    "review": "Coordinating agent independently inspected this PNG and confirmed the native channel settings screen is shown. Screenshot is from the owned synthetic emulator."
+  },
+  "previousNativeFailure": {
+    "runId": 39660443764,
+    "source": "48940b35082cdee5498562f6bda2898a27931b98",
+    "workflowConclusion": "failure",
+    "phase": "native_notification_settings",
+    "error": "notification_settings_screen_not_verified",
+    "compatibilityGuard": "skipped",
+    "receipt": "personal-native-settings-failed-2026-10-21.json",
+    "interpretation": "Original failure retained. That run lacked UI diagnostics, so its individual cause remains unproven."
+  },
+  "general": {
+    "runId": 39663527874,
+    "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/39663527874",
+    "source": "1b7ab09b1a9d4b93b39cbba34a962d2f2cf03dac",
+    "attempt1": {
+      "conclusion": "failure",
+      "failedJob": "flutter",
+      "failedStep": "Build test APK (debug certificate; not a release)",
+      "selectedFailureOutput": [
+        "2026-10-21T19:45:05.4669790Z Warning: An error occurred while preparing SDK package NDK (Side by side) 28.2.13676358: Error on ZipFile unknown archive.",
+        "2026-10-21T19:45:05.5704591Z > Process 'command '/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager'' finished with non-zero exit value 1",
+        "2026-10-21T19:45:06.0482692Z Gradle task assembleDebug failed with exit code 1"
+      ],
+      "passed": {
+        "backend": 308,
+        "roles": 41,
+        "regression": 96,
+        "tlsSmoke": 5,
+        "flutter": 332,
+        "offlineWorker": 4
+      },
+      "analyze": "No issues found",
+      "auditVulnerabilities": 0,
+      "interpretation": "The reported failure was SDK NDK archive preparation; no source-code defect is inferred from this message.",
+      "logRetrieval": "Official gh API run logs read while run_attempt=1; ZIP decoded in memory, only selected sanitized lines retained."
+    },
+    "attempt2": {
+      "requestedBy": "Coordinating agent",
+      "rerunScope": "Only failed Flutter job; successful backend/security retained",
+      "command": "gh run rerun 39663527874 --failed",
+      "status": "completed",
+      "conclusion": "success",
+      "note": "Actual final success of failed-job-only retry. Original SDK NDK archive failure remains recorded in attempt1; backend/security retained their original successful jobs. No artifact APK downloaded.",
+      "url": "https://github.com/davoodmehraban89/LifeMate/actions/runs/39663527874/attempts/2",
+      "observedFinalAt": "2026-10-21T20:45:48.628772+00:00",
+      "jobs": {
+        "flutter": "success",
+        "backend": "success",
+        "security": "success"
+      },
+      "passedInRetriedFlutter": {
+        "flutter": 332,
+        "offlineWorker": 4
+      },
+      "analyze": "No issues found",
+      "debugApkManifest": "PASS",
+      "debugApkV2Signature": true,
+      "selectedOutput": [
+        "2026-10-21T20:37:56.8007171Z No issues found! (ran in 9.3s)",
+        "2026-10-21T20:38:54.3829818Z 🎉 332 tests passed.",
+        "2026-10-21T20:38:54.6440130Z # tests 4",
+        "2026-10-21T20:38:54.6440796Z # pass 4",
+        "2026-10-21T20:38:54.6441327Z # fail 0",
+        "2026-10-21T20:38:54.6442187Z # skipped 0",
+        "2026-10-21T20:42:31.3495169Z [===                                    ] 10% Installing NDK (Side by side) 28.2",
+        "2026-10-21T20:45:29.9946302Z   \"result\": \"PASS\",",
+        "2026-10-21T20:45:30.8007179Z Verified using v2 scheme (APK Signature Scheme v2): true"
+      ],
+      "artifactMetadataOnly": [
+        {
+          "id": 12380317154,
+          "name": "LifeGuide-web",
+          "digest": "sha256:ede60205e73d1bb4c88d6594bbca43300f420cb24ef110475777b9af1f80e048",
+          "size_in_bytes": 19062885,
+          "expired": false
+        },
+        {
+          "id": 12379444001,
+          "name": "LifeGuide-debug-apk",
+          "digest": "sha256:a04a66a14620c9bdabed2881186d7cd2d4d712b4589f75e54b75b1a2f7f3290e",
+          "size_in_bytes": 90929292,
+          "expired": false
+        },
+        {
+          "id": 12375482916,
+          "name": "LifeGuide-web",
+          "digest": "sha256:292d8552fba2c6aa9e58f98a7e98c42958e542107841654f261762cfc14944dd",
+          "size_in_bytes": 19062885,
+          "expired": false
+        }
+      ]
+    }
+  },
+  "priorGeneralSuccess": {
+    "runId": 39660443665,
+    "source": "48940b35082cdee5498562f6bda2898a27931b98",
+    "conclusion": "success",
+    "flutter": 332,
+    "backend": 308,
+    "roles": 41,
+    "regression": 96
+  },
+  "parentPersonalResult": {
+    "runId": 39545684895,
+    "source": "76efe36169ce4e34deee8e218399f5a51d3e0e3f",
+    "workflowConclusion": "failure",
+    "nativeStepConclusion": "success",
+    "compatibilityReasons": [
+      "certificate_mismatch",
+      "version_code_not_incremented"
+    ],
+    "verificationArtifactId": 12321733529,
+    "verificationZipSha256": "8ff9c8a5351fbc06ec7c4f34650a32acbdd837cd0880505daa2a9acdabf86c78",
+    "zipDigestMatchesGitHub": true
+  },
+  "limitations": {
+    "physicalDevice": "UNVERIFIED",
+    "reboot": "UNVERIFIED",
+    "Doze": "UNVERIFIED",
+    "soundOrVibration": "UNVERIFIED",
+    "permissionConsentUI": "UNVERIFIED",
+    "Safari": "UNVERIFIED",
+    "signedRelease": "UNVERIFIED",
+    "onlineFamilyOrSynchronization": "UNVERIFIED"
+  },
+  "additionalUnverified": [
+    "Audible sound or selected ringtone",
+    "OEM fallback",
+    "Exact previously delivered APK to candidate/default product DB upgrade and data preservation",
+    "Original signing-key availability"
+  ],
+  "actionsNotTaken": [
+    "New rerun by evidence agent",
+    "APK download or handoff",
+    "Product/test/workflow/gate edit",
+    "Actual transfer of existing device data",
+    "Uninstall or clear-data",
+    "Merge",
+    "Deploy",
+    "Live/DNS change"
+  ],
+  "observationCommands": [
+    "gh run view 39663527908 --repo davoodmehraban89/LifeMate --json status,conclusion,headSha,url,jobs",
+    "gh api repos/davoodmehraban89/LifeMate/actions/runs/39663527874/logs",
+    "gh api repos/davoodmehraban89/LifeMate/actions/runs/39663527874",
+    "Official GitHub download_workflow_artifact artifact_id=12375074129; read sanitized JSON and synthetic PNG only",
+    "gh api repos/davoodmehraban89/LifeMate/actions/runs/39663527874/attempts/2/logs"
+  ]
+}
