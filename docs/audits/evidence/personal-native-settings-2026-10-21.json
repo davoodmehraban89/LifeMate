@@ -76,7 +76,7 @@
   ],
   "review": "Independent read-only review found no blocking safety defect. Its timing-confound finding was addressed by repeating the legacy probe after the strict file match. Reviewer did not run native tests.",
   "hostTestLimitation": "XML parser rejection is real host code; orchestration uses an explicit synthetic Android model. Neither is OS execution evidence.",
-  "newNativeScenario": "Original attempt FAILED; diagnostic followup native execution UNVERIFIED until its new CI receipt.",
+  "newNativeScenario": "VERIFIED PASS in real API35 emulator run39663527908 on1b7ab09; workflow then failed the preserved APK compatibility gate.",
   "preservedGates": [
     "explicit emulator serial",
     "fresh API35/qemu/hardware/product",
@@ -101,8 +101,14 @@
     },
     "personalPR41": {
       "run": 39545684895,
-      "status": "in_progress",
-      "newSettingsMode": "Not present in this parent source"
+      "status": "completed",
+      "newSettingsMode": "Not present in this parent source",
+      "conclusion": "failure",
+      "nativeStep": "success",
+      "compatibilityReasons": [
+        "certificate_mismatch",
+        "version_code_not_incremented"
+      ]
     }
   },
   "signingInvestigation": {
@@ -111,14 +117,13 @@
     "originalPrivateKeyAvailability": "UNVERIFIED"
   },
   "unverified": [
-    "New native settings mode execution",
     "Physical phone sound/vibration, DND, Doze, reboot and OEM fallback",
     "Exact previously delivered APK -> candidate/default product DB upgrade",
     "Original signing-key availability",
     "No new backup/export/restore implementation",
     "Full-history secret scan NOT_RUN",
     "Backend tests locally NOT_RUN: no backend change",
-    "Flutter/analyzer not repeated locally for Python-only followup; prior source48940b3/CI39660443665 passed332 and analyze. New CI pending."
+    "Local Flutter/analyzer not repeated for Python-only followup; real source1b7ab09 CI verified332/analyze and generic failed-job-only retry completed SUCCESS after the preserved NDK archive failure. See separate CI evidence."
   ],
   "actionsNotTaken": [
     "merge",
@@ -149,9 +154,16 @@
     "scope": "Before Python-only diagnostic followup; product/Dart/Kotlin remain identical."
   },
   "diagnosticHypothesis": {
-    "status": "UNVERIFIED",
+    "status": "OBSERVED_ON_SYNTHETIC_API35",
     "hypothesis": "/dev/tty may provide no hierarchy without an adb shell PTY. Compare it with a unique emulator-local dump file under the unchanged strict title/system-package predicate. Preserve sanitized booleans/counts and a synthetic-screen PNG; do not guess or weaken acceptance.",
-    "causality": "Legacy TTY is repeated after the file predicate succeeds to separate initial UI readiness from a transport failure. It remains a hypothesis until the real paired observation."
+    "causality": "On the real paired observation, both legacy probes produced33 characters/no valid hierarchy, while the intervening file produced18134 characters and passed the unchanged strict predicate. This separates initial UI readiness from the observed transport difference; underlying raw TTY content is not retained and physical/OEM generality is not established."
   },
-  "diagnosticPrivacy": "Raw XML is read in memory and the unique test-owned temporary file is removed in finally. Only booleans/counts and a fresh-owned synthetic-emulator PNG enter diagnostics. No private signing-key export or child-device access."
+  "diagnosticPrivacy": "Raw XML is read in memory and the unique test-owned temporary file is removed in finally. Only booleans/counts and a fresh-owned synthetic-emulator PNG enter diagnostics. No private signing-key export or child-device access.",
+  "sourceFilesScope": "Initial source48940b3 before the Python-only diagnostic followup; retained as historical hashes.",
+  "diagnosticSource": "1b7ab09b1a9d4b93b39cbba34a962d2f2cf03dac",
+  "diagnosticSourceFiles": {
+    "apps/lifemate/tool/test_standalone_android.py": "de611a0acda6d0877bff98bbd98226c5186a2ec3cb4500a56864660e1eb098e1",
+    "apps/lifemate/tool/test_standalone_android_test.py": "08655e000eab54a0f961a7d7ced804e28ff39084b83cc0fae10c4a21cff74315"
+  },
+  "ciEvidence": "personal-native-settings-ci-2026-10-21.json"
 }

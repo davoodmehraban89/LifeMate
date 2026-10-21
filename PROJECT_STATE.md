@@ -1,20 +1,13 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
-## شکست پذیرش صفحهٔ صدا و ابزار مشاهده — ۲۰۲۶-۱۰-۲۱
+## پذیرش native تنظیمات شخصی موفق؛ تحویل APK مسدود — ۲۰۲۶-۱۰-۲۱
 
-PR42/48940b3: عمومی39660443665 موفق باFlutter332/Backend308؛ شخصی39660443764 در `native_notification_settings` با `notification_settings_screen_not_verified` شکست خورد. guard اجرا نشد؛ شکست به امضا نسبت داده نمی‌شود. SQL/اعلان/OFF قبلی PASSبودند. [receipt شکست](docs/audits/evidence/personal-native-settings-failed-2026-10-21.json).
+[PR42](https://github.com/davoodmehraban89/LifeMate/pull/42)، منبع اجرایی `1b7ab09b1a9d4b93b39cbba34a962d2f2cf03dac`: گام OS در شخصی39663527908 واقعاً PASS شد؛ صفحهٔ کانال ثابت Android، Back، حفظ OFF/صفر اعلان و SQL مستقل پس از بازگشایی تأیید شدند. probeهای TTY پیش/پس هر دو33کاراکتر/XMLنامعتبر؛ فایل18134کاراکتر و title+systempackage روی همان node موفق بود. PNG ساختگی مستقل بازبینی شد؛ XML خام منتشر نشد. [گواه CI و تصویر](docs/audits/2026-10-21-personal-native-settings-acceptance.md)، [receipt خام PASS](docs/audits/evidence/personal-native-settings-pass-2026-10-21.json).
 
-در followup فقط ابزار Python، مشاهدهٔ `/dev/tty` را با فایل موقت متعلق به AVD تازه مقایسه و summary بی‌متن/تصویر ساختگی ثبت می‌کند؛ همان شرط دقیق عنوان+package حفظ شد. فایلXML در finally حذف می‌شود. RED2 سپس66تست ابزار موفق؛ **علت TTY و نتیجهٔ Android جدید UNVERIFIED** تا اجرای CI. محصول/DB/Kotlin/امضا/قفل upload و دادهٔ واقعی تغییر نکردند. [گواه و حدود اعتبار](docs/audits/evidence/personal-native-settings-2026-10-21.json).
+کل workflow شخصی پس از PASS پذیرش در guard با `certificate_mismatch` و `version_code_not_incremented` شکست خورد؛ `default_database_upgrade_acceptance_missing` و uploadمسدود حفظ‌اند. صدای شنیدنی/OEM/گوشی/Doze/reboot، کلید قبلی و ارتقای دقیق نصب موجود با DB محصول **UNVERIFIED** هستند. هیچ APK تازه‌ای تحویل نشد؛ نصب موجود حذف یا clear-data نشود. محصول/DB/Kotlin/امضا/گیت تغییر نکردند؛ آماده‌سازی مسیر حفظ داده جداست و این نتیجه مجوز انتقال واقعی/merge/deploy نیست.
 
 
-## پذیرش مستقل تنظیمات صدای Android — ۲۰۲۶-۱۰-۲۱؛ فقط ابزار آزمون
-
-در شاخهٔ `test/personal-notification-settings` بر PR41/76efe36، fixture debug با DB ساختگی جدا، تنظیمات کانال ثابت Android را از port واقعی باز می‌کند؛ میزبان UIAutomator، برگشت، SQL مستقل و باقی‌ماندن OFF/نبود اعلان را می‌سنجد. source محصول/DB پیش‌فرض/امضا و قفل تحویل PR40 تغییر نکردند. [طراحی و گزارش](docs/audits/2026-10-21-personal-native-settings-acceptance.md).
-
-**VERIFIED محلی:** baseline35، RED4شکست سپس39/39ابزار مرتبط و64/64کل ابزار؛ Flutter332/332، analyze clean، format1/0تغییر. بررسی host از مدل Android استفاده می‌کند و native نیست. [دستورها/خروجی و hash فایل‌ها](docs/audits/evidence/personal-native-settings-2026-10-21.json). بازبینی مستقل ایراد مسدودکننده‌ای پیدا نکرد.
-
-**VERIFIED خواندن CI قبلی:** عمومی PR41/39545684951 و اعلان آنلاین39545685044 موفق شدند. شخصی PR40 پس از build/SQLite/اعلان OS فقط در کنترل ناسازگاری امضا/code شکست خورد و upload APK رد شد. **UNVERIFIED:** اجرای mode جدید در Android، گوشی/صدا/باتری/راه‌اندازی مجدد و ارتقای نصب قبلی. کلید اصلی هنوز پیدا نشده/ناموجود اعلام نمی‌شود؛ درخواست نام‌های secrets با403 رد شد و کلید خوانده نشد. APK تازه، merge،deploy،DNS یا دادهٔ واقعی انجام نشده‌اند؛ نصب موجود حفظ شود.
-
+شکست اولیه48940b3/39660443764 در `native_notification_settings` با `notification_settings_screen_not_verified` و guardاجرانشده [حفظ است](docs/audits/evidence/personal-native-settings-failed-2026-10-21.json)؛ عمومی آن39660443665 موفق بود. followup Python پس از RED2 و RED1،66تست ابزار را پاس کرد. تلاش اول عمومی39663527874 روی1b7ab09 پس از Flutter332/Backend308/role41/regression96 و analyze clean در آماده‌سازی NDK با `Error on ZipFile unknown archive` شکست خورد. هماهنگ‌کننده فقط Flutter ناموفق را تکرار کرد؛ **تلاش دوم واقعاً SUCCESS** با Flutter332/worker4، buildوب/Android و manifest/v2signature موفق است؛ backend/security قبلی موفق حفظ شدند. [تاریخچهٔ دقیق هر دو تلاش](docs/audits/evidence/personal-native-settings-ci-2026-10-21.json).
 
 ## اولویت آفلاین و حفظ دادهٔ آپدیت — ۲۰۲۶-۱۰-۲۱؛ APK جدید تحویل نشده
 

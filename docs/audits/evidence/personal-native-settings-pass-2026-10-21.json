@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "result": "PASS",
+  "syntheticDataOnly": true,
+  "scope": "fresh API35 emulator; actual isolated SQLite and native notification",
+  "currentPhase": "complete",
+  "limitations": {
+    "physicalDevice": "UNVERIFIED",
+    "reboot": "UNVERIFIED",
+    "Doze": "UNVERIFIED",
+    "soundOrVibration": "UNVERIFIED",
+    "permissionConsentUI": "UNVERIFIED",
+    "Safari": "UNVERIFIED",
+    "signedRelease": "UNVERIFIED",
+    "onlineFamilyOrSynchronization": "UNVERIFIED"
+  },
+  "checks": {
+    "emulatorAndFreshInstallGates": "PASS",
+    "actualUserApkFirstLaunchScreenshot": "PASS",
+    "ownedFreshInstallFixtureUpgrade": "PASS",
+    "rawSqlAfterClose": "PASS",
+    "onceAndEveryTwoDays": "PASS",
+    "weeklyDifferentTimes": "PASS",
+    "profilePersists": "PASS",
+    "processAbsentBeforeAlarm": "PASS",
+    "notificationAfterProcessDeath": "PASS",
+    "notificationContent": {
+      "titleMatches": true,
+      "genericBodyMatches": true,
+      "privateCanaryAbsent": true
+    },
+    "relaunchReadOnlyPreservesNativeGeneration": "PASS",
+    "independentEditAndTick": "PASS",
+    "archivePersists": "PASS",
+    "archiveBeforeDeadlineHasNoOSPost": "PASS",
+    "offClearsNativeState": "PASS",
+    "nativeNotificationSettingsWhileOff": "PASS",
+    "sqliteAfterNotificationSettings": "PASS"
+  },
+  "apks": {
+    "user": {
+      "sha256": "5683193fcd7a21972c9e2823948a3d82baa8fde3c57f34a004f5a23788ad5333",
+      "package": "ir.lifeguide.app.device",
+      "label": "\u0644\u0627\u06cc\u0641\u200c\u06af\u0627\u06cc\u062f \u0634\u062e\u0635\u06cc",
+      "debuggable": true,
+      "internetPermission": false,
+      "targetSdkVersion": 36
+    },
+    "fixtureNeverDistribute": {
+      "sha256": "4c778698d223dc264f8c954ef0b27d64cb6015ca9ed9196dc11fa8ed9dbfa80c",
+      "package": "ir.lifeguide.app.device",
+      "label": "\u0644\u0627\u06cc\u0641\u200c\u06af\u0627\u06cc\u062f \u0634\u062e\u0635\u06cc",
+      "debuggable": true,
+      "internetPermission": false,
+      "targetSdkVersion": 36
+    }
+  },
+  "certificateSha256": "e4850fc135a196ff76fb4143e453e96ec37fbc8d1121667d409a0af08f834ae5",
+  "userFirstLaunch": {
+    "processAlive": true,
+    "ordinaryLaunchNoExtras": true,
+    "screenshotSha256": "7dad10f63f236b939f908fe4b19ebc1a5e55a91d9f1e7b60249a9e03578c4d17",
+    "screenshotFile": "standalone-user-first-launch.png",
+    "urlPromptDetected": false,
+    "localWelcomeText": "UNVERIFIED"
+  },
+  "lastProcessState": "ABSENT",
+  "settingsObservation": {
+    "legacyTty": {
+      "outputChars": 33,
+      "validHierarchy": false,
+      "systemSettingsNodePresent": false,
+      "channelTitlePresent": false,
+      "verified": false
+    },
+    "file": {
+      "outputChars": 18134,
+      "validHierarchy": true,
+      "systemSettingsNodePresent": true,
+      "channelTitlePresent": true,
+      "verified": true
+    },
+    "legacyTtyAfterFile": {
+      "outputChars": 33,
+      "validHierarchy": false,
+      "systemSettingsNodePresent": false,
+      "channelTitlePresent": false,
+      "verified": false
+    }
+  },
+  "settingsScreenshot": {
+    "status": "VERIFIED_CAPTURE",
+    "file": "standalone-notification-settings.png",
+    "sha256": "43729cd8ca25bade742785bf042206cca84481265cf6ead0e42c885529c1fe80"
+  },
+  "processExit": {
+    "confirmedAbsent": true,
+    "ordinaryKillAttempts": 3
+  }
+}
