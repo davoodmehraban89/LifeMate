@@ -1,5 +1,13 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## بازیابی رمزدار ساختگی روی رایانه — ۲۰۲۶-۱۰-۲۱؛ آمادهٔ بررسی در PR44
+
+[PR44](https://github.com/davoodmehraban89/LifeMate/pull/44)، شاخهٔ `feat/personal-encrypted-recovery` بر PR43، منبع `29fa2c7247847c4eadb7792daaa91379dd0f2367`: ابزار QA با fixture واقعی SQLite1، آرشیو AES-256-GCM/Scrypt، اعتبارسنجی schema/هدر/رابطه و بازیابی بدون overwrite اضافه شد. source فقط خوانده می‌شود؛ DB بدون marker ساختگی پیش از بدنه رد می‌شود. این marker اثبات منشأ نیست. ابزار، ورودی backup مالک یا انتقال گوشی نیست و کلاینت/Backend/شناسه/امضای محصول را تغییر نمی‌دهد.
+
+**VERIFIED:** محلی55 آزمون بازیابی و60 آزمون host قبلی، demo واقعی close/reopen با1پروفایل/4برنامه/3ساعت هفتگی/4نوبت؛ تطبیق تمام فیلدها و SQL مستقل، ماندن hash مبدأ، رد رمز اشتباه/فایل دستکاری‌شده/مقصد موجود. review مستقل دو ایراد FIFO/race را بازتولید کرد؛ اصلاح و تکرار هر دو موفق بود. CI اختصاصی [39673314234](https://github.com/davoodmehraban89/LifeMate/actions/runs/39673314234) و39673386588 روی همان منبع موفق؛55+60 و demo اجرا شدند. scan فقط tracked/high-confidence است، audit کامل تاریخچه نیست. [دستور/خروجی](docs/audits/evidence/personal-synthetic-recovery-2026-10-21.json)، [راهنمای فارسی](docs/operations/PERSONAL_SYNTHETIC_RECOVERY.md).
+
+**UNVERIFIED:** نصب کناری/ارتقای app تازه روی Android، کلید ثابت واقعی مالک، گوشی/Windows/USB/ACL، snapshot دارای WAL و دوام قطع برق/دیسک پر واقعی. ورودی WAL/SHM/journal یا هدر WAL رد می‌شود؛ چیزی پاک نمی‌شود. CI عمومی39673386647 هنگام ثبت این بخش هنوز درحال اجرا بود؛ نتیجهٔ آن ادعا نمی‌شود. APK تازه تحویل نشد. گام بعد آزمون جدا روی شبیه‌ساز تازه با همان APK اولیه و دادهٔ خیالی است؛ هیچ عملیات دادهٔ واقعی، merge/deploy/DNS مجاز/اجرا نشده است.
+
 ## آماده‌سازی بازیابی رمزدار — ۲۰۲۶-۱۰-۲۱؛ فقط دادهٔ ساختگی تأیید شد
 
 مالک گزینهٔ B در [ADR0018](docs/decisions/0018-offline-installed-data-rescue-options.md) را **فقط برای آماده‌سازی و آزمون ساختگی** تأیید کرد. [برنامهٔ اجرا](docs/superpowers/plans/2026-10-21-personal-encrypted-recovery.md) در شاخهٔ `feat/personal-encrypted-recovery` بر PR43 است. کد محصول، نصب موجود، کلید امضای واقعی، دادهٔ کودک، merge/deploy/DNS دست‌نخورده‌اند. انتقال واقعی و پذیرش گوشی هنوز **UNVERIFIED/غیرمجاز در این بسته** هستند.

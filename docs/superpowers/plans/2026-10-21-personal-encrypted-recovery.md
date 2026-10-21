@@ -24,13 +24,13 @@ CLI: `create-fixture`, `pack`, `restore-fixture`, `demo`; all require `--acknowl
 
 ## Verification ledger
 
-- [ ] Archive RED/GREEN and tamper/wrong-password/size/version checks.
-- [ ] Snapshot RED/GREEN, source hash unchanged, full field/ID round trip and invalid inputs.
-- [ ] CLI round trip on disk; close/reopen and independent SQL; no overwrite, interrupted/ENOSPC failure, no output before acknowledgement.
-- [ ] Existing Python APK/Android host tests; tracked-secret and naming checks.
-- [ ] CI on exact committed source; record success/failure, never infer Android acceptance from host tests.
-- [ ] Independent whole-branch review, correct issues, rerun affected tests.
-- [ ] PR and Persian runbook/evidence, exact VERIFIED/UNVERIFIED boundaries.
+- [x] Archive RED/GREEN and tamper/wrong-password/size/version checks.
+- [x] Snapshot RED/GREEN, source hash unchanged, full field/ID round trip and invalid inputs.
+- [x] CLI round trip on disk; close/reopen and independent SQL; no overwrite, simulated interrupted/ENOSPC failure, no output before acknowledgement. Actual disk exhaustion/power loss UNVERIFIED.
+- [x] Existing Python APK/Android host tests; tracked-secret and naming checks.
+- [x] Dedicated host CI39673314234 on exact source29fa2c7 PASS; general CI39673386647 initially pending. No Android acceptance inferred.
+- [x] Independent review: FIFO and source-path race reproduced, corrected, both original reproductions refuse; final55 recovery tests PASS.
+- [x] PR44 and Persian runbook/evidence. Android/owner data/key/Windows remain UNVERIFIED.
 
 ## Deferred separate acceptance package
 
