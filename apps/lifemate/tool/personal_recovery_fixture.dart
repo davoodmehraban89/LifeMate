@@ -2,7 +2,7 @@
 // Only the fresh-emulator host harness may seed fictional data before launch.
 import 'package:flutter/foundation.dart';
 
-import '../lib/standalone_main.dart' as personal;
+import 'package:lifemate/standalone_main.dart' as personal;
 
 void main() {
   if (!kDebugMode ||
