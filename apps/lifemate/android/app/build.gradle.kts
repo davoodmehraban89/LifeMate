@@ -25,7 +25,12 @@ val recoveryTarget = dartTarget.endsWith("tool/personal_recovery_fixture.dart")
 if (personalRecoveryQa && !devicePlannerOnly) {
     throw GradleException("Synthetic recovery QA requires the isolated device planner.")
 }
-if (assembling && personalRecoveryQa && !(standaloneDefine && recoveryDefine && recoveryTarget)) {
+// Gradle aliases such as build/installDebug/packageDebug may execute assembly
+// without an assemble* task in taskNames. Refuse aliases for this QA identity.
+if (personalRecoveryQa && (requestedTasks.isEmpty() || requestedTasks.any { it != "assembledebug" })) {
+    throw GradleException("Synthetic recovery QA is a debug-only initial edition; request assembleDebug explicitly.")
+}
+if (personalRecoveryQa && !(standaloneDefine && recoveryDefine && recoveryTarget)) {
     throw GradleException("Synthetic recovery QA requires its matching defines and entry point.")
 }
 if (assembling && !personalRecoveryQa && (recoveryDefine || recoveryTarget)) {
@@ -105,7 +110,7 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        if (assembling && personalRecoveryQa && (flutter.versionCode !in 10..11 || flutter.versionName != "0.7.2-recovery-qa.${flutter.versionCode}")) {
+        if (personalRecoveryQa && (flutter.versionCode !in 10..11 || flutter.versionName != "0.7.2-recovery-qa.${flutter.versionCode}")) {
             throw GradleException("Only private synthetic recovery QA versions 10 and 11 are allowed.")
         }
     }
