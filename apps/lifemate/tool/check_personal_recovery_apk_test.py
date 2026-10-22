@@ -65,5 +65,21 @@ class RecoveryManifestTest(unittest.TestCase):
             self.check()
 
 
+    def test_existing_profileinstaller_requires_exact_system_permission(self):
+        # Observed in the exact delivered original APK after baseline SHA check.
+        protected = {'name': 'androidx.profileinstaller.ProfileInstallReceiver',
+                     'permission': 'android.permission.DUMP', 'enabled': True,
+                     'exported': True, 'directBootAware': False}
+        self.tags.append(('receiver', protected))
+        self.assertEqual(self.check()['result'], 'PASS')
+        for key, value in (('permission', None), ('permission', 'android.permission.INTERNET'),
+                           ('name', 'unexpected.ExportedReceiver')):
+            original = protected[key]
+            protected[key] = value
+            with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                self.check()
+            protected[key] = original
+
+
 if __name__ == '__main__':
     unittest.main()

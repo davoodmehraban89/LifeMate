@@ -46,9 +46,17 @@ def check(apk, expected_code=None):
                a.get('exported') is True for a in activities):
         raise ValueError('QA must resolve the existing fully qualified activity')
     receivers = [a for tag, a in tags if tag == 'receiver']
+    # Exact system-protected dependency also observed in the delivered old APK.
+    # This does not permit another exported receiver or relax the reminder gate.
+    protected_profile_installer = {
+        'name': 'androidx.profileinstaller.ProfileInstallReceiver',
+        'permission': 'android.permission.DUMP', 'enabled': True,
+        'exported': True, 'directBootAware': False,
+    }
     if (not any(a.get('name') == 'ir.lifeguide.app.LocalReminderReceiver'
                 and a.get('exported') is False for a in receivers)
-            or any(a.get('exported') is True for a in receivers)):
+            or any(a.get('exported') is True and a != protected_profile_installer
+                   for a in receivers)):
         raise ValueError('QA reminder receivers must remain private')
     markers = [a for tag, a in tags if tag == 'meta-data'
                and a.get('name') == 'ir.lifeguide.PERSONAL_RECOVERY_QA']
