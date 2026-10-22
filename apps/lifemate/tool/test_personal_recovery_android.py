@@ -60,7 +60,8 @@ def binary_adb(serial, remote, data=None):
             'binary_input_limit')
     process = None
     try:
-        process = subprocess.Popen(['adb', '-s', serial, 'exec-out', remote],
+        direction = 'exec-in' if data is not None else 'exec-out'
+        process = subprocess.Popen(['adb', '-s', serial, direction, remote],
             stdin=subprocess.PIPE if data is not None else subprocess.DEVNULL,
             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         result, sent = bytearray(), 0

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "status": "FAILED_ACTUAL_ANDROID_ACCEPTANCE",
+  "runId": 39841416277,
+  "sourceCommit": "0f294af4a3d7b53728571bbc63be00b6b264c5eb",
+  "artifactId": 12454220764,
+  "artifactZipSha256": "39bd4d42a341406e9976e51f8cb87d20688ed7eeff84620c9a405d4cc1515681",
+  "rootVerifiedArtifactDigest": true,
+  "receipt": {
+    "apks": {
+      "original": {
+        "package": "ir.lifeguide.app.device",
+        "sha256": "c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e",
+        "versionCode": 9,
+        "versionName": "0.7.2-personal.1"
+      },
+      "qaNeverDistribute": {
+        "package": "ir.lifeguide.app.personal",
+        "sha256": "89caa1b92334c094af03c8e1a9190f103df3f7d1aea904c0aa861d83134b14a4",
+        "versionCode": 10,
+        "versionName": "0.7.2-recovery-qa.10"
+      },
+      "upgradeNeverDistribute": {
+        "package": "ir.lifeguide.app.personal",
+        "sha256": "969f6748ef53126cd4afd0b84d6dfd2dc5ec7416a94ee03ccbd05922e30d2139",
+        "versionCode": 11,
+        "versionName": "0.7.2-recovery-qa.11"
+      }
+    },
+    "canonicalSnapshotSha256": "f64bf8f30e41dc4eddca18629f2ca950839fdb11f489c85889a40500739c06f9",
+    "certificatesSha256": [
+      "4ef990d647fc98ac41113d5dbe7ee476ba80bf95b71b5f219b7863fa95263391",
+      "0a361b66092c8612d00f66120e70256b8e1a7dbc394f42d06ea3fda9da0279af",
+      "0a361b66092c8612d00f66120e70256b8e1a7dbc394f42d06ea3fda9da0279af"
+    ],
+    "checks": {
+      "allApksAndFreshEmulatorGatedBeforeInstall": "PASS"
+    },
+    "counts": {
+      "local_occurrences": 4,
+      "local_plans": 4,
+      "local_profiles": 1,
+      "local_weekly_slots": 3
+    },
+    "currentPhase": "original_seed_and_ordinary_ui",
+    "errorCode": "binary_adb_timeout",
+    "limitations": {
+      "Doze": "UNVERIFIED",
+      "USB": "UNVERIFIED",
+      "Windows": "UNVERIFIED",
+      "distributionApk": "UNVERIFIED",
+      "originalNotificationsEnabled": "UNVERIFIED",
+      "ownerData": "UNVERIFIED",
+      "ownerSigningKey": "UNVERIFIED",
+      "physicalDevice": "UNVERIFIED",
+      "powerLossOrFullDisk": "UNVERIFIED",
+      "reboot": "UNVERIFIED",
+      "soundOrVibration": "UNVERIFIED"
+    },
+    "result": "FAIL",
+    "schemaVersion": 1,
+    "syntheticDataOnly": true
+  },
+  "diagnosis": {
+    "officialSource": "https://android.googlesource.com/platform/packages/modules/adb/+/refs/heads/android15-release/client/commandline.cpp?format=TEXT",
+    "httpStatusActuallyObserved": 200,
+    "sourceObservation": "exec-in copies STDIN_FILENO to device fd; exec-out copies device fd to STDOUT_FILENO only",
+    "fixScope": "host test transport direction only; no app/data/permission/signing changes",
+    "regression": "actual subprocess reproduces directional transport; failed with exec-out upload, passed after exec-in upload; seed still requires independent exact-byte readback"
+  }
+}

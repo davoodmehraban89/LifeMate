@@ -210,6 +210,23 @@ class RecoveryBoundaryTest(unittest.TestCase):
             with self.assertRaisesRegex(subject.AcceptanceError, 'binary_output_limit'):
                 subject.binary_adb('emulator-5554', 'unused')
 
+    def test_binary_transport_uses_adb_input_and_output_directions(self):
+        # Android15 adb commandline.cpp: exec-in copies stdin to device;
+        # exec-out only copies device bytes to stdout and never consumes stdin.
+        uploaded = self.directory / 'uploaded-fixture'
+        real_popen = subprocess.Popen
+        child_source = ("import sys; from pathlib import Path; "
+                        "mode=sys.argv[1]; "
+                        "Path(sys.argv[2]).write_bytes(sys.stdin.buffer.read()) "
+                        "if mode == 'exec-in' else sys.stdout.buffer.write(b'fictional capture')")
+        def child(argv, **kwargs):
+            return real_popen(['python3', '-c', child_source, argv[3], str(uploaded)], **kwargs)
+        payload = bytes(range(256)) * 32
+        with patch.object(subject.subprocess, 'Popen', side_effect=child):
+            self.assertEqual(subject.binary_adb('emulator-5554', 'fixed synthetic command', payload), b'')
+            self.assertEqual(uploaded.read_bytes(), payload)
+            self.assertEqual(subject.binary_adb('emulator-5554', 'fixed synthetic command'), b'fictional capture')
+
     def test_failure_receipt_without_device_is_sanitized(self):
         output = self.directory / 'exports' / 'failed.json'
         code = subject.main(['--serial', 'physical-phone', '--original-apk', str(self.paths[0]),
