@@ -151,26 +151,55 @@ class RecoveryBoundaryTest(unittest.TestCase):
             with self.subTest(xml=xml), self.assertRaises(subject.AcceptanceError):
                 subject.notification_preferences_off(xml, choice=choice)
 
-    def test_ui_requires_valid_profile_text_and_exact_owned_dump_cleanup(self):
+    def test_ui_requires_exact_owned_profile_semantics_and_dump_cleanup(self):
         h = self.make()
         h.preflight()
         h.install(subject.ORIGINAL)
-        xml = '<hierarchy rotation="0"><node text="Fictional آزمایشی"/></hierarchy>'
+        xml = ''
         def shell(*parts, **kwargs):
             self.adb.calls.append(parts)
             return xml if parts[0] == 'cat' else ''
         self.adb.shell = shell
-        self.assertTrue(h.profile_visible(subject.ORIGINAL))
+        for attribute in ('text', 'content-desc'):
+            for value in (subject.PROFILE, 'سلام ' + subject.PROFILE):
+                with self.subTest(attribute=attribute, value=value):
+                    xml = f'<hierarchy><node package="{subject.ORIGINAL}" {attribute}="{value}"/></hierarchy>'
+                    self.assertTrue(h.profile_visible(subject.ORIGINAL))
+        for attrs in ('text="not fixture"',
+                      f'text="extra {subject.PROFILE}"',
+                      f'content-desc="سلام {subject.PROFILE} extra"',
+                      f'content-desc="{subject.PROFILE}" package="another.app"',
+                      f'text="{subject.PROFILE}"'):
+            with self.subTest(attrs=attrs):
+                xml = '<hierarchy><node ' + attrs + '/></hierarchy>'
+                self.assertFalse(h.profile_visible(subject.ORIGINAL))
+        for xml in ('<hierarchy><broken>', '<wrong><node/></wrong>'):
+            with self.assertRaises(subject.AcceptanceError):
+                h.profile_visible(subject.ORIGINAL)
         dumps = [call for call in self.adb.calls if call[0] == 'uiautomator']
-        self.assertRegex(dumps[0][2], r'^/data/local/tmp/lifeguide-recovery-[0-9a-f]+\.xml$')
-        self.assertIn(('rm', dumps[0][2]), self.adb.calls)
-        xml = '<hierarchy><node text="سلام Fictional آزمایشی"/></hierarchy>'
-        self.assertTrue(h.profile_visible(subject.ORIGINAL))
-        xml = '<hierarchy><node text="not fixture"/></hierarchy>'
-        self.assertFalse(h.profile_visible(subject.ORIGINAL))
-        xml = '<hierarchy><broken>'
-        with self.assertRaises(subject.AcceptanceError):
-            h.profile_visible(subject.ORIGINAL)
+        self.assertEqual(len(dumps), 11)
+        for call in dumps:
+            self.assertRegex(call[2], r'^/data/local/tmp/lifeguide-recovery-[0-9a-f]+\.xml$')
+            self.assertIn(('rm', call[2]), self.adb.calls)
+
+    def test_ui_timeout_keeps_failure_even_if_synthetic_diagnostic_fails(self):
+        for diagnostic_fails in (False, True):
+            with self.subTest(diagnostic_fails=diagnostic_fails):
+                ticks = iter((0, 31))
+                h = self.make(clock=lambda: next(ticks))
+                h.preflight()
+                h.install(subject.ORIGINAL)
+                h.seeded.add(subject.ORIGINAL)
+                h.profile_visible = lambda _: False
+                captures = []
+                def screenshot(kind='ordinary'):
+                    captures.append(kind)
+                    if diagnostic_fails:
+                        raise subject.AcceptanceError('fictional_screenshot_failed')
+                h.screenshot = screenshot
+                with self.assertRaisesRegex(subject.AcceptanceError, '^real_profile_ui_not_visible$'):
+                    h.launch(subject.ORIGINAL)
+                self.assertEqual(captures, ['ui-failure-original'])
 
     def test_seed_checks_bytes_after_binary_exec_without_overwriting(self):
         h = self.make()

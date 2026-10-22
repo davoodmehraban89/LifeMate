@@ -290,8 +290,16 @@ class Harness:
             require(root.tag == 'hierarchy' and len(root) > 0 and
                     all(node.tag == 'node' for node in root.iter() if node is not root),
                     'invalid_ui_hierarchy')
-            return any(node.attrib.get('text') in (PROFILE, 'سلام ' + PROFILE)
-                       for node in root.iter('node'))
+            nodes = list(root.iter('node'))
+            owned = [node for node in nodes if node.attrib.get('package') == package]
+            labels = (PROFILE, 'سلام ' + PROFILE)
+            observation = {'package': package, 'nodeCount': len(nodes),
+                'ownedPackageNodeCount': len(owned),
+                'exactTextMatch': any(node.attrib.get('text') in labels for node in owned),
+                'exactContentDescriptionMatch': any(
+                    node.attrib.get('content-desc') in labels for node in owned)}
+            self.receipt['lastUiObservation'] = observation
+            return observation['exactTextMatch'] or observation['exactContentDescriptionMatch']
         except ET.ParseError:
             raise AcceptanceError('invalid_ui_hierarchy') from None
         finally:
@@ -306,7 +314,12 @@ class Harness:
         self.launched.add(package)
         deadline = self.clock() + 30
         while not self.profile_visible(package):
-            require(self.clock() < deadline, 'real_profile_ui_not_visible')
+            if self.clock() >= deadline:
+                try:
+                    self.screenshot('ui-failure-original' if package == ORIGINAL else 'ui-failure-qa')
+                except Exception:
+                    self.receipt['uiFailureScreenshot'] = 'UNAVAILABLE'
+                raise AcceptanceError('real_profile_ui_not_visible')
             self.sleep(0.5)
         require(self.process_state(package) == 'PRESENT', 'ordinary_ui_process_missing')
 
@@ -340,14 +353,19 @@ class Harness:
             require(QA not in line.split('|'), 'qa_os_notification_present')
         self._cold(QA)
 
-    def screenshot(self):
+    def screenshot(self, kind='ordinary'):
+        require(self.gated and bool(self.seeded & self.launched) and
+                kind in ('ordinary', 'ui-failure-original', 'ui-failure-qa'),
+                'synthetic_screenshot_boundary_required')
         raw = self.binary('screencap -p')
         require(24 <= len(raw) <= MAX_PAYLOAD_BYTES and raw[:8] == b'\x89PNG\r\n\x1a\n'
                 and raw[12:16] == b'IHDR', 'fictional_screenshot_failed')
         width, height = struct.unpack('>II', raw[16:24])
         require(100 <= width <= 4096 and 100 <= height <= 4096, 'fictional_screenshot_failed')
-        publish_new(self.output.with_suffix('.png'), raw)
-        self.receipt['fictionalUiScreenshotSha256'] = digest(raw)
+        path = (self.output.with_suffix('.png') if kind == 'ordinary' else
+                self.output.with_name(self.output.stem + '-' + kind + '.png'))
+        publish_new(path, raw)
+        self.receipt.setdefault('fictionalScreenshotsSha256', {})[path.name] = digest(raw)
 
     def run(self):
         self.preflight()
