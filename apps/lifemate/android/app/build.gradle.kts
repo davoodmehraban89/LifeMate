@@ -33,7 +33,7 @@ if (personalRecoveryQa && (requestedTasks.isEmpty() || requestedTasks.any { it !
 if (personalRecoveryQa && !(standaloneDefine && recoveryDefine && recoveryTarget)) {
     throw GradleException("Synthetic recovery QA requires its matching defines and entry point.")
 }
-if (assembling && !personalRecoveryQa && (recoveryDefine || recoveryTarget)) {
+if (!personalRecoveryQa && (recoveryDefine || recoveryTarget)) {
     throw GradleException("Recovery fixtures cannot be packaged as a user application.")
 }
 if (devicePlannerOnly) {
