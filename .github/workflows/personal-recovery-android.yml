@@ -1,12 +1,12 @@
 name: LifeGuide personal recovery emulator QA
 on:
-  push:
-    branches: [test/personal-recovery-acceptance]
   pull_request:
     paths:
       - .github/workflows/personal-recovery-android.yml
       - apps/lifemate/tool/*personal_recovery*
       - apps/lifemate/android/app/src/recoveryQa/**
+      - apps/lifemate/android/app/build.gradle.kts
+      - apps/lifemate/android/app/src/main/kotlin/ir/lifeguide/app/**
   workflow_dispatch:
 permissions:
   contents: read
