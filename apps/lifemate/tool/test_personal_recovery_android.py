@@ -257,8 +257,34 @@ class Harness:
             f'if [ -e {shm} ]; then printf EMPTY_WAL_SHM; else printf EMPTY_WAL; fi; '
             'else printf SIDECAR; fi')
         output = self.adb.shell('run-as', package, 'sh', '-c', query).strip()
+        if output not in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM'):
+            self._diagnose_cold_files(package)
         require(output in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM'), 'database_sidecar_present')
         return output
+
+    def _diagnose_cold_files(self, package):
+        """Metadata only, never file contents; diagnosis cannot mask the refusal."""
+        self.receipt['lastColdFileObservation'] = 'UNAVAILABLE'
+        try:
+            commands = []
+            for label, suffix in (('main', ''), ('wal', '-wal'), ('shm', '-shm'), ('journal', '-journal')):
+                path = DATABASE + suffix
+                commands.append(f'printf "{label} "; '
+                    f'if [ -L {path} ]; then echo SYMLINK; '
+                    f'elif [ -f {path} ]; then printf "FILE "; stat -c %s {path}; '
+                    f'elif [ -e {path} ]; then echo OTHER; else echo ABSENT; fi')
+            raw = self.adb.shell('run-as', package, 'sh', '-c', '; '.join(commands))
+            require(len(raw) <= 256, 'invalid_file_metadata')
+            report = {}
+            for line in raw.splitlines():
+                match = re.fullmatch(r'(main|wal|shm|journal) (ABSENT|SYMLINK|OTHER|FILE ([0-9]{1,12}))', line)
+                require(match is not None and match[1] not in report, 'invalid_file_metadata')
+                report[match[1]] = ({'kind': 'FILE', 'bytes': int(match[3])} if match[3]
+                                    else {'kind': match[2]})
+            require(set(report) == {'main', 'wal', 'shm', 'journal'}, 'invalid_file_metadata')
+            self.receipt['lastColdFileObservation'] = report
+        except Exception:
+            pass
 
     def _remote(self, package, script):
         self._owned(package)

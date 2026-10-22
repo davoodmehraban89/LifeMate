@@ -147,6 +147,28 @@ class RecoveryBoundaryTest(unittest.TestCase):
             with self.assertRaisesRegex(subject.AcceptanceError, 'database_sidecar_present'):
                 h.capture(subject.ORIGINAL)
 
+    def test_sidecar_refusal_records_only_strict_file_metadata(self):
+        h = self.make()
+        h.preflight()
+        h.install(subject.ORIGINAL)
+        previous_shell = self.adb.shell
+        metadata = 'main FILE 45056\nwal FILE 32768\nshm FILE 32768\njournal ABSENT\n'
+        def shell(*parts, **kwargs):
+            if parts[0] == 'run-as' and 'stat -c' in parts[-1]:
+                return metadata
+            return previous_shell(*parts, **kwargs)
+        self.adb.shell = shell
+        self.adb.sidecars = 'SIDECAR'
+        with self.assertRaisesRegex(subject.AcceptanceError, '^database_sidecar_present$'):
+            h._cold(subject.ORIGINAL)
+        self.assertEqual(h.receipt['lastColdFileObservation']['wal'],
+                         {'kind': 'FILE', 'bytes': 32768})
+        metadata = 'untrusted diagnostic content must not be published'
+        with self.assertRaisesRegex(subject.AcceptanceError, '^database_sidecar_present$'):
+            h._cold(subject.ORIGINAL)
+        self.assertEqual(h.receipt['lastColdFileObservation'], 'UNAVAILABLE')
+        self.assertNotIn('untrusted', json.dumps(h.receipt))
+
     def test_actual_exited_sqlite_reader_leaves_empty_wal_cache_only(self):
         source = self.directory / 'real-closed-reader.sqlite'
         fixture = subject.create_sample_database()
