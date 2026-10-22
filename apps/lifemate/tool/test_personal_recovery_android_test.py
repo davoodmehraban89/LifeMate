@@ -211,7 +211,7 @@ class RecoveryBoundaryTest(unittest.TestCase):
                 subject.binary_adb('emulator-5554', 'unused')
 
     def test_failure_receipt_without_device_is_sanitized(self):
-        output = self.directory / 'failed.json'
+        output = self.directory / 'exports' / 'failed.json'
         code = subject.main(['--serial', 'physical-phone', '--original-apk', str(self.paths[0]),
             '--qa-apk', str(self.paths[1]), '--upgrade-apk', str(self.paths[2]),
             '--acknowledge-synthetic-emulator-only', '--output', str(output)])

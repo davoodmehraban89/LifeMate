@@ -426,6 +426,7 @@ def main(argv=None):
         output=args.output)
     code = 0
     try:
+        args.output.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
         runner.run()
     except (AcceptanceError, RecoveryError) as error:
         runner.receipt['errorCode'] = error.code if isinstance(error, RecoveryError) else str(error)
