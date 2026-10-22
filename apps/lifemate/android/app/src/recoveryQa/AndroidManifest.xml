@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Test identity only. Never distribute; no network permission or cloud backup. -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove"/>
+    <application android:label="آزمون بازیابی" tools:replace="android:label">
+        <meta-data android:name="ir.lifeguide.PERSONAL_RECOVERY_QA" android:value="true"/>
+    </application>
+</manifest>

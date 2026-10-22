@@ -22,7 +22,9 @@ internal object DevicePlannerReminders {
     private const val ENABLED = "enabled"
     @Volatile private var choiceFailedClosed = false
 
-    fun supported(c: Context) = BuildConfig.DEVICE_PLANNER_ONLY && c.packageName == "ir.lifeguide.app.device"
+    fun supported(c: Context) = BuildConfig.DEVICE_PLANNER_ONLY && (
+        c.packageName == "ir.lifeguide.app.device" ||
+            (BuildConfig.PERSONAL_RECOVERY_QA && c.packageName == "ir.lifeguide.app.personal"))
     fun enabled(c: Context): Boolean {
         if (!supported(c) || choiceFailedClosed) return false
         return try { c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(ENABLED, false) }

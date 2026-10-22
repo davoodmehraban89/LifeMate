@@ -12,11 +12,25 @@ plugins {
 val releaseRequested = gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) }
 // A separate, debug-only device edition. The published online identity stays fixed.
 val devicePlannerOnly = providers.gradleProperty("lifeguideDevicePlanner").orNull == "true"
+// Never-distributed synthetic acceptance identity, not a replacement user APK.
+val personalRecoveryQa = providers.gradleProperty("lifeguidePersonalRecoveryQa").orNull == "true"
 val requestedTasks = gradle.startParameter.taskNames.map { it.substringAfterLast(':').lowercase() }
 val assembling = requestedTasks.any { it.startsWith("assemble") || it.startsWith("bundle") }
 val decodedDefines = providers.gradleProperty("dart-defines").orNull.orEmpty()
     .split(',').filter { it.isNotBlank() }.map { String(Base64.getDecoder().decode(it)) }
 val standaloneDefine = decodedDefines.contains("LIFEGUIDE_STANDALONE=true")
+val recoveryDefine = decodedDefines.contains("LIFEGUIDE_PERSONAL_RECOVERY_QA=true")
+val dartTarget = providers.gradleProperty("target").orNull.orEmpty().replace('\\', '/')
+val recoveryTarget = dartTarget.endsWith("tool/personal_recovery_fixture.dart")
+if (personalRecoveryQa && !devicePlannerOnly) {
+    throw GradleException("Synthetic recovery QA requires the isolated device planner.")
+}
+if (assembling && personalRecoveryQa && !(standaloneDefine && recoveryDefine && recoveryTarget)) {
+    throw GradleException("Synthetic recovery QA requires its matching defines and entry point.")
+}
+if (assembling && !personalRecoveryQa && (recoveryDefine || recoveryTarget)) {
+    throw GradleException("Recovery fixtures cannot be packaged as a user application.")
+}
 if (devicePlannerOnly) {
     if (requestedTasks.any { it.contains("release") || it.contains("profile") || it == "assemble" || it == "bundle" }) {
         throw GradleException("The independent device planner is a debug-only initial edition.")
@@ -24,8 +38,7 @@ if (devicePlannerOnly) {
     if (assembling && !standaloneDefine) {
         throw GradleException("Device planner builds require the matching LIFEGUIDE_STANDALONE define.")
     }
-    val target = providers.gradleProperty("target").orNull.orEmpty().replace('\\', '/')
-    if (assembling && !(target.endsWith("lib/standalone_main.dart") || target.endsWith("tool/standalone_acceptance_fixture.dart"))) {
+    if (assembling && !(dartTarget.endsWith("lib/standalone_main.dart") || dartTarget.endsWith("tool/standalone_acceptance_fixture.dart") || (personalRecoveryQa && recoveryTarget))) {
         throw GradleException("The device edition requires its isolated Dart entry point.")
     }
 } else if (assembling && standaloneDefine) {
@@ -65,7 +78,7 @@ android {
     ndkVersion = flutter.ndkVersion
     buildFeatures { buildConfig = true }
     if (devicePlannerOnly) {
-        sourceSets.getByName("debug").manifest.srcFile("src/devicePlanner/AndroidManifest.xml")
+        sourceSets.getByName("debug").manifest.srcFile(if (personalRecoveryQa) "src/recoveryQa/AndroidManifest.xml" else "src/devicePlanner/AndroidManifest.xml")
     }
 
     compileOptions {
@@ -75,8 +88,13 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = if (devicePlannerOnly) "ir.lifeguide.app.device" else "ir.lifeguide.app"
+        applicationId = when {
+            personalRecoveryQa -> "ir.lifeguide.app.personal"
+            devicePlannerOnly -> "ir.lifeguide.app.device"
+            else -> "ir.lifeguide.app"
+        }
         buildConfigField("boolean", "DEVICE_PLANNER_ONLY", devicePlannerOnly.toString())
+        buildConfigField("boolean", "PERSONAL_RECOVERY_QA", personalRecoveryQa.toString())
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -87,6 +105,9 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        if (assembling && personalRecoveryQa && (flutter.versionCode !in 10..11 || flutter.versionName != "0.7.2-recovery-qa.${flutter.versionCode}")) {
+            throw GradleException("Only private synthetic recovery QA versions 10 and 11 are allowed.")
+        }
     }
 
     signingConfigs {
