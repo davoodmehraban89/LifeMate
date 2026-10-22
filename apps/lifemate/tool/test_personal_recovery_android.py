@@ -248,10 +248,17 @@ class Harness:
 
     def _cold(self, package):
         require(self.process_state(package) == 'ABSENT', 'database_process_must_be_absent')
-        query = ' && '.join('test ! -e ' + DATABASE + suffix for suffix in ('-wal', '-shm', '-journal'))
-        output = self.adb.shell('run-as', package, 'sh', '-c',
-            f'if {query}; then printf CLEAN; else printf SIDECAR; fi').strip()
-        require(output == 'CLEAN', 'database_sidecar_present')
+        # A terminated read-only Android WAL connection can leave a zero-byte
+        # WAL plus SHM cache. Only a strictly empty WAL has no frames to replay.
+        wal, shm, journal = (DATABASE + suffix for suffix in ('-wal', '-shm', '-journal'))
+        query = (f'if [ -e {journal} ]; then printf SIDECAR; '
+            f'elif [ ! -e {wal} ] && [ ! -e {shm} ]; then printf CLEAN; '
+            f'elif [ -f {wal} ] && [ ! -s {wal} ]; then '
+            f'if [ -e {shm} ]; then printf EMPTY_WAL_SHM; else printf EMPTY_WAL; fi; '
+            'else printf SIDECAR; fi')
+        output = self.adb.shell('run-as', package, 'sh', '-c', query).strip()
+        require(output in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM'), 'database_sidecar_present')
+        return output
 
     def _remote(self, package, script):
         self._owned(package)
@@ -271,9 +278,10 @@ class Harness:
         require(self.capture(package) == raw, 'seed_bytes_not_confirmed')
 
     def capture(self, package):
-        self._cold(package)
+        before = self._cold(package)
         raw = self.binary(self._remote(package, 'cat ' + DATABASE))
-        self._cold(package)
+        require(self._cold(package) == before, 'database_cache_shape_changed')
+        self.receipt.setdefault('coldCaptureStates', {})[package] = before
         require(100 <= len(raw) <= MAX_PAYLOAD_BYTES and raw[:16] == b'SQLite format 3\0'
                 and int.from_bytes(raw[68:72], 'big') == FIXTURE_APPLICATION_ID,
                 'captured_database_invalid')
@@ -355,7 +363,7 @@ class Harness:
 
     def screenshot(self, kind='ordinary'):
         require(self.gated and bool(self.seeded & self.launched) and
-                kind in ('ordinary', 'ui-failure-original', 'ui-failure-qa'),
+                kind in ('ordinary', 'qa-restored', 'ui-failure-original', 'ui-failure-qa'),
                 'synthetic_screenshot_boundary_required')
         raw = self.binary('screencap -p')
         require(24 <= len(raw) <= MAX_PAYLOAD_BYTES and raw[:8] == b'\x89PNG\r\n\x1a\n'
@@ -404,6 +412,8 @@ class Harness:
                 self.receipt['currentPhase'] = phase
                 for package, role in ((ORIGINAL, 'original'), (QA, 'qa')):
                     self.launch(package)
+                    if phase == 'both_apps_after_first_close' and package == QA:
+                        self.screenshot('qa-restored')
                     self.close(package)
                     raw = self.capture(package)
                     captured = private / (phase + '-' + role + '.sqlite')

@@ -126,6 +126,50 @@ class RecoveryBoundaryTest(unittest.TestCase):
         with self.assertRaises(subject.AcceptanceError):
             h.capture(subject.ORIGINAL)
 
+    def test_capture_accepts_only_stable_empty_wal_cache_shapes(self):
+        h = self.make()
+        h.preflight()
+        h.install(subject.ORIGINAL)
+        raw = subject.create_sample_database()
+        h.binary = lambda command, data=None: raw
+        for shape in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM'):
+            self.adb.sidecars = shape
+            self.assertEqual(h.capture(subject.ORIGINAL), raw)
+        self.adb.sidecars = 'EMPTY_WAL_SHM'
+        def changing_read(command, data=None):
+            self.adb.sidecars = 'EMPTY_WAL'
+            return raw
+        h.binary = changing_read
+        with self.assertRaisesRegex(subject.AcceptanceError, 'database_cache_shape_changed'):
+            h.capture(subject.ORIGINAL)
+        for state in ('NONEMPTY_WAL', 'ORPHAN_SHM', 'JOURNAL', 'SIDECAR'):
+            self.adb.sidecars = state
+            with self.assertRaisesRegex(subject.AcceptanceError, 'database_sidecar_present'):
+                h.capture(subject.ORIGINAL)
+
+    def test_actual_exited_sqlite_reader_leaves_empty_wal_cache_only(self):
+        source = self.directory / 'real-closed-reader.sqlite'
+        fixture = subject.create_sample_database()
+        source.write_bytes(fixture)
+        script = ("import os,sqlite3,sys; d=sqlite3.connect(sys.argv[1]); "
+                  "d.execute('PRAGMA journal_mode=WAL'); "
+                  "d.execute('SELECT * FROM local_profiles').fetchall(); os._exit(0)")
+        subprocess.run(['python3', '-c', script, str(source)], check=True)
+        wal, shm = Path(str(source) + '-wal'), Path(str(source) + '-shm')
+        self.assertEqual(wal.stat().st_size, 0)
+        self.assertGreater(shm.stat().st_size, 0)
+        before = {p: p.read_bytes() for p in (source, wal, shm)}
+        # The AVD harness captures the main bytes only AFTER its cold zero-WAL gate.
+        captured = self.directory / 'captured-main.sqlite'
+        captured.write_bytes(source.read_bytes())
+        reference = self.directory / 'reference.sqlite'
+        reference.write_bytes(fixture)
+        normalized = subject.normalized_snapshot(captured, self.directory / 'normalized.sqlite')
+        self.assertEqual(normalized, subject.export_fixture(reference))
+        self.assertEqual(subject.independent_sql(reference),
+                         subject.independent_sql(self.directory / 'normalized.sqlite'))
+        self.assertEqual({p: p.read_bytes() for p in before}, before)
+
     def test_private_normalization_preserves_wal_header_source_and_full_fields(self):
         raw = bytearray(subject.create_sample_database())
         raw[18:20] = b'\x02\x02'
