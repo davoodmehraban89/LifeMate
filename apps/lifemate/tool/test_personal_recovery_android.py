@@ -258,7 +258,7 @@ class Harness:
             f'if [ -f {journal} ] && [ ! -s {journal} ] && [ ! -e {wal} ] && [ ! -e {shm} ]; '
             'then printf EMPTY_JOURNAL; else printf SIDECAR; fi; '
             f'elif [ ! -e {wal} ] && [ ! -e {shm} ]; then printf CLEAN; '
-            f'elif [ -f {wal} ] && [ ! -s {wal} ]; then '
+            f'elif [ -f {wal} ] && [ ! -s {wal} ] && ( [ ! -e {shm} ] || [ -f {shm} ] ); then '
             f'if [ -e {shm} ]; then printf EMPTY_WAL_SHM; else printf EMPTY_WAL; fi; '
             'else printf SIDECAR; fi')
         output = self.adb.shell('run-as', package, 'sh', '-c', query).strip()
