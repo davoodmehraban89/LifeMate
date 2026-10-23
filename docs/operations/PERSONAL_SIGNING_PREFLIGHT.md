@@ -67,7 +67,12 @@ RSA/EC پشتیبانی می‌شوند؛ فقط داشتن certificate عموم
 
 ```powershell
 python -m unittest discover -s scripts/tests -p "test_signing*.py" -v
-python -m unittest discover -s apps/lifemate/tool -p "*_test.py" -v
+```
+
+آزمون‌های قدیمی host به shell/POSIX وابسته‌اند و فقط در Ubuntu اجرا می‌شوند:
+
+```sh
+python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v
 ```
 
 آزمون‌ها کلید موقت RSA/EC، ورود دوباره، نسخهٔ کپی **ساختگی**، رمز اشتباه،

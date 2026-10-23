@@ -61,4 +61,18 @@ PR45; no merge/release/deploy. Stop after handover.
 - Ruling: no new key-generation/transfer feature; read-only inspection is the
   smallest prep dependency. A wrong scope choice costs deferred usable transfer,
   not a change to installed data or approved policy.
-- Status: implementation/tests/CI UNVERIFIED until recorded below.
+- Task1: `79e1211`, 11 Java tests PASS on actual Temurin17; absent-helper RED and
+  deliberately removed-proof mutation RED observed (synthetic mismatched cert).
+- Task2: 24 Python tests PASS, including real synthetic CLI→JDK→keypair proof;
+  missing-module RED, source17 capability RED, pre-prompt guard RED recorded.
+- Ruling: check compiler module and empty-input source17 probe, not `javac` binary
+  presence — system21 has compiler but lacks ct.sym/source17; false capability
+  acceptance would delay inspection failure until after credentials. No key read
+  during the probe. Downloaded temporary official checksum-verified JDK17 only.
+- Ruling: inherited 82 host guards run on Ubuntu only because they invoke POSIX
+  shell/FIFO operations; new signing suites run on both CI systems. Wrong scope
+  costs missing Windows legacy-guard coverage, not weaker Android release gates.
+- Local full regression: 90 tests in32.576s OK (55 recovery +35 signing), inherited
+  host82 in0.197s OK; source compile and `git diff --check` exit0.
+- Task3: CI and independent review pending; no owner key/device/data inspection,
+  config/signing/build/APK/merge/deploy/DNS performed by this packet.

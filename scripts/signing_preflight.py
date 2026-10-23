@@ -216,6 +216,10 @@ def main(argv=None):
         if args.command == "inspect":
             if not args.acknowledge_owner_local_inspection:
                 raise PreflightError("owner_local_acknowledgement_required")
+            if not sys.stdin.isatty():
+                raise PreflightError("interactive_terminal_required")
+            if not _java_available():
+                raise PreflightError("jdk17_required")
             store, key = _passwords()
             report = inspect_key(args.keystore, args.alias, store, key)
         else:

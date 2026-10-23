@@ -2,6 +2,7 @@
 
 from contextlib import redirect_stdout
 import getpass
+import hashlib
 import io
 import json
 import os
@@ -86,6 +87,16 @@ class SigningPreflightTest(unittest.TestCase):
             with self.assertRaises(tool.PreflightError) as failure:
                 tool._passwords()
         self.assertEqual(failure.exception.code, "interactive_terminal_required")
+
+    def test_invalid_jdk_refused_before_password_prompt_or_private_io(self):
+        with patch.object(tool.sys.stdin, "isatty", return_value=True), \
+                patch.object(tool, "_java_available", return_value=False), \
+                patch.object(tool, "_passwords", side_effect=AssertionError("password prompt")), \
+                patch.object(tool, "read_bounded", side_effect=AssertionError("private IO")):
+            code, report = self.call(["inspect", "--keystore", CANARY, "--alias", CANARY,
+                                      "--acknowledge-owner-local-inspection"])
+        self.assertEqual(code, 2)
+        self.assertEqual(report["reason"], "jdk17_required")
 
     def test_hidden_password_and_same_key_password(self):
         with patch.object(tool.sys.stdin, "isatty", return_value=True), \
@@ -239,6 +250,31 @@ class SigningPreflightTest(unittest.TestCase):
                 patch.object(tool.subprocess, "run", return_value=subprocess.CompletedProcess([], 2, json.dumps(FACTS).encode())):
             with self.assertRaises(tool.PreflightError):
                 tool._run_inspector(b"fictional", CANARY, CANARY, CANARY)
+
+
+class SyntheticCLIIntegrationTest(unittest.TestCase):
+    def test_real_local_helper_hidden_prompt_port_and_source_preservation(self):
+        from scripts.tests.signing_test_support import synthetic_keystores
+
+        with synthetic_keystores() as fixture:
+            before = hashlib.sha256(fixture.jks_path.read_bytes()).hexdigest()
+            output = io.StringIO()
+            with redirect_stdout(output), patch.object(tool.sys.stdin, "isatty", return_value=True), \
+                    patch.object(tool.getpass, "getpass", side_effect=[fixture.store_password, fixture.key_password]):
+                code = tool.main(["inspect", "--keystore", str(fixture.jks_path), "--alias", fixture.alias,
+                                  "--acknowledge-owner-local-inspection"])
+            self.assertEqual(code, 0)
+            report = json.loads(output.getvalue())
+            self.assertEqual(report["certificateSha256"], fixture.fingerprints[fixture.jks_path])
+            self.assertEqual(report["delivery"], "BLOCKED")
+            self.assertEqual(report["status"], "INSPECTED")
+            self.assertEqual(hashlib.sha256(fixture.jks_path.read_bytes()).hexdigest(), before)
+            for private in (fixture.store_password, fixture.key_password, fixture.alias, str(fixture.jks_path)):
+                self.assertNotIn(private, output.getvalue())
+            # File remains reopenable; independent second keypair proof, no edits.
+            repeated = tool.inspect_key(fixture.jks_path, fixture.alias, fixture.store_password, fixture.key_password)
+            self.assertEqual(repeated["certificateSha256"], report["certificateSha256"])
+            self.assertEqual(repeated["privateKeyProof"], True)
 
 
 if __name__ == "__main__":
