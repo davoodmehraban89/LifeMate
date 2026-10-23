@@ -74,5 +74,16 @@ PR45; no merge/release/deploy. Stop after handover.
   costs missing Windows legacy-guard coverage, not weaker Android release gates.
 - Local full regression: 90 tests in32.576s OK (55 recovery +35 signing), inherited
   host82 in0.197s OK; source compile and `git diff --check` exit0.
-- Task3: CI and independent review pending; no owner key/device/data inspection,
-  config/signing/build/APK/merge/deploy/DNS performed by this packet.
+- Task3: independent review ran signing35/27.656s OK. It reproduced one Minor
+  multi-valued-RDN CN false-negative. Coordinator re-graded Important for accurate
+  owner-facing key facts, fixed all CN-value enumeration; actual synthetic test
+  RED1failure→GREEN1test/3subjects (positive multi-RDN/lowercase, negative OU).
+  No deferred review findings. Full-suite result recorded in final evidence.
+- CI initial `39941563602`: signing35 PASS on Ubuntu and Windows (Windows one
+  POSIX skip); Ubuntu inherited guard import failed missing cryptography. Added
+  existing pinned requirement; `39941815472` then both jobs SUCCESS on `9df0c92`.
+  Final CN-correction CI pending. Generic CI initial run superseded/cancelled by
+  normal branch concurrency; not treated as test success.
+- No owner key/device/data inspection, signing/configuration, personal APK delivery,
+  merge/deploy/DNS performed. Generic CI may build existing debug test artifacts;
+  they are not an approved update to the installed personal APK.

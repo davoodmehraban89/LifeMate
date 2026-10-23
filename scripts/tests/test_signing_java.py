@@ -74,6 +74,25 @@ class SigningJavaTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIs(report["debugCertificate"], True)
 
+    def test_debug_cn_in_multivalued_rdn_and_non_cn_value(self):
+        cases = (("CN=Android Debug+C=US,O=Android", True),
+                 ("CN=android debug+OU=QA,O=Example", True),
+                 ("CN=Fictional+OU=Android Debug,O=Example", False))
+        fixture = self.fixtures
+        for index, (subject, expected) in enumerate(cases):
+            with self.subTest(case=index):
+                path = fixture.directory / ("multivalue-" + str(index) + ".jks")
+                fixture.keytool("-genkeypair", "-keystore", path, "-storetype", "JKS",
+                                "-alias", fixture.alias, "-keyalg", "EC", "-dname", subject,
+                                "-validity", "3650", "-noprompt",
+                                "-storepass:env", "LG_TEST_STORE_PASSWORD",
+                                "-keypass:env", "LG_TEST_KEY_PASSWORD")
+                before = path.read_bytes()
+                code, report = self.inspect(path)
+                self.assertEqual(code, 0)
+                self.assertIs(report["debugCertificate"], expected)
+                self.assertEqual(path.read_bytes(), before)
+
     def test_expired_certificate_is_reported_without_blocking_proof(self):
         path = self.fixtures.directory / "expired.jks"
         self.fixtures.create_key(path, "RSA", expired=True)

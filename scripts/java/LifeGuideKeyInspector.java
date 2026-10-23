@@ -16,6 +16,8 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HexFormat;
+import javax.naming.NamingEnumeration;
+import javax.naming.directory.Attribute;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 
@@ -178,8 +180,19 @@ public final class LifeGuideKeyInspector {
     private static boolean debugCertificate(X509Certificate certificate) throws Exception {
         LdapName name = new LdapName(certificate.getSubjectX500Principal().getName());
         for (Rdn rdn : name.getRdns()) {
-            if ("CN".equalsIgnoreCase(rdn.getType())
-                    && "Android Debug".equalsIgnoreCase(String.valueOf(rdn.getValue()))) return true;
+            // A multi-valued RDN's primary type may be C/OU even when it has CN.
+            NamingEnumeration<? extends Attribute> attributes = rdn.toAttributes().getAll();
+            try {
+                while (attributes.hasMore()) {
+                    Attribute attribute = attributes.next();
+                    if (!"CN".equalsIgnoreCase(attribute.getID())) continue;
+                    for (int index = 0; index < attribute.size(); index++) {
+                        if ("Android Debug".equalsIgnoreCase(String.valueOf(attribute.get(index)))) return true;
+                    }
+                }
+            } finally {
+                attributes.close();
+            }
         }
         return false;
     }
