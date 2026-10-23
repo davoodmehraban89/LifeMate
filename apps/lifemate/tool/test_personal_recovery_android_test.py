@@ -215,53 +215,45 @@ class RecoveryBoundaryTest(unittest.TestCase):
         h.preflight()
         h.install(subject.ORIGINAL)
         previous_shell = self.adb.shell
-        with tempfile.TemporaryDirectory() as root:
-            db = Path(root) / subject.DATABASE
-            db.parent.mkdir()
-            journal = Path(str(db) + '-journal')
-            wal = Path(str(db) + '-wal')
-            shm = Path(str(db) + '-shm')
-            def shell(*parts, **kwargs):
-                if parts[0] == 'run-as':
-                    return subprocess.run(['sh', '-c', parts[-1]], cwd=root,
-                        capture_output=True, text=True, check=True, timeout=2).stdout
-                return previous_shell(*parts, **kwargs)
-            self.adb.shell = shell
-            for kind in ('byte', 'directory', 'fifo', 'symlink', 'dangling', 'with_wal', 'with_shm', 'shm_directory', 'shm_fifo', 'wal_dangling', 'shm_dangling'):
-                with self.subTest(kind=kind):
-                    if kind == 'byte':
-                        journal.write_bytes(b'x')
-                    elif kind == 'directory':
-                        journal.mkdir()
-                    elif kind == 'fifo':
-                        subject.os.mkfifo(journal)
-                    elif kind in ('symlink', 'dangling'):
-                        target = Path(root) / 'empty-target'
-                        if kind == 'symlink':
-                            target.write_bytes(b'')
-                        journal.symlink_to(target if kind == 'symlink' else Path(root) / 'missing')
-                    elif kind in ('shm_directory', 'shm_fifo'):
-                        wal.write_bytes(b'')
-                        if kind == 'shm_directory':
-                            shm.mkdir()
-                        else:
-                            subject.os.mkfifo(shm)
-                    elif kind in ('wal_dangling', 'shm_dangling'):
-                        (wal if kind == 'wal_dangling' else shm).symlink_to(Path(root) / 'missing')
+        cases = ('byte', 'directory', 'fifo', 'symlink', 'dangling', 'with_wal',
+                 'with_shm', 'shm_directory', 'shm_fifo', 'wal_dangling', 'shm_dangling')
+        for kind in cases:
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as root:
+                db = Path(root) / subject.DATABASE
+                db.parent.mkdir()
+                journal = Path(str(db) + '-journal')
+                wal = Path(str(db) + '-wal')
+                shm = Path(str(db) + '-shm')
+                def shell(*parts, **kwargs):
+                    if parts[0] == 'run-as':
+                        return subprocess.run(['sh', '-c', parts[-1]], cwd=root,
+                            capture_output=True, text=True, check=True, timeout=2).stdout
+                    return previous_shell(*parts, **kwargs)
+                self.adb.shell = shell
+                if kind == 'byte':
+                    journal.write_bytes(b'x')
+                elif kind == 'directory':
+                    journal.mkdir()
+                elif kind == 'fifo':
+                    subject.os.mkfifo(journal)
+                elif kind in ('symlink', 'dangling'):
+                    target = Path(root) / 'empty-target'
+                    if kind == 'symlink':
+                        target.write_bytes(b'')
+                    journal.symlink_to(target if kind == 'symlink' else Path(root) / 'missing')
+                elif kind in ('shm_directory', 'shm_fifo'):
+                    wal.write_bytes(b'')
+                    if kind == 'shm_directory':
+                        shm.mkdir()
                     else:
-                        journal.write_bytes(b'')
-                        (wal if kind == 'with_wal' else shm).write_bytes(b'')
-                    with self.assertRaisesRegex(subject.AcceptanceError, 'database_sidecar_present'):
-                        h._cold(subject.ORIGINAL)
-                    if journal.is_dir():
-                        journal.rmdir()
-                    elif journal.exists() or journal.is_symlink():
-                        journal.unlink()
-                    for extra in (wal, shm):
-                        if extra.is_dir():
-                            extra.rmdir()
-                        elif extra.exists() or extra.is_symlink():
-                            extra.unlink()
+                        subject.os.mkfifo(shm)
+                elif kind in ('wal_dangling', 'shm_dangling'):
+                    (wal if kind == 'wal_dangling' else shm).symlink_to(Path(root) / 'missing')
+                else:
+                    journal.write_bytes(b'')
+                    (wal if kind == 'with_wal' else shm).write_bytes(b'')
+                with self.assertRaisesRegex(subject.AcceptanceError, 'database_sidecar_present'):
+                    h._cold(subject.ORIGINAL)
 
     def test_actual_exited_sqlite_reader_leaves_empty_wal_cache_only(self):
         source = self.directory / 'real-closed-reader.sqlite'
