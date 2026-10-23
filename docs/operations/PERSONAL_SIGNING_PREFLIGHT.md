@@ -75,6 +75,12 @@ python -m unittest discover -s scripts/tests -p "test_signing*.py" -v
 python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v
 ```
 
+**VERIFIED برای منبع `62741da`:** محلی91تست Python (55بازیابی +36امضا) و82کنترل
+host پاس شدند. [CI اختصاصی39942133341](https://github.com/davoodmehraban89/LifeMate/actions/runs/39942133341)
+در Ubuntu36+82 و در Windows36تست با1skip مربوط به POSIX موفق شد. اجراهای
+headless با fixture اثبات تعامل واقعی صاحب کلید یا گوشی نیستند.
+[گزارش دستور/خروجی و شکست‌های قبلی](../audits/evidence/local-signing-preflight-2026-10-23.json).
+
 آزمون‌ها کلید موقت RSA/EC، ورود دوباره، نسخهٔ کپی **ساختگی**، رمز اشتباه،
 certificate-only، گواه debug، فایل خراب، خطای helper و حفظ hash ورودی را
 می‌سنجند. نتیجهٔ واقعی اجرا در گزارش evidence همین بسته درج می‌شود؛ وجود

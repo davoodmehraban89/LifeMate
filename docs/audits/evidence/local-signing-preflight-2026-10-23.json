@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "dateUtc": "2026-10-23",
+  "scope": "Preparation-only, owner-local read-only signing preflight; synthetic execution only",
+  "repository": "davoodmehraban89/LifeMate",
+  "pullRequest": 46,
+  "branch": "feat/local-signing-preflight",
+  "base": "5f0c4da505fc0cd03a36cb161361ca5bf588ea83",
+  "testedFunctionalCommit": "62741da7861921517541efafedae5514912fefe4",
+  "delivery": "BLOCKED",
+  "ownerKeyInspection": "UNVERIFIED_NOT_PERFORMED",
+  "toolchain": {
+    "localPython": "3.12.14",
+    "jdk": "Temurin 17.0.21+9",
+    "temporaryPath": "/tmp/lifeguide-jdk17",
+    "source": "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.21_9.tar.gz",
+    "vendorVerifiedArchiveSha256": "8b9b611d917e3dfd8419d3566b5949226f69b052fed7e109c1368add1dfe8711",
+    "systemJdkUnchanged": true,
+    "diagnosis": "System21 has jdk.compiler but no ct.sym/source17 support; empty-input fixed-helper probe now refuses this before any password/key read."
+  },
+  "localVerification": [
+    {
+      "command": "PATH=/tmp/lifeguide-jdk17/bin:$PATH python3 -m unittest discover -s scripts/tests -v",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "output": "Ran 91 tests in 40.187s; OK",
+      "counts": {
+        "recovery": 55,
+        "signingJava": 12,
+        "signingPython": 24
+      }
+    },
+    {
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "output": "Ran 82 tests in 0.197s; OK",
+      "note": "One expected-refusal unit test prints FAIL/preflight JSON; unittest overall OK. Existing guard sources unchanged by final Java-only fix."
+    },
+    {
+      "command": "PATH=/tmp/lifeguide-jdk17/bin:$PATH python3 scripts/signing_preflight.py check",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "output": {
+        "schemaVersion": 1,
+        "status": "CHECKED",
+        "java17OrNewer": true,
+        "baselineVersionCode": 9,
+        "keyInspection": "UNVERIFIED",
+        "delivery": "BLOCKED",
+        "releaseReadiness": "UNVERIFIED",
+        "dataPreservation": "UNVERIFIED",
+        "installedDeviceVerification": "UNVERIFIED"
+      }
+    },
+    {
+      "command": "python3 -m compileall -q scripts/signing_preflight.py scripts/tests/test_signing_preflight.py scripts/tests/test_signing_java.py scripts/tests/signing_test_support.py",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "output": ""
+    },
+    {
+      "command": "git diff --check",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "output": ""
+    },
+    {
+      "command": "python3 scripts/check-tracked-secrets.py",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "output": "Tracked-file credential/artifact scan passed; this is not a complete secret audit."
+    },
+    {
+      "command": "python3 scripts/audit-naming.py --check",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "output": "Naming audit passed: 581 retained text occurrences classified; binary fonts/icons excluded."
+    }
+  ],
+  "redGreenEvidence": [
+    {
+      "case": "Python module absent",
+      "command": "python3 -m unittest scripts.tests.test_signing_preflight -v",
+      "redOutput": "Ran 1 test; FAILED (errors=1); ImportError signing_preflight",
+      "green": "covered by final 91 PASS"
+    },
+    {
+      "case": "Java helper absent",
+      "command": "python3 -m unittest scripts.tests.test_signing_java -v",
+      "redOutput": "Ran 10 tests in 6.041s; FAILED (failures=21); fixture setup succeeded, source missing",
+      "green": "covered by final 91 PASS"
+    },
+    {
+      "case": "Compiler module without javac executable",
+      "redOutput": "Ran 1 test; FAILED (failures=1); False != True",
+      "green": "covered by final 91 PASS"
+    },
+    {
+      "case": "Compiler module but no source17 support",
+      "redOutput": "Ran 1 test; FAILED (failures=1); True is not false",
+      "green": "covered by final 91 PASS"
+    },
+    {
+      "case": "No password prompt on unsupported JDK",
+      "redOutput": "Ran 1 test; FAILED (failures=1); password prompt assertion",
+      "green": "covered by final 91 PASS"
+    },
+    {
+      "case": "Actual mismatched RSA certificate proof mutation",
+      "redOutput": "Temporary Java source copy with only proveKey invocation removed: 1 failure in3.980s; wrong keypair incorrectly INSPECTED",
+      "green": "production source rejects key_proof_failed; covered by final 91 PASS"
+    },
+    {
+      "case": "Independent review multi-valued RDN",
+      "command": "PATH=/tmp/lifeguide-jdk17/bin:$PATH python3 -m unittest scripts.tests.test_signing_java.SigningJavaTests.test_debug_cn_in_multivalued_rdn_and_non_cn_value -v",
+      "redOutput": "Ran 1 test in5.569s; FAILED (failures=1); debugCertificate False is not True",
+      "greenOutput": "Ran 1 test in8.538s; OK; 3 subjects including negative non-CN Android Debug",
+      "status": "VERIFIED"
+    }
+  ],
+  "independentReview": {
+    "range": "5f0c4da..3c69574",
+    "signingTests": "35 tests in27.656s OK",
+    "finding": "CN within multi-valued RDN misclassified as non-debug; delivery remained BLOCKED",
+    "reviewerGrade": "Minor",
+    "coordinatorGrade": "Important for accurate owner-facing certificate facts",
+    "resolution": "All CN attributes enumerated; actual RED/GREEN and final 91 PASS; no open or deferred findings in scoped review",
+    "reportSha256": "c6eb4f82cfb9eab1c898b2376cd366549453139b0231d554c680ca51fe07851a",
+    "limitations": "Reviewer reran signing subset only on Linux/JDK17; fix verified by coordinator TDD, no second review claimed."
+  },
+  "ci": [
+    {
+      "runId": 39941563602,
+      "commit": "3c695749941a1926b6b73a34219821cd1b9d0687",
+      "conclusion": "FAILURE",
+      "details": "Ubuntu signing35 PASS; inherited host import failed cryptography missing (65 tests/errors1). Windows signing35 OK skipped1 and job SUCCESS."
+    },
+    {
+      "runId": 39941815472,
+      "commit": "9df0c92ee8684fa3083c99a881f165547e56a3ab",
+      "conclusion": "SUCCESS",
+      "details": "Both Ubuntu and Windows jobs SUCCESS after pinned Ubuntu dependency installed; before final CN fix."
+    },
+    {
+      "runId": 39942133341,
+      "commit": "62741da7861921517541efafedae5514912fefe4",
+      "conclusion": "SUCCESS",
+      "status": "VERIFIED",
+      "jobs": [
+        {
+          "jobId": 120375885059,
+          "platform": "ubuntu-latest",
+          "output": "Ran 36 tests in29.256s; OK. Ran 82 tests in0.264s; OK. check CHECKED; tracked scan/naming passed."
+        },
+        {
+          "jobId": 120375886190,
+          "platform": "windows-latest",
+          "output": "Ran 36 tests in24.628s; OK (skipped=1, POSIX symlink/FIFO). check CHECKED; tracked scan/naming passed."
+        }
+      ],
+      "evidenceMethod": "Official GitHub decoded job-log connector; both job conclusions read from run API"
+    },
+    {
+      "runId": 39942133311,
+      "commit": "62741da7861921517541efafedae5514912fefe4",
+      "conclusion": "UNVERIFIED_PENDING",
+      "name": "General LifeGuide CI",
+      "status": "UNVERIFIED_PENDING",
+      "verifiedCompletedJobs": [
+        {
+          "jobId": 120376129811,
+          "name": "backend",
+          "conclusion": "SUCCESS",
+          "output": "TLS5/5, backend308/308, isolated-role41/41, runtime-regression96/96; zero audit vulnerabilities; synthetic dump/restore job step succeeded"
+        },
+        {
+          "jobId": 120376130183,
+          "name": "security",
+          "conclusion": "SUCCESS",
+          "output": "Tracked-file scan and naming passed"
+        }
+      ],
+      "pendingJob": {
+        "jobId": 120376130403,
+        "name": "flutter",
+        "observedStep": "Check compiled browser requests for local fonts and CanvasKit",
+        "conclusion": "UNVERIFIED_PENDING"
+      }
+    }
+  ],
+  "safety": {
+    "fixturesOnly": true,
+    "privateArtifactsUploaded": false,
+    "changedProductGradleBackendOrDeliveredBaseline": false,
+    "actualOwnerKeyGeneratedReadExportedOrConfigured": false,
+    "ownerPhoneOrRealChildDataAccessed": false,
+    "mergeDeployDnsOrPersonalApkDelivery": false,
+    "note": "New QA workflow uploads no artifacts. Generic inherited CI may produce existing debug test artifacts; no safe personal update is implied."
+  },
+  "rulings": [
+    {
+      "decision": "Read-only signing inspection preparation only, no key-generation/transfer feature",
+      "reason": "Smallest authorized dependency; actual owner actions remain gated",
+      "costIfWrong": "Usable transfer remains deferred"
+    },
+    {
+      "decision": "Empty-input source17 helper probe rather than javac executable or version alone",
+      "reason": "Observed stripped system JDK has compiler module but cannot launch source17",
+      "costIfWrong": "Valid unusual JDK could be refused; no key is read during probe"
+    },
+    {
+      "decision": "Inherited POSIX host82 Ubuntu-only; new signing suites on both CI platforms",
+      "reason": "Existing host tests use sh/FIFO",
+      "costIfWrong": "Legacy host behavior on Windows remains unverified"
+    }
+  ],
+  "unverified": [
+    "Actual owner signing key availability, identity and custody; no key-generation/read action authorized/executed",
+    "Physical phone, Android same-install upgrade and actual child data preservation",
+    "Real encrypted transfer/USB/local-machine acceptance and source notification deduplication",
+    "Interactive Windows password masking, ACLs and owner backup recovery; CI is headless synthetic only",
+    "Full-history secret audit (only tracked-file/high-confidence scan run)",
+    "Memory zeroization, OS crash dumps, hostile administrator/JDK/filesystem and parent-directory symlink confinement",
+    "Final docs-only head full rerun (test results are tied to testedFunctionalCommit)"
+  ],
+  "postDocumentationChecks": [
+    {
+      "command": "python3 scripts/check-tracked-secrets.py",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "output": "Tracked-file credential/artifact scan passed; this is not a complete secret audit."
+    },
+    {
+      "command": "python3 scripts/audit-naming.py --check",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "output": "Naming audit passed: 586 retained text occurrences classified; binary fonts/icons excluded."
+    },
+    {
+      "command": "git diff --cached --check",
+      "status": "VERIFIED",
+      "exitCode": 0,
+      "output": ""
+    },
+    {
+      "status": "VERIFIED",
+      "output": "3 local design/plan/guide links exist; evidence JSON parsed"
+    }
+  ]
+}

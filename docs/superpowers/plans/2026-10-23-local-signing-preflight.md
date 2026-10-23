@@ -82,7 +82,9 @@ PR45; no merge/release/deploy. Stop after handover.
 - CI initial `39941563602`: signing35 PASS on Ubuntu and Windows (Windows one
   POSIX skip); Ubuntu inherited guard import failed missing cryptography. Added
   existing pinned requirement; `39941815472` then both jobs SUCCESS on `9df0c92`.
-  Final CN-correction CI pending. Generic CI initial run superseded/cancelled by
+  Final CN-correction `39942133341` SUCCESS on `62741da`: Ubuntu signing36+host82,
+  Windows36 including1POSIXskip; exact outputs read via official job-log connector.
+  Local final91/40.187s OK. Generic CI initial run superseded/cancelled by
   normal branch concurrency; not treated as test success.
 - No owner key/device/data inspection, signing/configuration, personal APK delivery,
   merge/deploy/DNS performed. Generic CI may build existing debug test artifacts;
