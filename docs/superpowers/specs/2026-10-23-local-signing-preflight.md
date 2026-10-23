@@ -14,7 +14,8 @@ key locally. Parsing verbose keytool output could expose certificate identity.
 Use Python for explicit CLI/guards and a small local JDK17+ helper for typed
 KeyStore inspection instead. No network, device or signing/build commands.
 
-Default `check` reads only the public baseline and checks Java availability.
+Default `check` reads only the public baseline and checks Java availability,
+including compiling the fixed helper with empty input (no key inspection).
 `inspect` requires an explicit file, alias, acknowledgement and a non-echoing
 interactive terminal. Passwords have no argument/environment interface. The
 tool never searches for keys, copies/exports/generates one, prints identities,

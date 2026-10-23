@@ -1,0 +1,42 @@
+name: LifeGuide local signing preflight QA
+on:
+  pull_request:
+    paths:
+      - scripts/signing_preflight.py
+      - scripts/java/LifeGuideKeyInspector.java
+      - scripts/tests/test_signing*.py
+      - scripts/tests/signing_test_support.py
+      - scripts/personal_recovery/files.py
+      - apps/lifemate/tool/check_standalone_update.py
+      - docs/operations/personal-delivered-baseline.json
+      - .github/workflows/signing-preflight-qa.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-keys-only:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Check public prerequisites without opening any key
+        run: python scripts/signing_preflight.py check
+      - name: Exercise ephemeral fictional keys and fail-closed guards
+        run: python -m unittest discover -s scripts/tests -p 'test_signing*.py' -v
+      - name: Existing APK and Android host guards
+        run: python -m unittest discover -s apps/lifemate/tool -p '*_test.py' -v
+      - name: Tracked-file checks (not a full-history secret scan)
+        run: |
+          python scripts/check-tracked-secrets.py
+          python scripts/audit-naming.py --check
+      # No owner signing environment, secrets, APK, device or artifact upload.
