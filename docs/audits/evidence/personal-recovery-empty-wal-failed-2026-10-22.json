@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "status": "FAILED_ACTUAL_ANDROID_ACCEPTANCE",
+  "sourceCommit": "00bb8eec1898757ad9c197eb9327135fb1e69dfd",
+  "runId": 39847051850,
+  "artifactId": 12455653998,
+  "artifactZipSha256": "c1ba477e1873b7b5741af04b9a905e9c40bf779881660ba5a588c12916c0f816",
+  "rootVerifiedArtifactDigest": true,
+  "receipt": {
+    "apks": {
+      "original": {
+        "package": "ir.lifeguide.app.device",
+        "sha256": "c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e",
+        "versionCode": 9,
+        "versionName": "0.7.2-personal.1"
+      },
+      "qaNeverDistribute": {
+        "package": "ir.lifeguide.app.personal",
+        "sha256": "70c8f8a0d0b7dccfb4df9c086a34ac0bfa0eefbc037e55b6c2b73fd0942f4943",
+        "versionCode": 10,
+        "versionName": "0.7.2-recovery-qa.10"
+      },
+      "upgradeNeverDistribute": {
+        "package": "ir.lifeguide.app.personal",
+        "sha256": "c9efc6ee9c452c67fb8a4293f37dd7f8ce913ab76f4fbbd04362eb10b8568022",
+        "versionCode": 11,
+        "versionName": "0.7.2-recovery-qa.11"
+      }
+    },
+    "canonicalSnapshotSha256": "f64bf8f30e41dc4eddca18629f2ca950839fdb11f489c85889a40500739c06f9",
+    "certificatesSha256": [
+      "4ef990d647fc98ac41113d5dbe7ee476ba80bf95b71b5f219b7863fa95263391",
+      "736801f88a2a64a7929a5d32c4589a28de1aeea3bac7c13daced4cf65ee6f9ab",
+      "736801f88a2a64a7929a5d32c4589a28de1aeea3bac7c13daced4cf65ee6f9ab"
+    ],
+    "checks": {
+      "allApksAndFreshEmulatorGatedBeforeInstall": "PASS"
+    },
+    "coldCaptureStates": {
+      "ir.lifeguide.app.device": "CLEAN"
+    },
+    "counts": {
+      "local_occurrences": 4,
+      "local_plans": 4,
+      "local_profiles": 1,
+      "local_weekly_slots": 3
+    },
+    "currentPhase": "original_seed_and_ordinary_ui",
+    "errorCode": "database_sidecar_present",
+    "fictionalScreenshotsSha256": {
+      "personal-recovery-android.png": "f28d962b8e665f82867ee227c7e2b89db5daf939efb63a8c2c824b9a7f53e5d3"
+    },
+    "lastUiObservation": {
+      "exactContentDescriptionMatch": true,
+      "exactTextMatch": false,
+      "nodeCount": 30,
+      "ownedPackageNodeCount": 30,
+      "package": "ir.lifeguide.app.device"
+    },
+    "limitations": {
+      "Doze": "UNVERIFIED",
+      "USB": "UNVERIFIED",
+      "Windows": "UNVERIFIED",
+      "distributionApk": "UNVERIFIED",
+      "originalNotificationsEnabled": "UNVERIFIED",
+      "ownerData": "UNVERIFIED",
+      "ownerSigningKey": "UNVERIFIED",
+      "physicalDevice": "UNVERIFIED",
+      "powerLossOrFullDisk": "UNVERIFIED",
+      "reboot": "UNVERIFIED",
+      "soundOrVibration": "UNVERIFIED"
+    },
+    "result": "FAIL",
+    "schemaVersion": 1,
+    "syntheticDataOnly": true
+  },
+  "diagnosis": "Empty-WAL relaxation did not resolve actual Android refusal; exact sidecar kinds/sizes unverified. Add bounded metadata-only diagnostic, retain fail-closed capture; do not guess or remove/checkpoint files."
+}

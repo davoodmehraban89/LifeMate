@@ -1,0 +1,121 @@
+name: LifeGuide personal recovery emulator QA
+on:
+  pull_request:
+    paths:
+      - .github/workflows/personal-recovery-android.yml
+      - apps/lifemate/tool/*personal_recovery*
+      - apps/lifemate/android/app/src/recoveryQa/**
+      - apps/lifemate/android/app/build.gradle.kts
+      - apps/lifemate/android/app/src/main/kotlin/ir/lifeguide/app/**
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: lifeguide-recovery-qa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  synthetic-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run: {working-directory: apps/lifemate}
+    env:
+      ORG_GRADLE_PROJECT_lifeguideDevicePlanner: 'true'
+      ORG_GRADLE_PROJECT_lifeguidePersonalRecoveryQa: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -r ../../requirements-personal-recovery.txt
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: subosito/flutter-action@v2
+        with: {flutter-version: '3.47.6', channel: stable, cache: true}
+      - run: flutter pub get
+      - name: Host safety and ordinary planner checks
+        run: |
+          dart format --output=none --set-exit-if-changed tool/personal_recovery_fixture.dart
+          flutter analyze
+          flutter test
+          python -m unittest discover -s tool -p '*_test.py' -v
+          cd ../..
+          python -m unittest discover -s scripts/tests -p 'test_recovery*.py' -v
+      - name: Retrieve exact original delivered APK, never a rebuilt substitute
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12292340083'
+          run-id: '39480587450'
+          github-token: ${{ github.token }}
+          repository: davoodmehraban89/LifeMate
+          path: apps/lifemate/build/original-delivered
+          merge-multiple: true
+      - name: Build two private QA versions with the same ephemeral test signer
+        run: |
+          for code in 10 11; do
+            flutter build apk --debug --target=tool/personal_recovery_fixture.dart --dart-define=LIFEGUIDE_STANDALONE=true --dart-define=LIFEGUIDE_PERSONAL_RECOVERY_QA=true --build-name="0.7.2-recovery-qa.$code" --build-number="$code"
+            cp build/app/outputs/flutter-apk/app-debug.apk "build/recovery-qa-$code.apk"
+            python tool/check_personal_recovery_apk.py "build/recovery-qa-$code.apk" --expected-code "$code"
+          done
+      - name: Actually reject unsafe QA build combinations
+        working-directory: apps/lifemate/android
+        shell: bash
+        run: |
+          set -euo pipefail
+          defines=$(python -c 'import base64; print(",".join(base64.b64encode(x.encode()).decode() for x in ("LIFEGUIDE_STANDALONE=true", "LIFEGUIDE_PERSONAL_RECOVERY_QA=true")))')
+          expect_refusal() {
+            reason="$1"
+            shift
+            log_file=$(mktemp)
+            if "$@" > "$log_file" 2>&1; then
+              rm -f "$log_file"
+              echo 'FAIL: forbidden build unexpectedly succeeded'
+              exit 1
+            fi
+            if ! grep -Fq "$reason" "$log_file"; then
+              tail -n 40 "$log_file"
+              rm -f "$log_file"
+              echo 'FAIL: build failed without the expected safety refusal'
+              exit 1
+            fi
+            rm -f "$log_file"
+            echo "PASS: $reason"
+          }
+          expect_refusal 'requires the isolated device planner' ./gradlew :app:assembleDebug -PlifeguideDevicePlanner=false --console=plain
+          expect_refusal 'requires its matching defines and entry point' ./gradlew :app:assembleDebug --console=plain
+          expect_refusal 'cannot be packaged as a user application' ./gradlew :app:assembleDebug -PlifeguidePersonalRecoveryQa=false -Ptarget=tool/personal_recovery_fixture.dart -Pdart-defines="$defines" --console=plain
+          expect_refusal 'debug-only initial edition' ./gradlew :app:assembleRelease -Ptarget=tool/personal_recovery_fixture.dart -Pdart-defines="$defines" --console=plain
+          for task in :app:installDebug :app:packageDebug :app:build; do
+            expect_refusal 'request assembleDebug explicitly' ./gradlew "$task" -Ptarget=tool/personal_recovery_fixture.dart -Pdart-defines="$defines" --console=plain
+          done
+          expect_refusal 'versions 10 and 11' bash -c 'cd ..; flutter build apk --debug --target=tool/personal_recovery_fixture.dart --dart-define=LIFEGUIDE_STANDALONE=true --dart-define=LIFEGUIDE_PERSONAL_RECOVERY_QA=true --build-number=12 --build-name=0.7.2-recovery-qa.12'
+      - name: Enable KVM for a newly created synthetic SDK emulator
+        run: |
+          test -c /dev/kvm
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Exact old install, side-by-side recovery and new-app upgrade
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-port: 5554
+          avd-name: lifeguide-recovery-synthetic
+          force-avd-creation: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -wipe-data -noaudio -no-boot-anim -camera-back none
+          working-directory: apps/lifemate
+          script: python tool/test_personal_recovery_android.py --serial emulator-5554 --original-apk build/original-delivered/LifeGuide.apk --qa-apk build/recovery-qa-10.apk --upgrade-apk build/recovery-qa-11.apk --acknowledge-synthetic-emulator-only --output exports/personal-recovery-android.json
+      - name: Preserve only sanitized receipts and fictional screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LifeGuide-synthetic-Android-recovery-verification
+          path: |
+            apps/lifemate/exports/personal-recovery-android.json
+            apps/lifemate/exports/*.png
+          if-no-files-found: warn
+          retention-days: 14
+      # No APK, SQLite, encrypted archive, private key or owner data is uploaded.

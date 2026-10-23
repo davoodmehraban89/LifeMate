@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "status": "FAILED_ACTUAL_ANDROID_ACCEPTANCE",
+  "sourceCommit": "7eb413d92ec6b83c02326dd28b4e2446c1d6c321",
+  "runId": 39845355974,
+  "artifactId": 12455128173,
+  "artifactZipSha256": "35fb3a29b5f72404b2dbde16a49db036d81591d7acb0d028f3f4b80c0b45644c",
+  "rootVerifiedArtifactDigest": true,
+  "rootViewedFictionalOriginalScreenshot": true,
+  "receipt": {
+    "apks": {
+      "original": {
+        "package": "ir.lifeguide.app.device",
+        "sha256": "c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e",
+        "versionCode": 9,
+        "versionName": "0.7.2-personal.1"
+      },
+      "qaNeverDistribute": {
+        "package": "ir.lifeguide.app.personal",
+        "sha256": "8db3d32f4070c60cd41588c5d54a96f2233654765da2606c707a31e26a0d9ebe",
+        "versionCode": 10,
+        "versionName": "0.7.2-recovery-qa.10"
+      },
+      "upgradeNeverDistribute": {
+        "package": "ir.lifeguide.app.personal",
+        "sha256": "c04721407c164c32c79353a5e5bf20547f8f8eec82b473d6e77f704f34716920",
+        "versionCode": 11,
+        "versionName": "0.7.2-recovery-qa.11"
+      }
+    },
+    "canonicalSnapshotSha256": "f64bf8f30e41dc4eddca18629f2ca950839fdb11f489c85889a40500739c06f9",
+    "certificatesSha256": [
+      "4ef990d647fc98ac41113d5dbe7ee476ba80bf95b71b5f219b7863fa95263391",
+      "901ddfcf2804a43d8efcd51aeabad7889c0db703d4c3f2cd69be127bdf8708b5",
+      "901ddfcf2804a43d8efcd51aeabad7889c0db703d4c3f2cd69be127bdf8708b5"
+    ],
+    "checks": {
+      "allApksAndFreshEmulatorGatedBeforeInstall": "PASS"
+    },
+    "counts": {
+      "local_occurrences": 4,
+      "local_plans": 4,
+      "local_profiles": 1,
+      "local_weekly_slots": 3
+    },
+    "currentPhase": "original_seed_and_ordinary_ui",
+    "errorCode": "database_sidecar_present",
+    "fictionalScreenshotsSha256": {
+      "personal-recovery-android.png": "c8633f0e08645142e9212571a108b515ebc093ec2b512e4c51ffe5c5ff047b2a"
+    },
+    "lastUiObservation": {
+      "exactContentDescriptionMatch": true,
+      "exactTextMatch": false,
+      "nodeCount": 30,
+      "ownedPackageNodeCount": 30,
+      "package": "ir.lifeguide.app.device"
+    },
+    "limitations": {
+      "Doze": "UNVERIFIED",
+      "USB": "UNVERIFIED",
+      "Windows": "UNVERIFIED",
+      "distributionApk": "UNVERIFIED",
+      "originalNotificationsEnabled": "UNVERIFIED",
+      "ownerData": "UNVERIFIED",
+      "ownerSigningKey": "UNVERIFIED",
+      "physicalDevice": "UNVERIFIED",
+      "powerLossOrFullDisk": "UNVERIFIED",
+      "reboot": "UNVERIFIED",
+      "soundOrVibration": "UNVERIFIED"
+    },
+    "result": "FAIL",
+    "schemaVersion": 1,
+    "syntheticDataOnly": true
+  },
+  "diagnosis": {
+    "uiHypothesis": "VERIFIED: exact owned content-desc true, text false; original fictional greeting visible in actual PNG",
+    "sidecarCause": "Android sidecar presence observed; exact sizes UNVERIFIED in this run",
+    "localReproduction": "real Python SQLite WAL reader followed by process exit leaves zero-byte WAL plus32768byte SHM; private main copy preserves all logical data",
+    "fixScope": "accept only cold stable zero-byte WAL/cache shape; nonempty WAL/orphan SHM/journal still refused; no source deletion or checkpoint"
+  }
+}

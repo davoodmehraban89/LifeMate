@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "status": "FAILED_ACTUAL_ANDROID_ACCEPTANCE",
+  "runId": 39843072795,
+  "sourceCommit": "c5b548bfd534a41aadf147e0c26e3009147cdb20",
+  "artifactId": 12454632195,
+  "artifactZipSha256": "8bbd52ac7f77f2772f253ff867bc5059c507e890f5c4d75cf8482cf42e14c501",
+  "rootVerifiedArtifactDigest": true,
+  "receipt": {
+    "apks": {
+      "original": {
+        "package": "ir.lifeguide.app.device",
+        "sha256": "c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e",
+        "versionCode": 9,
+        "versionName": "0.7.2-personal.1"
+      },
+      "qaNeverDistribute": {
+        "package": "ir.lifeguide.app.personal",
+        "sha256": "4a8bcdcfd5c0cef91160088f437a6def7bef8a8ec885d59eae925fa3af920080",
+        "versionCode": 10,
+        "versionName": "0.7.2-recovery-qa.10"
+      },
+      "upgradeNeverDistribute": {
+        "package": "ir.lifeguide.app.personal",
+        "sha256": "a34d44c770b434a5794af4a8ea8e86deac8e870f14469c2b3b077b920c4f7d76",
+        "versionCode": 11,
+        "versionName": "0.7.2-recovery-qa.11"
+      }
+    },
+    "canonicalSnapshotSha256": "f64bf8f30e41dc4eddca18629f2ca950839fdb11f489c85889a40500739c06f9",
+    "certificatesSha256": [
+      "4ef990d647fc98ac41113d5dbe7ee476ba80bf95b71b5f219b7863fa95263391",
+      "b07d4520f095c209d76c45ef7e9393c6439add86fb007ebdaee744fc6e3a0dce",
+      "b07d4520f095c209d76c45ef7e9393c6439add86fb007ebdaee744fc6e3a0dce"
+    ],
+    "checks": {
+      "allApksAndFreshEmulatorGatedBeforeInstall": "PASS"
+    },
+    "counts": {
+      "local_occurrences": 4,
+      "local_plans": 4,
+      "local_profiles": 1,
+      "local_weekly_slots": 3
+    },
+    "currentPhase": "original_seed_and_ordinary_ui",
+    "errorCode": "real_profile_ui_not_visible",
+    "limitations": {
+      "Doze": "UNVERIFIED",
+      "USB": "UNVERIFIED",
+      "Windows": "UNVERIFIED",
+      "distributionApk": "UNVERIFIED",
+      "originalNotificationsEnabled": "UNVERIFIED",
+      "ownerData": "UNVERIFIED",
+      "ownerSigningKey": "UNVERIFIED",
+      "physicalDevice": "UNVERIFIED",
+      "powerLossOrFullDisk": "UNVERIFIED",
+      "reboot": "UNVERIFIED",
+      "soundOrVibration": "UNVERIFIED"
+    },
+    "result": "FAIL",
+    "schemaVersion": 1,
+    "syntheticDataOnly": true
+  },
+  "diagnosis": {
+    "status": "HYPOTHESIS_PENDING_ANDROID_RERUN",
+    "sdkSource": "Flutter engine BaseRoleConfigurator.configureLabelAndValue (local SDK source)",
+    "observation": "Non-text-field label is setContentDescription; previous predicate checked only text. Ordinary original greeting template independently checked against delivered source."
+  }
+}

@@ -1,0 +1,414 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "bdc97c8d95992385e91b40853d1c7a6c40c4c494",
+  "scope": "B2 synthetic fresh-API35 emulator acceptance only; no owner data/device/key/transfer/distribution",
+  "localPythonVerification": {
+    "independentReviewedHarnessCommit": "89a81432ebaa95f1d118595f87b90ef287f33693",
+    "harnessUnchangedInBdc97c8": true,
+    "command": "python3 /tmp/lifeguide-cold-independent-review.py",
+    "rootAlsoRan": true,
+    "exitCode": 0,
+    "observations": {
+      "sourceCommit": "89a81432ebaa95f1d118595f87b90ef287f33693",
+      "matrix": {
+        "cases": 343,
+        "acceptedCombinations": [
+          {
+            "walShmJournal": [
+              "absent",
+              "absent",
+              "absent"
+            ],
+            "result": "CLEAN"
+          },
+          {
+            "walShmJournal": [
+              "absent",
+              "absent",
+              "empty"
+            ],
+            "result": "EMPTY_JOURNAL"
+          },
+          {
+            "walShmJournal": [
+              "empty",
+              "absent",
+              "absent"
+            ],
+            "result": "EMPTY_WAL"
+          },
+          {
+            "walShmJournal": [
+              "empty",
+              "empty",
+              "absent"
+            ],
+            "result": "EMPTY_WAL_SHM"
+          },
+          {
+            "walShmJournal": [
+              "empty",
+              "data",
+              "absent"
+            ],
+            "result": "EMPTY_WAL_SHM"
+          }
+        ],
+        "unexpectedResults": 0
+      },
+      "captureChangeChecks": {
+        "emptyJournalToOtherAcceptedShapes": 3,
+        "processRestart": "REFUSED"
+      },
+      "checks": [
+        {
+          "label": "focused",
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "apps/lifemate/tool",
+            "-p",
+            "*personal_recovery*_test.py",
+            "-v"
+          ],
+          "exitCode": 0,
+          "log": "/tmp/lifeguide-cold-review-focused.log"
+        },
+        {
+          "label": "host",
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "apps/lifemate/tool",
+            "-p",
+            "*_test.py",
+            "-v"
+          ],
+          "exitCode": 0,
+          "log": "/tmp/lifeguide-cold-review-host.log"
+        },
+        {
+          "label": "b1",
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "scripts/tests",
+            "-p",
+            "test_recovery*.py",
+            "-v"
+          ],
+          "exitCode": 0,
+          "log": "/tmp/lifeguide-cold-review-b1.log"
+        },
+        {
+          "label": "whitespace",
+          "argv": [
+            "git",
+            "diff",
+            "--check",
+            "c5942f4..HEAD"
+          ],
+          "exitCode": 0,
+          "log": "/tmp/lifeguide-cold-review-whitespace.log"
+        }
+      ],
+      "result": "PASS"
+    },
+    "probeScript": "#!/usr/bin/env python3\n\"\"\"Read-only source review; synthetic temporary shell files only; no adb/CI/network.\"\"\"\nimport itertools\nimport json\nimport os\nfrom pathlib import Path\nimport subprocess\nimport sys\nimport tempfile\n\nREPO = Path('/tmp/lifeguide-recovery-current')\nEXPECTED_HEAD = '89a81432ebaa95f1d118595f87b90ef287f33693'\n\ndef head():\n    return subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=REPO,\n                          capture_output=True, text=True, check=True).stdout.strip()\n\nassert head() == EXPECTED_HEAD\nsys.path.insert(0, str(REPO / 'apps/lifemate/tool'))\nimport test_personal_recovery_android as subject\nfrom test_personal_recovery_android_test import RecoveryBoundaryTest\n\nkinds = ('absent', 'empty', 'data', 'directory', 'fifo', 'symlink', 'dangling')\naccepted = []\nwith tempfile.TemporaryDirectory(prefix='independent-cold-shell-') as root:\n    base = Path(root)\n    db = base / subject.DATABASE\n    db.parent.mkdir()\n    target = base / 'regular-target'\n    target.write_bytes(b'')\n    class Shell:\n        def shell(self, *parts):\n            return subprocess.run(['sh', '-c', parts[-1]], cwd=root,\n                capture_output=True, text=True, check=True, timeout=2).stdout\n    harness = subject.Harness.__new__(subject.Harness)\n    harness.process_state = lambda package: 'ABSENT'\n    harness.adb = Shell()\n    harness._diagnose_cold_files = lambda package: None\n    def create(path, kind):\n        if kind == 'empty': path.write_bytes(b'')\n        elif kind == 'data': path.write_bytes(b'x')\n        elif kind == 'directory': path.mkdir()\n        elif kind == 'fifo': os.mkfifo(path)\n        elif kind == 'symlink': path.symlink_to(target)\n        elif kind == 'dangling': path.symlink_to(base / 'missing-target')\n    paths = [Path(str(db) + suffix) for suffix in ('-wal', '-shm', '-journal')]\n    for kinds3 in itertools.product(kinds, repeat=3):\n        for path, kind in zip(paths, kinds3): create(path, kind)\n        valid = (kinds3 == ('absent', 'absent', 'absent') or\n                 kinds3 == ('absent', 'absent', 'empty') or\n                 (kinds3[0] == 'empty' and kinds3[1] in ('absent', 'empty', 'data')\n                  and kinds3[2] == 'absent'))\n        try:\n            result = harness._cold(subject.ORIGINAL)\n            accepted.append({'walShmJournal': kinds3, 'result': result})\n            assert valid, (kinds3, result)\n        except subject.AcceptanceError as error:\n            assert str(error) == 'database_sidecar_present'\n            assert not valid, kinds3\n        for path in paths:\n            if path.is_dir() and not path.is_symlink(): path.rmdir()\n            elif path.exists() or path.is_symlink(): path.unlink()\n\ncase = RecoveryBoundaryTest()\ncase.setUp()\ntry:\n    harness = case.make()\n    harness.preflight()\n    harness.install(subject.ORIGINAL)\n    raw = subject.create_sample_database()\n    for state in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM'):\n        case.adb.process, case.adb.sidecars = 'ABSENT', 'EMPTY_JOURNAL'\n        def read(command, data=None):\n            case.adb.sidecars = state\n            return raw\n        harness.binary = read\n        try: harness.capture(subject.ORIGINAL)\n        except subject.AcceptanceError as error:\n            assert str(error) == 'database_cache_shape_changed'\n        else: raise AssertionError('journal shape change accepted')\n    case.adb.sidecars = 'EMPTY_JOURNAL'\n    def restart(command, data=None):\n        case.adb.process = 'PRESENT'\n        return raw\n    harness.binary = restart\n    try: harness.capture(subject.ORIGINAL)\n    except subject.AcceptanceError as error:\n        assert str(error) == 'database_process_must_be_absent'\n    else: raise AssertionError('process restart accepted')\nfinally:\n    case.doCleanups()\n\ncommands = [\n    ('focused', ['python3', '-m', 'unittest', 'discover', '-s', 'apps/lifemate/tool', '-p', '*personal_recovery*_test.py', '-v']),\n    ('host', ['python3', '-m', 'unittest', 'discover', '-s', 'apps/lifemate/tool', '-p', '*_test.py', '-v']),\n    ('b1', ['python3', '-m', 'unittest', 'discover', '-s', 'scripts/tests', '-p', 'test_recovery*.py', '-v']),\n    ('whitespace', ['git', 'diff', '--check', 'c5942f4..HEAD']),\n]\nchecks = []\nfor label, command in commands:\n    result = subprocess.run(command, cwd=REPO, capture_output=True, text=True)\n    log = Path('/tmp/lifeguide-cold-review-' + label + '.log')\n    log.write_text(result.stdout + result.stderr)\n    checks.append({'label': label, 'argv': command, 'exitCode': result.returncode, 'log': str(log)})\n    assert result.returncode == 0, (label, str(log))\nassert head() == EXPECTED_HEAD\nprint(json.dumps({'sourceCommit': EXPECTED_HEAD, 'matrix': {'cases': len(kinds) ** 3,\n    'acceptedCombinations': accepted, 'unexpectedResults': 0},\n    'captureChangeChecks': {'emptyJournalToOtherAcceptedShapes': 3, 'processRestart': 'REFUSED'},\n    'checks': checks, 'result': 'PASS'}, indent=2))\n",
+    "outputs": {
+      "host": [
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 82 tests in 0.205s",
+        "",
+        "OK"
+      ],
+      "b1": [
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 55 tests in 3.546s",
+        "",
+        "OK"
+      ]
+    }
+  },
+  "localFlutterVerification": {
+    "testedFile": "apps/lifemate/test/standalone_ui_test.dart",
+    "fileSha256": "7d551e2d80c42ca4f13dd4f43626998c54b14df6f50fc0ad7bdea1711dc8d5d7",
+    "evidenceFile": "personal-recovery-picker-tests-failed-2026-10-23.json",
+    "fullSuiteOutput": "01:28 +332: All tests passed!",
+    "rootFocusedOutput": "00:04 +2: All tests passed!"
+  },
+  "nativeRunId": 39914081997,
+  "androidAcceptance": "VERIFIED_SYNTHETIC_API35_ONLY",
+  "limitations": {
+    "physicalDevice": "UNVERIFIED",
+    "ownerDataOrTransfer": "UNVERIFIED",
+    "ownerSigningKey": "UNVERIFIED",
+    "WindowsUsbAcl": "UNVERIFIED",
+    "sourceNotificationsEnabledAndDedup": "UNVERIFIED",
+    "futureActivePlansTransfer": "UNVERIFIED",
+    "soundDozeReboot": "UNVERIFIED",
+    "powerLossRealFullDisk": "UNVERIFIED",
+    "productionUpgradeContinuity": "UNVERIFIED",
+    "publicDistribution": "UNVERIFIED",
+    "nativeTaskListNavigationAfterRestore": "UNVERIFIED: native UI checks exact fictional profile; all planner rows checked via independent SQL, not every row through UI navigation"
+  },
+  "unsupportedInput": "Nonempty WAL or journal and abnormal sidecars refused; no source deletion/checkpoint.",
+  "generalCi": {
+    "runId": 39914082002,
+    "sourceCommit": "bdc97c8d95992385e91b40853d1c7a6c40c4c494",
+    "status": "completed",
+    "conclusion": "success",
+    "rootReadSelectedActualLog": "backend\tVerify reachability smoke rejects untrusted TLS\t2026-10-23T06:52:04.4170035Z # tests 5\nbackend\tVerify reachability smoke rejects untrusted TLS\t2026-10-23T06:52:04.4170390Z # pass 5\nbackend\tRun npm test && npm run check && npm audit --audit-level=high\t2026-10-23T06:52:45.7386354Z # tests 308\nbackend\tRun npm test && npm run check && npm audit --audit-level=high\t2026-10-23T06:52:45.7386560Z # pass 308\nbackend\tVerify isolated database roles and runtime family scenario\t2026-10-23T06:52:55.8119607Z # tests 41\nbackend\tVerify isolated database roles and runtime family scenario\t2026-10-23T06:52:55.8119949Z # pass 41\nbackend\tVerify isolated database roles and runtime family scenario\t2026-10-23T06:53:16.7419849Z # tests 96\nbackend\tVerify isolated database roles and runtime family scenario\t2026-10-23T06:53:16.7420111Z # pass 96\nflutter\tRun dart format --output=none --set-exit-if-changed lib test\t2026-10-23T06:52:01.1827624Z Formatted 107 files (0 changed) in 0.52 seconds.\nflutter\tRun flutter analyze\t2026-10-23T06:52:11.7541566Z No issues found! (ran in 9.8s)\nflutter\tRun flutter test\t2026-10-23T06:53:07.4437559Z \ud83c\udf89 332 tests passed.\nflutter\tRun node --test tool/test_offline_worker.mjs\t2026-10-23T06:53:07.7345483Z # tests 4\nflutter\tRun node --test tool/test_offline_worker.mjs\t2026-10-23T06:53:07.7346269Z # pass 4\nflutter\tRun flutter build web --release --no-web-resources-cdn --pwa-strategy=none\t2026-10-23T06:53:42.7624551Z \u2713 Built build/web\nflutter\tCheck exclusive web instance before session and cache access\t2026-10-23T06:54:43.1971851Z 00:00 +3: All tests passed!\nflutter\tBuild test APK (debug certificate; not a release)\t2026-10-23T06:58:44.1265923Z \u2713 Built build/app/outputs/flutter-apk/app-debug.apk\n"
+  },
+  "nativeRun": {
+    "id": 39914081997,
+    "headSha": "bdc97c8d95992385e91b40853d1c7a6c40c4c494",
+    "conclusion": "success",
+    "artifactId": 12484965895,
+    "artifactZipBytes": 248034,
+    "artifactZipSha256": "83d6f22994481b51bceb7d32ac77b439a4c038295cb626693cd59b412fc7f030",
+    "officialDownloadDigestVerifiedByRoot": true,
+    "rootViewedBothActualFictionalPngs": true,
+    "receipt": {
+      "apks": {
+        "original": {
+          "package": "ir.lifeguide.app.device",
+          "sha256": "c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e",
+          "versionCode": 9,
+          "versionName": "0.7.2-personal.1"
+        },
+        "qaNeverDistribute": {
+          "package": "ir.lifeguide.app.personal",
+          "sha256": "5789cdb34224df36d7783956e06c0ed7b24b651d3f750ab8ee524bb874a33028",
+          "versionCode": 10,
+          "versionName": "0.7.2-recovery-qa.10"
+        },
+        "upgradeNeverDistribute": {
+          "package": "ir.lifeguide.app.personal",
+          "sha256": "3a9553855258b9941693b98c584d6a8e65c84c8f84a37dd665d4eaa86427e8d6",
+          "versionCode": 11,
+          "versionName": "0.7.2-recovery-qa.11"
+        }
+      },
+      "canonicalSnapshotSha256": "f64bf8f30e41dc4eddca18629f2ca950839fdb11f489c85889a40500739c06f9",
+      "certificatesSha256": [
+        "4ef990d647fc98ac41113d5dbe7ee476ba80bf95b71b5f219b7863fa95263391",
+        "f2d26b47f2e0b113594977598f1aec2200f53a190453a4e13fa7f2d1d1dc0575",
+        "f2d26b47f2e0b113594977598f1aec2200f53a190453a4e13fa7f2d1d1dc0575"
+      ],
+      "checks": {
+        "allApksAndFreshEmulatorGatedBeforeInstall": "PASS",
+        "both_apps_after_first_close": "PASS",
+        "both_apps_after_qa_upgrade": "PASS",
+        "both_apps_after_reopen": "PASS",
+        "both_apps_after_upgrade_reopen": "PASS",
+        "hostEncryptedFullFieldRoundTripSourceUnchanged": "PASS",
+        "originalSourceBytesUnchangedAcrossRestoreAndUpgrade": "PASS",
+        "qaNotificationsDefaultOffNoConsentTransferred": "PASS"
+      },
+      "coldCaptureStates": {
+        "ir.lifeguide.app.device": "EMPTY_JOURNAL",
+        "ir.lifeguide.app.personal": "EMPTY_JOURNAL"
+      },
+      "counts": {
+        "local_occurrences": 4,
+        "local_plans": 4,
+        "local_profiles": 1,
+        "local_weekly_slots": 3
+      },
+      "currentPhase": "complete",
+      "fictionalScreenshotsSha256": {
+        "personal-recovery-android-qa-restored.png": "554927813c1cb4319fada63958c285fd76c7f2219e94a1236011c43104c345a9",
+        "personal-recovery-android.png": "b8e5cd83e62e5264a1de94b4eafe8c125dfc237c7a0fd3e1bad04dd30ae95e03"
+      },
+      "lastUiObservation": {
+        "exactContentDescriptionMatch": true,
+        "exactTextMatch": false,
+        "nodeCount": 30,
+        "ownedPackageNodeCount": 30,
+        "package": "ir.lifeguide.app.personal"
+      },
+      "limitations": {
+        "Doze": "UNVERIFIED",
+        "USB": "UNVERIFIED",
+        "Windows": "UNVERIFIED",
+        "distributionApk": "UNVERIFIED",
+        "originalNotificationsEnabled": "UNVERIFIED",
+        "ownerData": "UNVERIFIED",
+        "ownerSigningKey": "UNVERIFIED",
+        "physicalDevice": "UNVERIFIED",
+        "powerLossOrFullDisk": "UNVERIFIED",
+        "reboot": "UNVERIFIED",
+        "soundOrVibration": "UNVERIFIED"
+      },
+      "originalClosedDatabaseSha256": "3cb373fe11384f13e4980403c1c2364c9f3d4952a07bfc351b0d416cffd8e225",
+      "result": "PASS",
+      "schemaVersion": 1,
+      "syntheticDataOnly": true
+    }
+  },
+  "otherCurrentRuns": [
+    {
+      "id": 39914082002,
+      "name": "general CI",
+      "conclusion": "success"
+    },
+    {
+      "id": 39914082154,
+      "name": "native Android reminder acceptance",
+      "conclusion": "success"
+    },
+    {
+      "id": 39914077504,
+      "name": "B1 synthetic recovery",
+      "conclusion": "success"
+    },
+    {
+      "id": 39914082024,
+      "name": "personal APK delivery guard",
+      "conclusion": "failure/BLOCKED",
+      "guardReceipt": {
+        "dataPreservation": "UNVERIFIED",
+        "delivery": "BLOCKED",
+        "deliveryReasonCode": "default_database_upgrade_acceptance_missing",
+        "installedDeviceVerification": "UNVERIFIED",
+        "reasonCodes": [
+          "certificate_mismatch",
+          "version_code_not_incremented"
+        ],
+        "result": "BLOCKED"
+      },
+      "artifactId": 12484372938,
+      "artifactZipSha256": "40456445ef8d8866811e25c177b4afe45b33802b621103683628404a472af829",
+      "officialDownloadDigestVerifiedByRoot": true
+    }
+  ],
+  "nativeSelectedActualLog": [
+    "synthetic-emulator\tHost safety and ordinary planner checks\t2026-10-23T06:52:20.5261411Z Formatted 1 file (0 changed) in 0.00 seconds.",
+    "synthetic-emulator\tHost safety and ordinary planner checks\t2026-10-23T06:52:34.0118666Z No issues found! (ran in 12.4s)",
+    "synthetic-emulator\tHost safety and ordinary planner checks\t2026-10-23T06:53:44.0663218Z \ud83c\udf89 332 tests passed.",
+    "synthetic-emulator\tHost safety and ordinary planner checks\t2026-10-23T06:53:45.1676231Z Ran 82 tests in 0.274s",
+    "synthetic-emulator\tHost safety and ordinary planner checks\t2026-10-23T06:53:48.8310342Z Ran 55 tests in 3.543s",
+    "synthetic-emulator\tActually reject unsafe QA build combinations\t2026-10-23T06:58:49.1616111Z PASS: requires the isolated device planner",
+    "synthetic-emulator\tActually reject unsafe QA build combinations\t2026-10-23T06:58:50.3625403Z PASS: requires its matching defines and entry point",
+    "synthetic-emulator\tActually reject unsafe QA build combinations\t2026-10-23T06:58:51.5191178Z PASS: cannot be packaged as a user application",
+    "synthetic-emulator\tActually reject unsafe QA build combinations\t2026-10-23T06:58:52.6424136Z PASS: debug-only initial edition",
+    "synthetic-emulator\tActually reject unsafe QA build combinations\t2026-10-23T06:58:53.9365361Z PASS: request assembleDebug explicitly",
+    "synthetic-emulator\tActually reject unsafe QA build combinations\t2026-10-23T06:58:55.1388638Z PASS: request assembleDebug explicitly",
+    "synthetic-emulator\tActually reject unsafe QA build combinations\t2026-10-23T06:58:56.2586567Z PASS: request assembleDebug explicitly",
+    "synthetic-emulator\tActually reject unsafe QA build combinations\t2026-10-23T06:58:58.2045963Z PASS: versions 10 and 11",
+    "synthetic-emulator\tExact old install, side-by-side recovery and new-app upgrade\t2026-10-23T07:03:21.5906955Z {\"result\": \"PASS\", \"currentPhase\": \"complete\"}"
+  ],
+  "priorFailures": [
+    {
+      "run": 39733377664,
+      "kind": "analyzer relative lib import"
+    },
+    {
+      "run": 39733371818,
+      "kind": "analyzer relative lib import"
+    },
+    {
+      "run": 39733751581,
+      "kind": "blanket receiver check rejected existing system-protected AndroidX receiver"
+    },
+    {
+      "run": 39841416277,
+      "kind": "binary_adb_timeout"
+    },
+    {
+      "run": 39843072795,
+      "kind": "real_profile_ui_not_visible"
+    },
+    {
+      "run": 39845355974,
+      "kind": "database_sidecar_present"
+    },
+    {
+      "run": 39847051850,
+      "kind": "database_sidecar_present"
+    },
+    {
+      "run": 39848561580,
+      "kind": "database_sidecar_present; metadata established zero-byte TRUNCATE journal"
+    },
+    {
+      "run": 39912812283,
+      "kind": "two date-picker test target-finder failures before native execution"
+    },
+    {
+      "run": 39912812206,
+      "kind": "same two date-picker tests in general CI"
+    }
+  ],
+  "documentedRedGreen": {
+    "journalBeforeFix": {
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p 'test_personal_recovery_android_test.py'",
+      "output": "Ran18 tests in0.161s; FAILED(failures=2,errors=1)",
+      "causes": [
+        "empty journal refused",
+        "empty-journal status rejected by existing host fake",
+        "dangling journal was wrongly accepted"
+      ]
+    },
+    "journalAfterFix": {
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py'",
+      "output": "Ran82 tests in0.192s; OK"
+    },
+    "isolatedShmBeforeFix": {
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p 'test_personal_recovery_android_test.py'",
+      "output": "Ran18 tests in0.139s; FAILED(failures=2)",
+      "causes": [
+        "SHM directory accepted",
+        "SHM FIFO accepted"
+      ],
+      "note": "Earlier combined fixture run had cascade errors; fixture isolation was corrected and this independent RED reproduced both refusals."
+    },
+    "isolatedShmAfterFix": {
+      "command": "python3 -m unittest discover -s apps/lifemate/tool -p '*_test.py'",
+      "output": "Ran82 tests in0.181s; OK"
+    },
+    "flutterPicker": "personal-recovery-picker-tests-failed-2026-10-23.json"
+  },
+  "repositoryScreenshots": {
+    "personal-recovery-original-2026-10-23.png": "b8e5cd83e62e5264a1de94b4eafe8c125dfc237c7a0fd3e1bad04dd30ae95e03",
+    "personal-recovery-qa-restored-2026-10-23.png": "554927813c1cb4319fada63958c285fd76c7f2219e94a1236011c43104c345a9"
+  },
+  "documentationOnlyFinalCommit": {
+    "fullTestRerun": "UNVERIFIED_NOT_RUN",
+    "reason": "final commit contains only docs/JSON/fictional PNGs; tested functional code is exact sourceCommit above; no delivery gate/baseline bypass"
+  },
+  "boundedSecretPatternScan": {
+    "scope": "changed/untracked text files only, not complete history or all secret formats",
+    "textFileCount": 21,
+    "rules": [
+      "privateKey",
+      "githubClassicPat",
+      "githubFineGrainedPat"
+    ],
+    "findingCount": 0,
+    "fullHistoryScan": "UNVERIFIED_NOT_RUN_IN_B2"
+  },
+  "protectedFilesDiff": {
+    "command": "git diff 1b7e867ea498f6387622ef4c42f614a9237edf3b..HEAD -- .github/workflows/standalone-personal-apk.yml docs/operations/personal-delivered-baseline.json apps/lifemate/tool/check_standalone_update.py",
+    "output": "",
+    "exitCode": 0
+  },
+  "documentationValidation": {
+    "jsonParse": "PASS",
+    "relativeRunbookPlanAdrTargets": "PASS",
+    "gitDiffWhitespace": "PASS",
+    "hardApkUploadHold": "PRESENT_UNCHANGED"
+  }
+}

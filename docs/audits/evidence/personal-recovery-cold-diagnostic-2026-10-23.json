@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "status": "FAILED_ACTUAL_ANDROID_ACCEPTANCE",
+  "sourceCommit": "c5942f4d06f9df87ee5874553309b75aa658d27d",
+  "runId": 39848561580,
+  "artifactId": 12457246607,
+  "artifactZipSha256": "1851ec108b74ff4ff480ec83452729c73a0f26a9bc345f766608a9347c8866b7",
+  "rootVerifiedArtifactDigest": true,
+  "receipt": {
+    "apks": {
+      "original": {
+        "package": "ir.lifeguide.app.device",
+        "sha256": "c24ff6e75a987945399b0d96129f5d1a72525fa0270f31b0c481f9780f84db8e",
+        "versionCode": 9,
+        "versionName": "0.7.2-personal.1"
+      },
+      "qaNeverDistribute": {
+        "package": "ir.lifeguide.app.personal",
+        "sha256": "8fdb87aae0b36a28a08652ab718642f6c89858e8ec9154525f7541cf2f3a697b",
+        "versionCode": 10,
+        "versionName": "0.7.2-recovery-qa.10"
+      },
+      "upgradeNeverDistribute": {
+        "package": "ir.lifeguide.app.personal",
+        "sha256": "30c3842fca73de639c33921c04f862754c35c119d024dc4d13ecc840bdfc4fcd",
+        "versionCode": 11,
+        "versionName": "0.7.2-recovery-qa.11"
+      }
+    },
+    "canonicalSnapshotSha256": "f64bf8f30e41dc4eddca18629f2ca950839fdb11f489c85889a40500739c06f9",
+    "certificatesSha256": [
+      "4ef990d647fc98ac41113d5dbe7ee476ba80bf95b71b5f219b7863fa95263391",
+      "f559aa4d6af8596f837694840ccb27af73a899626efdde5e3a2b43bc791495a0",
+      "f559aa4d6af8596f837694840ccb27af73a899626efdde5e3a2b43bc791495a0"
+    ],
+    "checks": {
+      "allApksAndFreshEmulatorGatedBeforeInstall": "PASS"
+    },
+    "coldCaptureStates": {
+      "ir.lifeguide.app.device": "CLEAN"
+    },
+    "counts": {
+      "local_occurrences": 4,
+      "local_plans": 4,
+      "local_profiles": 1,
+      "local_weekly_slots": 3
+    },
+    "currentPhase": "original_seed_and_ordinary_ui",
+    "errorCode": "database_sidecar_present",
+    "fictionalScreenshotsSha256": {
+      "personal-recovery-android.png": "65117bbda7e93f3812824c4328a9f635b0e86ffdb25a711e4189a06c65944ba0"
+    },
+    "lastColdFileObservation": {
+      "journal": {
+        "bytes": 0,
+        "kind": "FILE"
+      },
+      "main": {
+        "bytes": 49152,
+        "kind": "FILE"
+      },
+      "shm": {
+        "kind": "ABSENT"
+      },
+      "wal": {
+        "kind": "ABSENT"
+      }
+    },
+    "lastUiObservation": {
+      "exactContentDescriptionMatch": true,
+      "exactTextMatch": false,
+      "nodeCount": 30,
+      "ownedPackageNodeCount": 30,
+      "package": "ir.lifeguide.app.device"
+    },
+    "limitations": {
+      "Doze": "UNVERIFIED",
+      "USB": "UNVERIFIED",
+      "Windows": "UNVERIFIED",
+      "distributionApk": "UNVERIFIED",
+      "originalNotificationsEnabled": "UNVERIFIED",
+      "ownerData": "UNVERIFIED",
+      "ownerSigningKey": "UNVERIFIED",
+      "physicalDevice": "UNVERIFIED",
+      "powerLossOrFullDisk": "UNVERIFIED",
+      "reboot": "UNVERIFIED",
+      "soundOrVibration": "UNVERIFIED"
+    },
+    "result": "FAIL",
+    "schemaVersion": 1,
+    "syntheticDataOnly": true
+  },
+  "diagnosis": {
+    "actualObservation": "PID absent; main49152bytes; WAL absent; SHM absent; regular journal0bytes",
+    "rootCause": "Test classifier rejected an inert zero-byte TRUNCATE journal, not an observed nonempty WAL",
+    "fixScope": "Only regular zero-byte journal with no WAL/SHM after process absence; compare shape before/after; never delete/checkpoint any source; nonempty journal/WAL still refused"
+  }
+}
