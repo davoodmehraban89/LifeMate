@@ -132,7 +132,7 @@ class RecoveryBoundaryTest(unittest.TestCase):
         h.install(subject.ORIGINAL)
         raw = subject.create_sample_database()
         h.binary = lambda command, data=None: raw
-        for shape in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM'):
+        for shape in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM', 'EMPTY_JOURNAL'):
             self.adb.sidecars = shape
             self.assertEqual(h.capture(subject.ORIGINAL), raw)
         self.adb.sidecars = 'EMPTY_WAL_SHM'
@@ -168,6 +168,90 @@ class RecoveryBoundaryTest(unittest.TestCase):
             h._cold(subject.ORIGINAL)
         self.assertEqual(h.receipt['lastColdFileObservation'], 'UNAVAILABLE')
         self.assertNotIn('untrusted', json.dumps(h.receipt))
+
+    def test_actual_committed_truncate_journal_is_safe_after_process_exit(self):
+        source = self.directory / subject.DATABASE
+        source.parent.mkdir()
+        fixture = subject.create_sample_database()
+        source.write_bytes(fixture)
+        script = ("import os,sqlite3,sys; d=sqlite3.connect(sys.argv[1]); "
+                  "d.execute('PRAGMA journal_mode=TRUNCATE'); "
+                  "d.execute('CREATE TABLE android_metadata (locale TEXT)'); "
+                  "d.execute(\"INSERT INTO android_metadata VALUES ('en_US')\"); "
+                  "d.commit(); os._exit(0)")
+        subprocess.run(['python3', '-c', script, str(source)], check=True)
+        journal = Path(str(source) + '-journal')
+        self.assertTrue(journal.is_file())
+        self.assertEqual(journal.stat().st_size, 0)
+        before = {p: p.read_bytes() for p in (source, journal)}
+        h = self.make()
+        h.preflight()
+        h.install(subject.ORIGINAL)
+        previous_shell = self.adb.shell
+        def shell(*parts, **kwargs):
+            if parts[0] == 'run-as':
+                return subprocess.run(['sh', '-c', parts[-1]], cwd=self.directory,
+                    capture_output=True, text=True, check=True, timeout=2).stdout
+            return previous_shell(*parts, **kwargs)
+        self.adb.shell = shell
+        h.binary = lambda command, data=None: source.read_bytes()
+        try:
+            captured = h.capture(subject.ORIGINAL)
+        except subject.AcceptanceError as error:
+            self.fail('Committed TRUNCATE journal is empty, but capture refused: ' + str(error))
+        self.assertEqual(h.receipt['coldCaptureStates'][subject.ORIGINAL], 'EMPTY_JOURNAL')
+        copy = self.directory / 'captured-main.sqlite'
+        copy.write_bytes(captured)
+        reference = self.directory / 'reference.sqlite'
+        reference.write_bytes(fixture)
+        actual = subject.normalized_snapshot(copy, self.directory / 'normalized.sqlite')
+        self.assertEqual(actual, subject.export_fixture(reference))
+        self.assertEqual(subject.independent_sql(reference),
+                         subject.independent_sql(self.directory / 'normalized.sqlite'))
+        self.assertEqual({p: p.read_bytes() for p in before}, before)
+
+    def test_actual_shell_rejects_unsafe_journal_shapes(self):
+        h = self.make()
+        h.preflight()
+        h.install(subject.ORIGINAL)
+        previous_shell = self.adb.shell
+        with tempfile.TemporaryDirectory() as root:
+            db = Path(root) / subject.DATABASE
+            db.parent.mkdir()
+            journal = Path(str(db) + '-journal')
+            wal = Path(str(db) + '-wal')
+            shm = Path(str(db) + '-shm')
+            def shell(*parts, **kwargs):
+                if parts[0] == 'run-as':
+                    return subprocess.run(['sh', '-c', parts[-1]], cwd=root,
+                        capture_output=True, text=True, check=True, timeout=2).stdout
+                return previous_shell(*parts, **kwargs)
+            self.adb.shell = shell
+            for kind in ('byte', 'directory', 'fifo', 'symlink', 'dangling', 'with_wal', 'with_shm'):
+                with self.subTest(kind=kind):
+                    if kind == 'byte':
+                        journal.write_bytes(b'x')
+                    elif kind == 'directory':
+                        journal.mkdir()
+                    elif kind == 'fifo':
+                        subject.os.mkfifo(journal)
+                    elif kind in ('symlink', 'dangling'):
+                        target = Path(root) / 'empty-target'
+                        if kind == 'symlink':
+                            target.write_bytes(b'')
+                        journal.symlink_to(target if kind == 'symlink' else Path(root) / 'missing')
+                    else:
+                        journal.write_bytes(b'')
+                        (wal if kind == 'with_wal' else shm).write_bytes(b'')
+                    with self.assertRaisesRegex(subject.AcceptanceError, 'database_sidecar_present'):
+                        h._cold(subject.ORIGINAL)
+                    if journal.is_dir():
+                        journal.rmdir()
+                    else:
+                        journal.unlink()
+                    for extra in (wal, shm):
+                        if extra.exists():
+                            extra.unlink()
 
     def test_actual_exited_sqlite_reader_leaves_empty_wal_cache_only(self):
         source = self.directory / 'real-closed-reader.sqlite'

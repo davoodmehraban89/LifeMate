@@ -251,15 +251,20 @@ class Harness:
         # A terminated read-only Android WAL connection can leave a zero-byte
         # WAL plus SHM cache. Only a strictly empty WAL has no frames to replay.
         wal, shm, journal = (DATABASE + suffix for suffix in ('-wal', '-shm', '-journal'))
-        query = (f'if [ -e {journal} ]; then printf SIDECAR; '
+        # Android TRUNCATE mode also retains a regular zero-byte journal after
+        # a committed transaction. It has no rollback record to recover.
+        query = (f'if [ -L {wal} ] || [ -L {shm} ] || [ -L {journal} ]; then printf SIDECAR; '
+            f'elif [ -e {journal} ]; then '
+            f'if [ -f {journal} ] && [ ! -s {journal} ] && [ ! -e {wal} ] && [ ! -e {shm} ]; '
+            'then printf EMPTY_JOURNAL; else printf SIDECAR; fi; '
             f'elif [ ! -e {wal} ] && [ ! -e {shm} ]; then printf CLEAN; '
             f'elif [ -f {wal} ] && [ ! -s {wal} ]; then '
             f'if [ -e {shm} ]; then printf EMPTY_WAL_SHM; else printf EMPTY_WAL; fi; '
             'else printf SIDECAR; fi')
         output = self.adb.shell('run-as', package, 'sh', '-c', query).strip()
-        if output not in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM'):
+        if output not in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM', 'EMPTY_JOURNAL'):
             self._diagnose_cold_files(package)
-        require(output in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM'), 'database_sidecar_present')
+        require(output in ('CLEAN', 'EMPTY_WAL', 'EMPTY_WAL_SHM', 'EMPTY_JOURNAL'), 'database_sidecar_present')
         return output
 
     def _diagnose_cold_files(self, package):
