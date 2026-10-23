@@ -20,10 +20,18 @@ The temporary execution environment was replaced before the previous uncommitted
 
 ## Ledger
 
-- [ ] Host safety and manifest RED/GREEN.
-- [ ] Opt-in QA build gates; default identities preserved.
-- [ ] Independent review; applicable tests/format/analyze run.
-- [ ] Actual fresh API35 CI; inspect outputs and screenshots before claims.
-- [ ] Record failures and precise remaining UNVERIFIED items; PR and stop at real-data boundary.
+- [x] Host safety and manifest RED/GREEN.
+- [x] Opt-in QA build gates; default identities preserved.
+- [x] Independent review; applicable tests/format/analyze run.
+- [x] Actual fresh API35 CI; inspect outputs and screenshots before claims.
+- [x] Record failures and precise remaining UNVERIFIED items; PR and stop at real-data boundary.
 
 Physical devices, Windows/USB/ACL, real data/keys, old-app notification ON/dedup, Doze/sound/reboot, permission consent UI and production readiness remain UNVERIFIED. Real owner transfer requires separately accepted tooling, local user choice and stable signing; this test harness is not that interface.
+
+## Recorded outcome — 2026-10-23
+
+Functional bdc97c8d95992385e91b40853d1c7a6c40c4c494: actual API35 run39914081997 PASS/complete; original UI, encrypted roundtrip, both default DBs close/reopen, QA same-test-key10→11 and second reopen all passed with full-field/independent SQL equality. Original DB hash unchanged, QA notifications OFF. Root officially downloaded artifact12484965895, verified ZIP/PNG hashes, inspected receipt and both real fictional screenshots. Host82/B1-55/Flutter332 and eight negative Gradle cases passed. GeneralCI39914082002 succeeded.
+
+Actual prior failures (including the two date-dependent picker test failures) are retained in evidence; no success inferred from a failed run. The later date-picker fix is test-only, with unchanged RED2 then GREEN2, full332 pass and deterministic duplicate-label coverage. Final docs-only commit is not a new code test run (UNVERIFIED).
+
+Personal delivery run39914082024 remains BLOCKED by original signer/version/default-DB upgrade guard; baseline and hard upload hold are unchanged. B2 does not prove old-install update or an owner signing key. [Evidence](../../audits/evidence/personal-recovery-android-2026-10-23.json), [runbook](../../operations/PERSONAL_RECOVERY_ANDROID_QA.md). Stop at this synthetic package boundary; no owner operation or new APK handoff.

@@ -1,5 +1,15 @@
 # LifeGuide / لایف‌گاید — وضعیت واقعی پروژه
 
+## B2 — بازیابی و ارتقای نصب آزمایشی در Android؛ ۲۰۲۶-۱۰-۲۳
+
+[PR45](https://github.com/davoodmehraban89/LifeMate/pull/45)، شاخهٔ `test/personal-recovery-acceptance` بر PR44؛ منبع عملکردی `bdc97c8d95992385e91b40853d1c7a6c40c4c494`. فقط fixture خیالی در DB پیش‌فرض، exact APK اولیه روی AVD تازه و QA کناری آزموده شدند. داده/گوشی/کلید واقعی مالک، مجوز خانوادگی، AI و زیرساخت زنده تغییر نکردند.
+
+**VERIFIED:** [Android API35 / 39914081997](https://github.com/davoodmehraban89/LifeMate/actions/runs/39914081997) PASS/complete؛ رمزگذاری/بازیابی، هر دو نصب پس از close/reopen، ارتقای فقط QA10→11 با یک کلید موقت و بازگشایی دوباره؛ تمام فیلدها/شناسه‌ها و SQL مستقل برای1پروفایل/4برنامه/3ساعت هفتگی/4نوبت برابرند. hash مبدأ ثابت، اعلان QA خاموش و رضایت منتقل‌نشده است. ZIP رسمی و hash هر دو PNG تطبیق داده و تصاویر واقعی دیده شدند. محلی/CI: Python82، B1-55، Flutter332، analyze پاک، هشت رد Gradle؛343 ترکیب shell با صفر نتیجهٔ غیرمنتظره. [CI عمومی39914082002](https://github.com/davoodmehraban89/LifeMate/actions/runs/39914082002) نیز موفق است. [دستور/خروجی و شکست‌ها](docs/audits/evidence/personal-recovery-android-2026-10-23.json)، [راهنما](docs/operations/PERSONAL_RECOVERY_ANDROID_QA.md).
+
+**محدودهٔ capture:** PID غایب و شکل ثابت پیش/پس از خواندن؛ هیچ sidecar، یا WAL صفر با SHM معمولی/غایب، یا journal صفر بدون WAL/SHM. WAL/journal داده‌دار، symlink و نوع غیرعادی رد می‌شوند؛ هیچ source حذف/checkpoint نمی‌شود. فرض اشتباه رد همهٔ journalها با metadata واقعی CI و بازتولید SQLite TRUNCATE اصلاح شد. دو تست تاریخ نیز به‌دلیل برچسب تکراری روز1 شکست خوردند؛ finder فقط در فایل تست اصلاح شد و RED/GREEN واقعی ثبت شد.
+
+**BLOCKED/UNVERIFIED:** تحویل APK شخصی39914082024 به‌درستی بسته ماند؛ certificate/code و پذیرش آپدیت همان نصب قبلی سازگار نیستند. B2 این نصب را آپدیت نمی‌کند و کلید پایدار مالک را اثبات نمی‌کند. گوشی/Windows/USB/ACL، داده/انتقال واقعی، برنامهٔ فعال آینده و اعلان روشن مبدأ/تکرار دو نصب، صدا/باتری/reboot و دوام قطع برق هنوز UNVERIFIED هستند. fixture در2024 پایان دارد و UI فقط پروفایل را می‌سنجد؛ همهٔ ردیف‌ها از SQL بررسی شدند. commit پایانی صرفاً مستندات/گواه است و تست کاملش دوباره اجرا نشد (UNVERIFIED). APK تازه برای مالک عرضه نشد؛ نصب فعلی حذف یا clear-data نشود. بستهٔ ساختگی اینجا متوقف می‌شود؛ merge/deploy/DNS/انتقال واقعی اجرا نشدند.
+
 ## بازیابی رمزدار ساختگی روی رایانه — ۲۰۲۶-۱۰-۲۱؛ آمادهٔ بررسی در PR44
 
 [PR44](https://github.com/davoodmehraban89/LifeMate/pull/44)، شاخهٔ `feat/personal-encrypted-recovery` بر PR43، منبع `29fa2c7247847c4eadb7792daaa91379dd0f2367`: ابزار QA با fixture واقعی SQLite1، آرشیو AES-256-GCM/Scrypt، اعتبارسنجی schema/هدر/رابطه و بازیابی بدون overwrite اضافه شد. source فقط خوانده می‌شود؛ DB بدون marker ساختگی پیش از بدنه رد می‌شود. این marker اثبات منشأ نیست. ابزار، ورودی backup مالک یا انتقال گوشی نیست و کلاینت/Backend/شناسه/امضای محصول را تغییر نمی‌دهد.
