@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "status": "FAILED_BEFORE_ANDROID",
+  "sourceCommit": "89a81432ebaa95f1d118595f87b90ef287f33693",
+  "runId": 39912812283,
+  "generalRunId": 39912812206,
+  "commands": [
+    {
+      "command": "gh run view 39912812283 --log-failed",
+      "exitCode": 0,
+      "selectedOutput": [
+        "StateError: Bad state: Too many elements",
+        "WidgetController.element -> dragUntilVisible -> scrollUntilVisible",
+        "330 tests passed, 2 failed."
+      ]
+    },
+    {
+      "command": "gh run view 39912812283 --json status,conclusion,jobs",
+      "exitCode": 0,
+      "selectedOutput": {
+        "status": "completed",
+        "conclusion": "failure",
+        "failedStep": "Host safety and ordinary planner checks"
+      }
+    }
+  ],
+  "failedTests": [
+    {
+      "file": "apps/lifemate/test/standalone_ui_test.dart",
+      "line": 221,
+      "name": "Persian picker saves next-year date and keeps ISO SQLite after reopen"
+    },
+    {
+      "file": "apps/lifemate/test/standalone_ui_test.dart",
+      "line": 278,
+      "name": "Persian picker confirms and cancels at320px and200percent text"
+    }
+  ],
+  "passedBeforeFailure": [
+    "format:1file/0changed",
+    "flutter analyze:No issues found",
+    "330 Flutter tests"
+  ],
+  "notRun": [
+    "Python host checks in this job",
+    "original retrieval",
+    "QA APK builds",
+    "Gradle negative gates",
+    "API35 emulator recovery"
+  ],
+  "artifactCount": 0,
+  "rootCause": "Day1 exists as both closed selected field and open menu item; unscoped target finder has multiple elements. Scrollable selector already uses.last. Current-date local focused test reproduces both CI failures.",
+  "fixBoundary": "test helper only; scope target to actual open dropdown Scrollable, keep ISO independent-SQL/reopen/cancel/accessibility assertions; do not change application clock/calendar/storage.",
+  "redGreenLocal": {
+    "baseCommit": "89a81432ebaa95f1d118595f87b90ef287f33693",
+    "changedFile": "apps/lifemate/test/standalone_ui_test.dart",
+    "changedFileSha256": "7d551e2d80c42ca4f13dd4f43626998c54b14df6f50fc0ad7bdea1711dc8d5d7",
+    "workingDirectory": "apps/lifemate",
+    "environment": "PUB_CACHE=/tmp/date-picker-pub-cache; Flutter executable /tmp/date-picker-flutter/bin/flutter (3.47.6)",
+    "commands": [
+      {
+        "command": "flutter test --no-pub test/standalone_ui_test.dart --plain-name 'Persian picker' --reporter expanded",
+        "stage": "RED_BEFORE_FIX",
+        "exitCode": 1,
+        "output": "Both original Persian picker cases fail with Too many elements"
+      },
+      {
+        "command": "flutter test --no-pub test/standalone_ui_test.dart --plain-name 'Persian picker' --reporter expanded",
+        "stage": "GREEN_AFTER_FIX",
+        "exitCode": 0,
+        "output": "00:04 +2: All tests passed!"
+      },
+      {
+        "command": "flutter test --no-pub --reporter expanded",
+        "stage": "FULL_SUITE",
+        "exitCode": 0,
+        "output": "01:28 +332: All tests passed!"
+      },
+      {
+        "command": "flutter analyze --no-pub",
+        "exitCode": 0,
+        "output": "Analyzing lifemate...                                           \nNo issues found! (ran in 14.9s)"
+      },
+      {
+        "command": "dart format --output=none --set-exit-if-changed test/standalone_ui_test.dart",
+        "exitCode": 0,
+        "output": "Formatted1 file(0changed)"
+      },
+      {
+        "command": "PUB_CACHE=/tmp/date-picker-pub-cache /tmp/date-picker-flutter/bin/flutter test --no-pub test/standalone_ui_test.dart --plain-name 'Persian picker' --reporter expanded",
+        "stage": "ROOT_INDEPENDENT_REPEAT",
+        "exitCode": 0,
+        "output": "00:04 +2: All tests passed!"
+      }
+    ],
+    "setupNotes": [
+      "Offline package resolution failed from incomplete cache; locked online resolution succeeded, tracked lockfile unchanged",
+      "Minimal writable SDK initially lacked dev/examples; copying existing SDK directories resolved local analyzer setup without repository change",
+      "Root first repeated focused command from repo root and got No pubspec.yaml(exit1); corrected cwd to apps/lifemate, then focused2 passed"
+    ],
+    "scope": "Test-only finder scoping plus deterministic duplicate-day-label regression; no production file changed"
+  }
+}

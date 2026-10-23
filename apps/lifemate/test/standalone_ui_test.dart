@@ -87,6 +87,15 @@ void main() {
     await tap(tester, find.text(label).last);
   }
 
+  Future<void> chooseDateOption(WidgetTester tester, String label) async {
+    // The selected label also exists in the dialog behind the open menu.
+    final menu = find.byType(Scrollable).last;
+    final option = find.descendant(of: menu, matching: find.text(label));
+    await tester.scrollUntilVisible(option, -150, scrollable: menu);
+    expect(option, findsOneWidget);
+    await tap(tester, option);
+  }
+
   Future<void> profile() => store.createProfile(
       displayName: 'کاربر ساختگی',
       category: StandaloneProfileCategory.girlMinor);
@@ -214,13 +223,12 @@ void main() {
       await tap(tester, find.byKey(const Key('personal-date-year')));
       await tap(tester, find.text('۱۴۰۶').last);
       await tap(tester, find.byKey(const Key('personal-date-month')));
-      await tester.scrollUntilVisible(find.text('فروردین'), -150,
-          scrollable: find.byType(Scrollable).last);
-      await tap(tester, find.text('فروردین').last);
+      await chooseDateOption(tester, 'فروردین');
       await tap(tester, find.byKey(const Key('personal-date-day')));
-      await tester.scrollUntilVisible(find.text('۱'), -150,
-          scrollable: find.byType(Scrollable).last);
-      await tap(tester, find.text('۱').last);
+      await chooseDateOption(tester, '۱');
+      // Reopening day1 exercises duplicate labels regardless of today's date.
+      await tap(tester, find.byKey(const Key('personal-date-day')));
+      await chooseDateOption(tester, '۱');
       final evidence = Platform.environment['LIFEGUIDE_UI_EVIDENCE_DIR'];
       if (evidence != null) {
         final boundary = tester.renderObject<RenderRepaintBoundary>(
@@ -271,13 +279,9 @@ void main() {
       await tap(tester, find.byKey(const Key('personal-date-year')));
       await tap(tester, find.text('۱۴۰۶').last);
       await tap(tester, find.byKey(const Key('personal-date-month')));
-      await tester.scrollUntilVisible(find.text('فروردین'), -150,
-          scrollable: find.byType(Scrollable).last);
-      await tap(tester, find.text('فروردین').last);
+      await chooseDateOption(tester, 'فروردین');
       await tap(tester, find.byKey(const Key('personal-date-day')));
-      await tester.scrollUntilVisible(find.text('۱'), -150,
-          scrollable: find.byType(Scrollable).last);
-      await tap(tester, find.text('۱').last);
+      await chooseDateOption(tester, '۱');
       await tap(tester, find.text('انتخاب تاریخ'));
       expect(find.text('تاریخ: ۱ فروردین ۱۴۰۶ شمسی'), findsOneWidget);
       final originalLabel =
